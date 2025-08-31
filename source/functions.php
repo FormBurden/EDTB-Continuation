@@ -449,33 +449,35 @@ function edtbCommon($name, $field, $update = false, $value = '')
 {
     global $mysqli;
 
+    // If the table doesn't exist yet, behave safely on cold start
+    $exists = $mysqli->query("SHOW TABLES LIKE 'edtb_common'");
+    if (!$exists || $exists->num_rows === 0) {
+        // Reads return neutral defaults; writes are no-ops
+        if ($update === true) {
+            return null;
+        }
+        return ($field === 'unixtime') ? 0 : '';
+    }
+
     if ($update !== true) {
-        $query = '  SELECT ' . $field . "
-                    FROM edtb_common
-                    WHERE name = '$name'
-                    LIMIT 1";
-
+        $query = "SELECT $field FROM edtb_common WHERE name = '$name' LIMIT 1";
         $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-        $obj = $result->fetch_object();
-
-        $value = $obj->{$field};
-
-        $result->close();
-
-        return $value;
+        if ($result && $result->num_rows) {
+            $obj = $result->fetch_object();
+            $val = $obj->{$field};
+            $result->close();
+            return $val;
+        }
+        // Row missing: neutral default
+        return ($field === 'unixtime') ? 0 : '';
     }
 
     $escVal = $mysqli->real_escape_string($value);
-    $stmt = '   UPDATE edtb_common
-                SET ' . $field . " = '$escVal'
-                WHERE name = '$name'
-                LIMIT 1";
-
+    $stmt = "UPDATE edtb_common SET $field = '$escVal' WHERE name = '$name' LIMIT 1";
     $mysqli->query($stmt) or write_log($mysqli->error, __FILE__, __LINE__);
-
     return null;
 }
+
 
 /**
  * Remove invalid dos characters

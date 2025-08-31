@@ -70,15 +70,20 @@ if (isset($_GET['do'])) {
                         <select title="Category" class="selectbox" name="bm_catid" id="bm_catid" style="width: 140px">
                             <option value="0">Category (optional)</option>
                             <?php
-                            $query = 'SELECT id, name FROM user_bm_categories ORDER BY name';
-                            $result = $mysqli->query($query);
-
-                            while ($obj = $result->fetch_object()) {
-                                echo '<option value="' . $obj->id . '">' . $obj->name . '</option>';
+                            // Only list categories if the table exists
+                            $hasCats = $mysqli->query("SHOW TABLES LIKE 'user_bm_categories'");
+                            if ($hasCats && $hasCats->num_rows) {
+                                $query = "SELECT id, name FROM user_bm_categories ORDER BY name";
+                                $result = $mysqli->query($query);
+                                while ($obj = $result->fetch_object()) {
+                                    echo '<option value="' . (int)$obj->id . '">' . htmlspecialchars($obj->name) . '</option>';
+                                }
+                                $result->close();
+                            } else {
+                                echo '<option value="">(no categories yet)</option>';
                             }
-
-                            $result->close();
                             ?>
+
                         </select>
                     </td>
                 </tr>

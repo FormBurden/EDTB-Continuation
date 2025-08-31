@@ -43,9 +43,10 @@ use \EDTB\Gallery\MakeGallery;
 
 $action = $_GET['action'] ?? '';
 $request = $_GET['request'] ?? 0;
+$newSystem = false; // default on cold start
 
 if ($action === 'onlycoordinates') {
-    echo $curSys['coordinates'];
+    echo $curSys['name'] ?? '';
 
     exit;
 }
@@ -68,13 +69,13 @@ if ($action === 'makegallery') {
      */
     if (MakeGallery::go()) {
         $gallery = new MakeGallery();
-        $gallery->makeGallery($curSys['name']);
+        $gallery->makeGallery($curSys['name'] ?? '');
     }
     exit;
 }
 
 /** @var string $escCursysName */
-$escCursysName = $mysqli->real_escape_string($curSys['name']);
+$escCursysName = $mysqli->real_escape_string($curSys['name'] ?? '');
 
 $data = [];
 
@@ -198,7 +199,7 @@ if ($newSystem !== false || $request == 0) {
         $data['new_sys'] = 'true';
     }
 
-    $data['current_system_name'] = $curSys['name'];
+    $data['current_system_name'] = $curSys['name'] ?? '';
     $data['current_coordinates'] = $curSys['coordinates'];
 
     /**

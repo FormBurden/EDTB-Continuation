@@ -53,6 +53,7 @@ class Header extends Theme
     public function displayHeader()
     {
         global $settings;
+        $minm = ''; // ensure defined for min/max toggle
         ?>
         <!DOCTYPE html>
         <html>
@@ -354,20 +355,20 @@ class Header extends Theme
                         <div class="button" onclick="edsm_comment($('#comment2').val(), true)" style="margin-top: 6px; margin-bottom: 6px">Send comment</div>
                     </form>
                     <?php
-                    if (!empty($settings['edsm_standard_comments'])) {
-                        echo '<br>&nbsp;OR choose from standard set<form method="get" action="/">';
-                        echo '<select class="selectbox" id="comment1" name="comment" onchange="edsm_comment($(\'#comment1\').val(), true)">';
-                        echo '<option value="">Choose comment</option>';
-
-                        foreach ($settings['edsm_standard_comments'] as $name => $comment) {
-                            echo '<option value="' . $comment . '">';
-                            echo $name;
-                            echo '</option>';
+                    if (!empty($settings['edsm_api_key']) && !empty($settings['edsm_cmdr_name'])) {
+                        // ...
+                        if (!empty($settings['edsm_standard_comments']) && is_array($settings['edsm_standard_comments'])) {
+                            echo '<select id="edsm_std_comments">';
+                            echo '<option value="">Choose comment</option>';
+                            foreach ($settings['edsm_standard_comments'] as $name => $comment) {
+                                echo '<option value="' . htmlspecialchars($comment) . '">' . htmlspecialchars($name) . '</option>';
+                            }
+                            echo '</select>';
                         }
-
-                        echo '</select></form>';
+                        // ...
                     }
                     ?>
+
                 </div>
                 <?php
             }

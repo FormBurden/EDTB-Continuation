@@ -30,6 +30,13 @@
 
 namespace EDTB\Gallery;
 
+global $mysqli;
+$hasVisits = $mysqli->query("SHOW TABLES LIKE 'user_visited_systems'");
+if (!$hasVisits || !$hasVisits->num_rows) {
+    write_log("Gallery skipped: 'user_visited_systems' table is missing", __FILE__, __LINE__);
+    return;
+}
+
 /**
  * Make screenshot galleries
  *
