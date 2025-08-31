@@ -28,8 +28,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/** @require installer script */
-$installer = dirname(__DIR__) . '/Install/install_script.php';
+ // Linux build: no legacy installer; keep variable benign
+$installer = null;
 if (is_file($installer)) {
     require_once $installer;
 }

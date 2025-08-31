@@ -32,7 +32,8 @@
 
 /** @require config */
 require_once __DIR__ . '/config.inc.php';
-$settings = include __DIR__ . '/../data/server_config.inc.php';
+ // Use unified config bootstrap + portable data dir
+ if (!defined('EDTB_DATA')) { require_once __DIR__ . '/config.inc.php'; }
 
 
 /**

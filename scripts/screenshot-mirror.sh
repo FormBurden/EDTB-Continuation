@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-SRC="$(php -r '$c=include "data/server_config.inc.php"; echo $c["screens_dir"]??"";')"
+SRC="$(php -r 'require "source/config.inc.php"; $c=include EDTB_DATA . "/server_config.inc.php"; echo $c["screens_dir"]??\"\";')"
 DST="data/gallery"
 [[ -d "$SRC" ]] || { echo "Screens dir not found: $SRC"; exit 0; }
 mkdir -p "$DST"
