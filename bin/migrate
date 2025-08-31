@@ -87,7 +87,8 @@ if (!class_exists('\\EDTB\\Config') || !class_exists('\\EDTB\\DB')) {
 if (method_exists('\\EDTB\\Config', 'load')) {
     $cfg = \EDTB\Config::load();
 } elseif (method_exists('\\EDTB\\Config', 'fromEnv')) {
-    $cfg = \EDTB\Config::fromEnv();
+    // Your branch signature expects one argument (project root)
+    $cfg = \EDTB\Config::fromEnv($root);
 } else {
     // Manual construction mirrors src/Config.php defaults
     $projectRoot = $root;
@@ -106,4 +107,5 @@ if (method_exists('\\EDTB\\Config', 'load')) {
 }
 $db  = \EDTB\DB::connect($cfg);               // see src/DB.php
 $pdo = $db->pdo();
+
 

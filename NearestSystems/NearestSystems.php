@@ -69,70 +69,134 @@ class NearestSystems
      */
     public function __construct()
     {
-        global $server, $user, $pwd, $db;
+        // Prefer the global mysqli if config.inc.php / MySQL.php already created it
+        global $mysqli, $server, $user, $pwd, $db;
 
-        /**
-         * connect to database
-         */
-        $this->mysqli = new mysqli($server, $user, $pwd, $db);
+        if ($mysqli instanceof mysqli) {
+            $this->mysqli = $mysqli;
+        } else {
+            // Build a new connection using whatever is available
+            $host = isset($server) && $server !== '' ? $server : ($_ENV['MYSQL_HOST'] ?? 'localhost');
+            $usr  = isset($user)   && $user   !== '' ? $user   : ($_ENV['MYSQL_USER'] ?? 'root');
+            $pass = isset($pwd)    && $pwd    !== '' ? $pwd    : ($_ENV['MYSQL_PASSWORD'] ?? '');
+
+            // If we already know the DB name, pass it; otherwise connect without and we'll select below
+            if (isset($db) && $db !== '') {
+                $this->mysqli = new mysqli($host, $usr, $pass, $db);
+            } else {
+                $this->mysqli = new mysqli($host, $usr, $pass);
+            }
+        }
 
         if ($this->mysqli->connect_errno) {
             echo 'Failed to connect to MySQL: ' . $this->mysqli->connect_error;
         }
 
-        /**
-         * determine what coordinates to use
-         */
-        $this->system = isset($_GET['system']) ? $_GET['system'] + 0 : '';
+        // Make sure a default DB is selected (covers cold-starts)
+        $this->ensureDbSelected();
+
+        // determine what coordinates to use
+        $this->system = isset($_GET['system']) ? ($_GET['system'] + 0) : '';
 
         if (!empty($this->system)) {
-            $query = "  SELECT name, id, x, y, z
-                        FROM edtb_systems
-                        WHERE id = '$this->system'
-                        LIMIT 1";
-
+            $query = "SELECT name, id, x, y, z
+                    FROM edtb_systems
+                    WHERE id = '$this->system'
+                    LIMIT 1";
             $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
             $sysObj = $result->fetch_object();
 
-            $sysName = $sysObj->name;
-            $sysId = $sysObj->id;
-
+            $sysName    = $sysObj->name;
             $this->useX = $sysObj->x;
             $this->useY = $sysObj->y;
             $this->useZ = $sysObj->z;
-
             $result->close();
 
-            $this->text .= ' (to <a href="/System?system_id=' . $sysId . '">' . $sysName . '</a>) ';
-            $this->powerParams .= '&system=' . $this->system;
+            $this->text             .= ' (to ' . $sysName . ') ';
+            $this->powerParams      .= '&system=' . $this->system;
             $this->allegianceParams .= '&system=' . $this->system;
-            $this->hiddenInputs .= '<input type="hidden" name="system" value="' . $sysId . '">';
-        } elseif (validCoordinates($curSys['x'], $curSys['y'], $curSys['z']) && empty($this->system)) {
-            $this->useX = $curSys['x'];
-            $this->useY = $curSys['y'];
-            $this->useZ = $curSys['z'];
         } else {
-            // get last known coordinates
-            $lastCoords = lastKnownSystem();
-
-            $this->useX = $lastCoords['x'];
-            $this->useY = $lastCoords['y'];
-            $this->useZ = $lastCoords['z'];
-
-            $this->is_unknown = ' *';
+            // Safe universal fallback (uses $curSys if available, else last known/own, else Sol)
+            $coords     = usableCoords();
+            $this->useX = $coords['x'];
+            $this->useY = $coords['y'];
+            $this->useZ = $coords['z'];
+            if ($coords['current'] !== true) {
+                $this->is_unknown = ' *';
+            }
         }
 
-        /**
-         * If we still don't have valid coordinates, center on Sol
-         */
         if (!validCoordinates($this->useX, $this->useY, $this->useZ)) {
-            $this->useX = '0';
-            $this->useY = '0';
-            $this->useZ = '0';
-
+            $this->useX      = '0';
+            $this->useY      = '0';
+            $this->useZ      = '0';
             $this->is_unknown = ' *';
         }
     }
+
+    private function ensureDbSelected(): void
+    {
+        if (!($this->mysqli instanceof mysqli)) {
+            return;
+        }
+    
+        // If already selected, nothing to do
+        $probe = @$this->mysqli->query('SELECT DATABASE() AS db');
+        if ($probe && ($row = $probe->fetch_object()) && $row->db) {
+            $probe->close();
+            return;
+        }
+        if ($probe) {
+            $probe->close();
+        }
+    
+        // Try common sources to discover the DB name
+        $candidates = [];
+    
+        // From global $db if set
+        if (isset($GLOBALS['db']) && $GLOBALS['db'] !== '') {
+            $candidates[] = $GLOBALS['db'];
+        }
+    
+        // From environment (docker/compose often sets this)
+        if (!empty($_ENV['MYSQL_DATABASE'])) {
+            $candidates[] = $_ENV['MYSQL_DATABASE'];
+        }
+    
+        // From server_config.inc.php
+        $paths = [
+            dirname(__DIR__) . '/data/server_config.inc.php',
+            __DIR__ . '/../data/server_config.inc.php',
+            '/data/server_config.inc.php',
+        ];
+        foreach ($paths as $p) {
+            if (is_file($p)) {
+                $cfg = include $p; // expected to return an array
+                if (is_array($cfg)) {
+                    if (!empty($cfg['database']['name'])) {
+                        $candidates[] = $cfg['database']['name'];
+                    }
+                    if (!empty($cfg['db']['name'])) {
+                        $candidates[] = $cfg['db']['name'];
+                    }
+                    if (!empty($cfg['name'])) {
+                        $candidates[] = $cfg['name'];
+                    }
+                }
+                break;
+            }
+        }
+    
+        // Last-resort sensible default used across the project
+        $candidates[] = 'edtb';
+    
+        foreach ($candidates as $name) {
+            if ($name && @$this->mysqli->select_db($name)) {
+                return;
+            }
+        }
+    }
+    
 
     /**
      *
@@ -235,7 +299,7 @@ class NearestSystems
             $result->close();
 
             $article = 'a';
-            if (preg_match('/([aeiouAEIOU])/', $fName{0})) {
+            if (preg_match('/([aeiouAEIOU])/', $fName[0])) {
                 $article = 'an';
             }
 

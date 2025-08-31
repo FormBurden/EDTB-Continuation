@@ -54,55 +54,60 @@ function lastKnownSystem($onlyedsm = false): array
 {
     global $mysqli;
 
-    $query = "  SELECT user_visited_systems.system_name,
-                edtb_systems.x, edtb_systems.y, edtb_systems.z
-                FROM user_visited_systems
-                LEFT JOIN edtb_systems ON user_visited_systems.system_name = edtb_systems.name
-                WHERE edtb_systems.x != ''
-                ORDER BY user_visited_systems.visit DESC
-                LIMIT 1";
-    if ($onlyedsm !== true) {
-        $query = "  SELECT user_visited_systems.system_name,
-                    edtb_systems.x, edtb_systems.y, edtb_systems.z,
-                    user_systems_own.x AS own_x,
-                    user_systems_own.y AS own_y,
-                    user_systems_own.z AS own_z
-                    FROM user_visited_systems
-                    LEFT JOIN edtb_systems ON user_visited_systems.system_name = edtb_systems.name
-                    LEFT JOIN user_systems_own ON user_visited_systems.system_name = user_systems_own.name
-                    WHERE edtb_systems.x != '' OR user_systems_own.x != ''
-                    ORDER BY user_visited_systems.visit DESC
-                    LIMIT 1";
+    // Cold start: if the table(s) don't exist yet, return empty coords safely
+    $exists = $mysqli->query("SHOW TABLES LIKE 'user_visited_systems'");
+    if (!$exists || $exists->num_rows === 0) {
+        return ['name' => '', 'x' => '', 'y' => '', 'z' => ''];
+    }
+    $exists->close();
+
+    if ($onlyedsm === true) {
+        $query = "
+            SELECT uvs.system_name, es.x, es.y, es.z
+            FROM user_visited_systems uvs
+            LEFT JOIN edtb_systems es ON uvs.system_name = es.name
+            WHERE es.x != ''
+            ORDER BY uvs.visit DESC
+            LIMIT 1
+        ";
+    } else {
+        $query = "
+            SELECT uvs.system_name, es.x, es.y, es.z,
+                   uso.x AS own_x, uso.y AS own_y, uso.z AS own_z
+            FROM user_visited_systems uvs
+            LEFT JOIN edtb_systems  es  ON uvs.system_name = es.name
+            LEFT JOIN user_systems_own uso ON uvs.system_name = uso.name
+            WHERE es.x != '' OR uso.x != ''
+            ORDER BY uvs.visit DESC
+            LIMIT 1
+        ";
     }
 
     $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
 
-    $results = $result->num_rows;
-    $lastSystem = [];
-
-    if ($results > 0) {
-        $coordObj = $result->fetch_object();
+    $lastSystem = ['name' => '', 'x' => '', 'y' => '', 'z' => ''];
+    if ($result && $result->num_rows > 0) {
+        $coordObj         = $result->fetch_object();
         $lastSystem['name'] = $coordObj->system_name;
-        $lastSystem['x'] = $coordObj->x;
-        $lastSystem['y'] = $coordObj->y;
-        $lastSystem['z'] = $coordObj->z;
+        $lastSystem['x']    = $coordObj->x;
+        $lastSystem['y']    = $coordObj->y;
+        $lastSystem['z']    = $coordObj->z;
 
+        // If not in edtb_systems, fall back to user-owned coords
         if ($lastSystem['x'] === '') {
             $lastSystem['x'] = $coordObj->own_x;
             $lastSystem['y'] = $coordObj->own_y;
             $lastSystem['z'] = $coordObj->own_z;
         }
-    } else {
-        $lastSystem['name'] = '';
-        $lastSystem['x'] = '';
-        $lastSystem['y'] = '';
-        $lastSystem['z'] = '';
     }
 
-    $result->close();
+    if ($result) {
+        $result->close();
+    }
 
     return $lastSystem;
 }
+
 
 /**
  * Check if data is old
@@ -272,37 +277,50 @@ function getAllegianceIcon($allegiance)
  * @return array of floats x, y, z and bool current
  * @author Mauri Kujala <contact@edtb.xyz>
  */
-function usableCoords()
+function usableCoords(): array
 {
     global $curSys;
 
-    $usable = [];
+    // Start with a neutral default
+    $usable = [
+        'x' => '0',
+        'y' => '0',
+        'z' => '0',
+        'current' => false,
+    ];
 
-    if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
-        $usable['x'] = $curSys['x'];
-        $usable['y'] = $curSys['y'];
-        $usable['z'] = $curSys['z'];
+    // Read $curSys defensively (it might not exist or might be partial)
+    $cx = is_array($curSys) ? ($curSys['x'] ?? null) : null;
+    $cy = is_array($curSys) ? ($curSys['y'] ?? null) : null;
+    $cz = is_array($curSys) ? ($curSys['z'] ?? null) : null;
 
+    if (validCoordinates($cx, $cy, $cz)) {
+        $usable['x'] = $cx;
+        $usable['y'] = $cy;
+        $usable['z'] = $cz;
         $usable['current'] = true;
-    } else {
-        $lastCoords = lastKnownSystem();
-
-        $usable['x'] = $lastCoords['x'];
-        $usable['y'] = $lastCoords['y'];
-        $usable['z'] = $lastCoords['z'];
-
-        $usable['current'] = false;
+        return $usable;
     }
 
-    if (!validCoordinates($usable['x'], $usable['y'], $usable['z'])) {
-        $usable['x'] = '0';
-        $usable['y'] = '0';
-        $usable['z'] = '0';
+    // Fall back to last known (handles cold-starts if tables exist)
+    $last = lastKnownSystem();
+    $lx = is_array($last) ? ($last['x'] ?? null) : null;
+    $ly = is_array($last) ? ($last['y'] ?? null) : null;
+    $lz = is_array($last) ? ($last['z'] ?? null) : null;
 
+    if (validCoordinates($lx, $ly, $lz)) {
+        $usable['x'] = $lx;
+        $usable['y'] = $ly;
+        $usable['z'] = $lz;
         $usable['current'] = false;
+        return $usable;
     }
+
+    // Still nothing valid? Leave zeros, mark as unknown
+    $usable['current'] = false;
     return $usable;
 }
+
 
 /**
  * Validate coordinates
