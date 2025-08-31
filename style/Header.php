@@ -29,10 +29,10 @@
  */
 
 /** @require installer script */
- $installer = __DIR__ . '/../Install/install_script.php';
- if (is_file($installer)) {
-     require_once $installer; // optional legacy installer on Windows builds
- }
+$installer = dirname(__DIR__) . '/Install/install_script.php';
+if (is_file($installer)) {
+    require_once $installer;
+}
 /** @require config */
 require_once$_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
 /** @require MySQL */
@@ -203,7 +203,10 @@ class Header extends Theme
                      * session log
                      */
                     // get old session log
-                    $log = @file_get_contents(($server['data_dir'] ?? (__DIR__.'/../data')).'/sessionlog.txt');
+                    $base = $settings['install_path'] ?? $_SERVER['DOCUMENT_ROOT'];
+                    $sessionlog_file = $base . '/data/sessionlog.txt';
+                    $sessionlog = @file_get_contents($sessionlog_file) ?: '';
+
                     ?>
                     <div class="seslog" id="seslog">
                         <textarea title="Session log" class="seslogtext" cols="40" rows="13" id="logtext" oninput="showsave()"><?= $sessionlog?></textarea>

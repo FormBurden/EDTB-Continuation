@@ -64,24 +64,20 @@ spl_autoload_register(function ($class) {
     }
 });
 
-/** @var string $iniDir ini file directory */
-$iniDir = str_replace([
-    "\\EDTB\\source",
-    "\\"
-], [
-    '',
-    '/'
-], __DIR__);
-/** @var string ini_file ini file */
-$iniFile = $iniDir . '/data/edtoolbox_v1.ini';
-
-/** @var array $settings global user settings variable */
- $iniFile  = __DIR__ . '/data/edtoolbox_v1.ini';
- $settings = is_file($iniFile) ? parse_ini_file($iniFile, true) : [];
- // Bridge to server_config when INI is missing/partial
- $settings['paths']['log_dir']     = $settings['paths']['log_dir']     ?? ($server['netlog_dir']  ?? null);
- $settings['paths']['screens_dir'] = $settings['paths']['screens_dir'] ?? ($server['screens_dir'] ?? null);
- $settings['paths']['data_dir']    = $settings['paths']['data_dir']    ?? ($server['data_dir']    ?? null);
+$iniPath = __DIR__ . '/data/edtoolbox_v1.ini';
+if (!is_file($iniPath)) {
+    @mkdir(__DIR__ . '/data', 0775, true);
+    file_put_contents($iniPath, "[settings]\nedtb_version=dev\ndefault_map=system_map\n");
+}
+$ini = parse_ini_file($iniPath, true, INI_SCANNER_TYPED) ?: [];
+$settings = array_merge([
+    'edtb_version' => 'dev',
+    'game_time'    => 'UTC',
+    'cmdr_name'    => 'CMDR',
+    'default_map'  => 'system_map',
+    'ext_links'    => [],
+    'install_path' => dirname(__DIR__),
+], $ini['settings'] ?? []);
 
 /**
  * set the new screendir if it's empty

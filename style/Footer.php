@@ -29,10 +29,10 @@
  */
 
 /** @require installer script */
- $installer = __DIR__ . '/../Install/install_script.php';
- if (is_file($installer)) {
-     require_once $installer; // optional legacy installer
- }
+$installer = dirname(__DIR__) . '/Install/install_script.php';
+if (is_file($installer)) {
+    require_once $installer;
+}
 /** @require config */
 require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
 /** @require MySQL */
