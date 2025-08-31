@@ -76,7 +76,12 @@ $iniDir = str_replace([
 $iniFile = $iniDir . '/data/edtoolbox_v1.ini';
 
 /** @var array $settings global user settings variable */
-$settings = parse_ini_file($iniFile);
+ $iniFile  = __DIR__ . '/data/edtoolbox_v1.ini';
+ $settings = is_file($iniFile) ? parse_ini_file($iniFile, true) : [];
+ // Bridge to server_config when INI is missing/partial
+ $settings['paths']['log_dir']     = $settings['paths']['log_dir']     ?? ($server['netlog_dir']  ?? null);
+ $settings['paths']['screens_dir'] = $settings['paths']['screens_dir'] ?? ($server['screens_dir'] ?? null);
+ $settings['paths']['data_dir']    = $settings['paths']['data_dir']    ?? ($server['data_dir']    ?? null);
 
 /**
  * set the new screendir if it's empty
