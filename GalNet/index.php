@@ -31,10 +31,10 @@
 */
 
 /** @require phpfastcache */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/Vendor/phpfastcache/phpfastcache.php';
+require_once __DIR__ . '/../source/Vendor/phpfastcache/phpfastcache.php';
 
 /** @require Theme class */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/style/Theme.php';
+require_once __DIR__ . '/../style/Theme.php';
 
 /**
  * initiate page header

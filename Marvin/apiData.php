@@ -31,9 +31,9 @@
  */
 
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require configs */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
+require_once __DIR__ . '/../source/config.inc.php';
 
 $info = '';
 

@@ -33,7 +33,7 @@
 */
 
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 
 use \EDTB\source\System;
 
@@ -1148,7 +1148,7 @@ function spgm_DisplayGalleryNavibar($strGalleryId, $strFilterFlags, $mixPictureI
 {
     global $spgmCfg;
 
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+    require_once __DIR__ . '/../source/functions.php';
 
     spgm_Trace('<p>function spgm_DisplayGalleryNavibar</p>' . "\n" . 'strGalleryId: ' . $strGalleryId . '<br>' . "\n" . 'strFilterFlags: ' . $strFilterFlags . '<br>' . "\n" . 'mixPictureId: ' . $mixPictureId . '<br>' . "\n");
 

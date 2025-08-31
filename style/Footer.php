@@ -34,13 +34,13 @@ if (is_file($installer)) {
     require_once $installer;
 }
 /** @require config */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
+require_once __DIR__ . '/../source/config.inc.php';
 /** @require MySQL */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/MySQL.php';
+require_once __DIR__ . '/../source/MySQL.php';
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require curSys */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/curSys.php';
+require_once __DIR__ . '/../source/curSys.php';
 
 use \EDTB\style\Theme;
 

@@ -1,6 +1,6 @@
 <?php
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 
 // no direct access
 if (strtolower(basename($_SERVER['PHP_SELF'])) == strtolower(basename(__FILE__))) {
@@ -87,7 +87,7 @@ class MySQLtabledit
      */
     public function do_it()
     {
-        require_once $_SERVER['DOCUMENT_ROOT'] . '/DataPoint/Vendor/MySQL_table_edit/lang/en.php';
+        require_once __DIR__ . '/../DataPoint/Vendor/MySQL_table_edit/lang/en.php';
 
         // No cache
         /*if (!headers_sent()) {

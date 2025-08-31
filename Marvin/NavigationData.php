@@ -32,11 +32,11 @@
  */
 
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require config */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
+require_once __DIR__ . '/../source/config.inc.php';
 /** @require MySQL */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/MySQL.php';
+require_once __DIR__ . '/../source/MySQL.php';
 
 /**
  * Query the database

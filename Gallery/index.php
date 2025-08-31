@@ -31,7 +31,7 @@
 */
 
 /** @require Theme class */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/style/Theme.php';
+require_once __DIR__ . '/../style/Theme.php';
 
 /**
  * initiate page header
@@ -65,7 +65,7 @@ $header->displayHeader();
                     <tr>
                         <td id="center">
                             <?php
-                            require_once $_SERVER['DOCUMENT_ROOT'] . '/Gallery/Vendor/spgm/spgm.php';
+                            require_once __DIR__ . '/../Gallery/Vendor/spgm/spgm.php';
                             ?>
                         </td>
                     </tr>

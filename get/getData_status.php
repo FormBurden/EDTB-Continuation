@@ -49,11 +49,11 @@ if (isset($_GET['force_update'])) {
 }
 
 /** @require api update */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/action/updateAPIdata.php';
+require_once __DIR__ . '/../action/updateAPIdata.php';
 /** @require config */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
+require_once __DIR__ . '/../source/config.inc.php';
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 
 /**
  * show user status

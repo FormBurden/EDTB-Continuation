@@ -31,13 +31,13 @@
 */
 
 /** @require config */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/config.inc.php';
+require_once __DIR__ . '/../source/config.inc.php';
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require MySQL */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/MySQL.php';
+require_once __DIR__ . '/../source/MySQL.php';
 /** @require curSys */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/curSys.php';
+require_once __DIR__ . '/../source/curSys.php';
 
 use \EDTB\Gallery\MakeGallery;
 
@@ -204,22 +204,22 @@ if ($newSystem !== false || $request == 0) {
     /**
      * Data for the left column
      */
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/get/getData_leftColumn.php';
+    require_once __DIR__ . '/../get/getData_leftColumn.php';
 
     /**
      * Stuff specifically for System.php
      */
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/System/getData_systemInfo.php';
+    require_once __DIR__ . '/../System/getData_systemInfo.php';
 
     /**
      * System and general logs
      */
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/Log/getData_logs.php';
+    require_once __DIR__ . '/../Log/getData_logs.php';
 
     /**
      * Check for updates
      */
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/get/getData_checkForUpdates.php';
+    require_once __DIR__ . '/../get/getData_checkForUpdates.php';
 
     /**
      * set data renew tag

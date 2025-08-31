@@ -34,7 +34,7 @@ use EDTB\Bookmarks\PoiBm;
 
 if (isset($_GET['do'])) {
     /** @require functions */
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+    require_once __DIR__ . '/../source/functions.php';
     /** @require PoiBm class */
     require_once __DIR__ . '/PoiBm.php';
 

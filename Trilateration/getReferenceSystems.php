@@ -32,11 +32,11 @@
 use EDTB\Trilateration\ReferenceSystems;
 
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require MySQL */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/MySQL.php';
+require_once __DIR__ . '/../source/MySQL.php';
 /** @require curSys */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/curSys.php';
+require_once __DIR__ . '/../source/curSys.php';
 /** @require ReferenceSystems class */
 require_once __DIR__ . '/ReferenceSystems.php';
 

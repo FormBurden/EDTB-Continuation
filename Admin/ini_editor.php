@@ -34,7 +34,7 @@
 $notify = '';
 
 /** @require Theme class */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/style/Theme.php';
+require_once __DIR__ . '/../style/Theme.php';
 
 /**
  * initiate page header

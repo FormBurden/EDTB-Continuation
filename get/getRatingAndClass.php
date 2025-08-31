@@ -31,9 +31,9 @@
  */
 
 /** @require functions */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/functions.php';
+require_once __DIR__ . '/../source/functions.php';
 /** @require MySQL */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/source/MySQL.php';
+require_once __DIR__ . '/../source/MySQL.php';
 
 if (isset($_GET['group_id']) && !empty($_GET['group_id'])) {
     $groupId = $_GET['group_id'];
