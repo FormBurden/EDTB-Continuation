@@ -38,7 +38,7 @@ final class Config
         $c->dbUser = $_ENV['DB_USER'] ?? 'edtb';
         $c->dbPass = $_ENV['DB_PASS'] ?? 'edtbpass';
 
-        $c->dataDir = rtrim($_ENV['DATA_DIR'] ?? ($projectRoot . '/data'), '/');
+        $c->dataDir = rtrim((defined('DATA_DIR') ? DATA_DIR : ($_ENV['EDTB_DATA_DIR'] ?? $_ENV['DATA_DIR'] ?? ($projectRoot . '/data'))), '/');
         $c->rootDir = rtrim($_ENV['ROOT_DIR'] ?? (realpath($projectRoot) ?: $projectRoot), '/');
 
         return $c;

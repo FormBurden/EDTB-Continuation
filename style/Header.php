@@ -197,7 +197,7 @@ class Header extends Theme
                      */
                     // get old session log
                     $base = $settings['install_path'] ?? $_SERVER['DOCUMENT_ROOT'];
-                    $sessionlog_file = $base . '/data/sessionlog.txt';
+                    $sessionlog_file = DATA_DIR . '/sessionlog.txt';
                     $sessionlog = @file_get_contents($sessionlog_file) ?: '';
 
                     ?>

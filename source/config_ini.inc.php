@@ -64,9 +64,28 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Always define dir + path
-$iniDir  = __DIR__ . '/data';
-$iniPath = $iniDir . '/edtoolbox_v1.ini';
+// Find edtoolbox_v1.ini relative to EDTB_DATA with sane fallbacks
+$iniCandidates = [
+    (defined('DATA_DIR') ? DATA_DIR : (defined('EDTB_DATA') ? EDTB_DATA : null)) . '/edtoolbox_v1.ini',
+    dirname(__DIR__) . '/data/edtoolbox_v1.ini',
+    dirname(__DIR__) . '/source/data/edtoolbox_v1.ini',
+    '/data/edtoolbox_v1.ini',
+];
+
+$iniPath = null;
+foreach ($iniCandidates as $p) {
+    if ($p && is_file($p)) { $iniPath = $p; break; }
+}
+
+$ini = [];
+if ($iniPath) {
+    // Typed parsing; matches your existing usage
+    $ini = @parse_ini_file($iniPath, true, INI_SCANNER_TYPED);
+    if ($ini === false) {
+        $ini = [];
+    }
+}
+
 
 // Create a safe default INI if missing
 if (!is_file($iniPath)) {
