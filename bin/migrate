@@ -2,13 +2,108 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+/**
+ * EDTB barebones migrator runner for native Linux installs.
+ * - Loads .env if vlucas/phpdotenv is present (optional)
+ * - Loads EDTB\Config, EDTB\DB, and EDTB\Migrator (no Composer needed)
+ * - Falls back to an inline Migrator if the class isn't found (robust)
+ */
 
-use EDTB\Config;
-use EDTB\DB;
-use EDTB\Migrator;
+$root = dirname(__DIR__);
 
-$config = Config::fromEnv(__DIR__ . '/../');
-$db     = DB::connect($config);
+// optional Composer autoload + Dotenv
+$autoload = $root . '/vendor/autoload.php';
+if (is_file($autoload)) {
+    require $autoload;
+    if (class_exists('Dotenv\\Dotenv')) {
+        Dotenv\Dotenv::createImmutable($root)->safeLoad();
+    }
+}
 
-Migrator::run($db->pdo(), __DIR__ . '/../database/migrations');
+// minimal includes for native runs (no Composer)
+foreach (['/src/Config.php', '/src/DB.php', '/source/Migrator.php'] as $rel) {
+    $path = $root . $rel;
+    if (is_file($path)) {
+        require_once $path;
+    }
+}
+
+// fallback inline migrator if EDTB\Migrator is missing
+if (!class_exists('\\EDTB\\Migrator')) {
+    class Migrator_Fallback
+    {
+        public static function run(\PDO $pdo, string $dir): void
+        {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS migrations_applied (
+                  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                  filename VARCHAR(255) NOT NULL UNIQUE,
+                  applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $applied = [];
+            $stmt = $pdo->query('SELECT filename FROM migrations_applied');
+            foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $applied[$row['filename']] = true;
+            }
+
+            $files = glob(rtrim($dir, '/').'/*.sql') ?: [];
+            sort($files);
+
+            foreach ($files as $file) {
+                $base = basename($file);
+                if (isset($applied[$base])) {
+                    continue;
+                }
+
+                $sql = file_get_contents($file) ?: '';
+                // naive split on semicolons followed by newline(s)
+                $parts = array_filter(array_map('trim', preg_split('/;[\\r\\n]+/m', $sql)));
+                foreach ($parts as $part) {
+                    if ($part !== '') {
+                        $pdo->exec($part);
+                    }
+                }
+
+                $ins = $pdo->prepare('INSERT INTO migrations_applied (filename) VALUES (:f)');
+                $ins->execute([':f' => $base]);
+                echo "[migrate] applied {$base}\n";
+            }
+        }
+    }
+    $runner = ['\\Migrator_Fallback', 'run'];
+} else {
+    $runner = ['\\EDTB\\Migrator', 'run']; // from source/Migrator.php
+}
+
+// connect DB via your src layer
+if (!class_exists('\\EDTB\\Config') || !class_exists('\\EDTB\\DB')) {
+    fwrite(STDERR, "Missing EDTB\\Config or EDTB\\DB\n");
+    exit(1);
+}
+
+// Build Config safely across branches
+if (method_exists('\\EDTB\\Config', 'load')) {
+    $cfg = \EDTB\Config::load();
+} elseif (method_exists('\\EDTB\\Config', 'fromEnv')) {
+    $cfg = \EDTB\Config::fromEnv();
+} else {
+    // Manual construction mirrors src/Config.php defaults
+    $projectRoot = $root;
+    $cfg = new \EDTB\Config();
+    $cfg->env     = $_ENV['APP_ENV']   ?? 'dev';
+    $cfg->debug   = (bool)(int)($_ENV['APP_DEBUG'] ?? '1');
+    $cfg->baseUrl = $_ENV['BASE_URL']  ?? 'http://localhost:8080';
+    $cfg->dbHost  = $_ENV['DB_HOST']   ?? '127.0.0.1';
+    $cfg->dbPort  = (int)($_ENV['DB_PORT'] ?? 3306);
+    $cfg->dbName  = $_ENV['DB_NAME']   ?? 'edtb';
+    $cfg->dbUser  = $_ENV['DB_USER']   ?? 'edtb';
+    $cfg->dbPass  = $_ENV['DB_PASS']   ?? 'edtbpass';
+    $cfg->dataDir = rtrim((defined('DATA_DIR') ? DATA_DIR
+                    : ($_ENV['EDTB_DATA_DIR'] ?? $_ENV['DATA_DIR'] ?? ($projectRoot . '/data'))), '/');
+    $cfg->rootDir = rtrim($_ENV['ROOT_DIR'] ?? (realpath($projectRoot) ?: $projectRoot), '/');
+}
+$db  = \EDTB\DB::connect($cfg);               // see src/DB.php
+$pdo = $db->pdo();
+
