@@ -418,8 +418,8 @@ class Header extends Theme
 
             <!-- notices for new releases or old data -->
             <div class="settings_panel" id="notice">
-                It has been a while since you last update system and station data.<br>As a result, any data you see here may be outdated.<br><br>
-                Right-click the EDTB manager icon on your system tray and select<br>"Update system and station data".
+                On Linux: run your EDTB data update (systemd timer or cron), then refresh this page.
+                If this is your first setup, open <a href="/Admin">Settings</a> to configure DB access and trigger the initial update.
             </div>
             <div class="settings_panel" id="notice_new"></div>
 

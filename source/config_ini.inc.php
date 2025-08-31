@@ -117,3 +117,13 @@ $settings = [
  * set the new screendir if it's empty
  */
 $settings['new_screendir'] = empty($settings['new_screendir']) ? $iniDir . '/EDTB/screenshots' : $settings['new_screendir'];
+
+$settings['cookie_file'] = $settings['install_path'] . '/cache/cookies';
+
+$settings['curl_exe'] = '/usr/bin/curl';
+
+$profileFile = $settings['install_path'] . '/cache/profile.json';
+// Ensure cache directory exists on Linux
+if (!is_dir($settings['install_path'] . '/cache')) {
+    @mkdir($settings['install_path'] . '/cache', 0755, true);
+}
