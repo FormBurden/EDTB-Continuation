@@ -31,9 +31,9 @@
 namespace EDTB\style;
 
 /** @require header class */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/style/Header.php';
+require_once __DIR__ . '/Header.php';
 /** @require footer class */
-require_once $_SERVER['DOCUMENT_ROOT'] . '/style/Footer.php';
+require_once __DIR__ . '/Footer.php';
 
 /**
  * Class Theme
