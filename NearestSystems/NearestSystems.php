@@ -69,18 +69,16 @@ class NearestSystems
      */
     public function __construct()
     {
-        // Prefer the global mysqli if config.inc.php / MySQL.php already created it
+        // Prefer global mysqli if already created by config.inc.php / MySQL.php
         global $mysqli, $server, $user, $pwd, $db;
 
         if ($mysqli instanceof mysqli) {
             $this->mysqli = $mysqli;
         } else {
-            // Build a new connection using whatever is available
             $host = isset($server) && $server !== '' ? $server : ($_ENV['MYSQL_HOST'] ?? 'localhost');
             $usr  = isset($user)   && $user   !== '' ? $user   : ($_ENV['MYSQL_USER'] ?? 'root');
             $pass = isset($pwd)    && $pwd    !== '' ? $pwd    : ($_ENV['MYSQL_PASSWORD'] ?? '');
 
-            // If we already know the DB name, pass it; otherwise connect without and we'll select below
             if (isset($db) && $db !== '') {
                 $this->mysqli = new mysqli($host, $usr, $pass, $db);
             } else {
@@ -92,17 +90,14 @@ class NearestSystems
             echo 'Failed to connect to MySQL: ' . $this->mysqli->connect_error;
         }
 
-        // Make sure a default DB is selected (covers cold-starts)
+        // ← exactly one call, here:
         $this->ensureDbSelected();
 
         // determine what coordinates to use
         $this->system = isset($_GET['system']) ? ($_GET['system'] + 0) : '';
 
         if (!empty($this->system)) {
-            $query = "SELECT name, id, x, y, z
-                    FROM edtb_systems
-                    WHERE id = '$this->system'
-                    LIMIT 1";
+            $query  = "SELECT name, id, x, y, z FROM edtb_systems WHERE id = '$this->system' LIMIT 1";
             $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
             $sysObj = $result->fetch_object();
 
@@ -112,12 +107,11 @@ class NearestSystems
             $this->useZ = $sysObj->z;
             $result->close();
 
-            $this->text             .= ' (to ' . $sysName . ') ';
-            $this->powerParams      .= '&system=' . $this->system;
-            $this->allegianceParams .= '&system=' . $this->system;
+            $this->text              .= ' (to ' . $sysName . ') ';
+            $this->powerParams       .= '&system=' . $this->system;
+            $this->allegianceParams  .= '&system=' . $this->system;
         } else {
-            // Safe universal fallback (uses $curSys if available, else last known/own, else Sol)
-            $coords     = usableCoords();
+            $coords     = usableCoords(); // safe fallback (uses $curSys or lastKnownSystem or Sol)
             $this->useX = $coords['x'];
             $this->useY = $coords['y'];
             $this->useZ = $coords['z'];
@@ -127,20 +121,21 @@ class NearestSystems
         }
 
         if (!validCoordinates($this->useX, $this->useY, $this->useZ)) {
-            $this->useX      = '0';
-            $this->useY      = '0';
-            $this->useZ      = '0';
+            $this->useX = '0';
+            $this->useY = '0';
+            $this->useZ = '0';
             $this->is_unknown = ' *';
         }
     }
+
 
     private function ensureDbSelected(): void
     {
         if (!($this->mysqli instanceof mysqli)) {
             return;
         }
-    
-        // If already selected, nothing to do
+
+        // Already selected?
         $probe = @$this->mysqli->query('SELECT DATABASE() AS db');
         if ($probe && ($row = $probe->fetch_object()) && $row->db) {
             $probe->close();
@@ -149,21 +144,17 @@ class NearestSystems
         if ($probe) {
             $probe->close();
         }
-    
-        // Try common sources to discover the DB name
+
+        // Try to discover the DB name from several places
         $candidates = [];
-    
-        // From global $db if set
+
         if (isset($GLOBALS['db']) && $GLOBALS['db'] !== '') {
             $candidates[] = $GLOBALS['db'];
         }
-    
-        // From environment (docker/compose often sets this)
         if (!empty($_ENV['MYSQL_DATABASE'])) {
             $candidates[] = $_ENV['MYSQL_DATABASE'];
         }
-    
-        // From server_config.inc.php
+
         $paths = [
             dirname(__DIR__) . '/data/server_config.inc.php',
             __DIR__ . '/../data/server_config.inc.php',
@@ -186,16 +177,17 @@ class NearestSystems
                 break;
             }
         }
-    
-        // Last-resort sensible default used across the project
+
+        // Last-resort default
         $candidates[] = 'edtb';
-    
+
         foreach ($candidates as $name) {
             if ($name && @$this->mysqli->select_db($name)) {
                 return;
             }
         }
     }
+
     
 
     /**
@@ -664,23 +656,28 @@ class NearestSystems
                 <td class="transparent" style="vertical-align: top; width:20%; white-space: nowrap">
                     <?php
                     $query = 'SELECT name FROM edtb_powers ORDER BY name';
-                    $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+                    if ($this->tableExists('edtb_powers')) {
+                        $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
 
-                    while ($powerObj = $result->fetch_object()) {
-                        $powerName = $powerObj->name;
+                        while ($powerObj = $result->fetch_object()) {
+                            $powerName = $powerObj->name;
 
-                        if (isset($power)) {
-                            $this->powerParams = str_replace('&power=', '', $this->powerParams);
-                            $this->powerParams = str_replace('?power=', '', $this->powerParams);
-                            $this->powerParams = str_replace(urlencode($power), '', $this->powerParams);
+                            if (isset($power)) {
+                                $this->powerParams = str_replace('&power=', '', $this->powerParams);
+                                $this->powerParams = str_replace('?power=', '', $this->powerParams);
+                                $this->powerParams = str_replace(urlencode($power), '', $this->powerParams);
+                            }
+                            echo '<a data-replace="true" data-target="#nscontent" href="/NearestSystems/?power=' .
+                                urlencode($powerName) . $this->powerParams . '" title="' . $powerName . '">' . $powerName .
+                                '</a><br>';
                         }
-                        echo '<a data-replace="true" data-target="#nscontent" href="/NearestSystems/?power=' .
-                            urlencode($powerName) . $this->powerParams . '" title="' . $powerName . '">' . $powerName .
-                            '</a><br>';
-                    }
 
-                    $result->close();
+                        $result->close();
+                    } else {
+                        echo '<em style="opacity:.7">Powers list unavailable</em>';
+                    }
                     ?>
+
                 </td>
                 <!-- modules -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
