@@ -30,69 +30,85 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/**
- * System title for the left column
- */
-$data['system_title'] .= '';
+/** * System title for the left column */
+$data['system_title'] = '';
 
-$pic = getAllegianceIcon($curSys['allegiance']);
+$allegiance = $curSys['allegiance'] ?? '';
+$pic = getAllegianceIcon($allegiance);
 
-$data['system_title'] .= '<div class="leftpanel-add-data">';
-$data['system_title'] .= '<a href="javascript:void(0)" id="toggle" onclick="setbm(\'' . addslashes($curSys['name']) . '\', \'' . $curSys['id'] . '\');tofront(\'addBm\');$(\'#bm_text\').focus()" title="Bookmark system">';
-$data['system_title'] .= '<img src="/style/img/' . $pic . '" class="allegiance_icon" alt="' . $curSys['allegiance'] . '">';
-$data['system_title'] .= '</a>';
+$data['system_title'] .= '<div class="titlewrap">';
+$data['system_title'] .= '<div class="titleimg">';
+$data['system_title'] .= $pic;
 $data['system_title'] .= '</div>';
 
 if (!isset($_COOKIE['style']) || $_COOKIE['style'] !== 'narrow') {
-    $data['system_title'] .= '<div class="leftpanel-title-text"><span id="ltitle">';
+    $data['system_title'] .= '<div class="title">';
 
+    // defaults
     $bookmarked = 0;
-    $bQuery = "SELECT id
-                FROM user_bookmarks
-                WHERE system_name = '$escCursysName'
-                LIMIT 1";
-    if ($curSys['id'] != '-1') {
-        $bQuery = "SELECT id
-                    FROM user_bookmarks
-                    WHERE system_id = '" . $curSys['id'] . "'
-                    AND system_id != ''
-                    LIMIT 1";
+    $poid = 0;
+
+    // guarded reads
+    $curId   = $curSys['id']   ?? '';
+    $curName = $curSys['name'] ?? '';
+    $escName = $mysqli->real_escape_string($escCursysName);
+
+    // table existence checks (avoid fatals before migrations)
+    $res = $mysqli->query("SHOW TABLES LIKE 'user_bookmarks'");
+    $hasUserBookmarks = $res && $res->num_rows > 0;
+    if ($res) { $res->close(); }
+
+    $res = $mysqli->query("SHOW TABLES LIKE 'user_poi'");
+    $hasUserPoi = $res && $res->num_rows > 0;
+    if ($res) { $res->close(); }
+
+    if ($hasUserBookmarks) {
+        if ($curId !== '' && $curId !== '-1') {
+            $bQuery = "SELECT id FROM user_bookmarks WHERE system_id = '" . $mysqli->real_escape_string($curId) . "' AND system_id != '' LIMIT 1";
+        } else {
+            $bQuery = "SELECT id FROM user_bookmarks WHERE system_name = '" . $escName . "' LIMIT 1";
+        }
+        if ($res = $mysqli->query($bQuery)) {
+            $bookmarked = $res->num_rows;
+            $res->close();
+        }
     }
-    $bookmarked = $mysqli->query($bQuery)->num_rows;
 
-    $pQuery = "SELECT id
-                FROM user_poi
-                WHERE system_name = '$escCursysName'
-                AND system_name != ''
-                LIMIT 1";
-
-    $poid = $mysqli->query($pQuery)->num_rows;
+    if ($hasUserPoi) {
+        $pQuery = "SELECT id FROM user_poi WHERE system_name = '" . $escName . "' AND system_name != '' LIMIT 1";
+        if ($res = $mysqli->query($pQuery)) {
+            $poid = $res->num_rows;
+            $res->close();
+        }
+    }
 
     $class = $bookmarked > 0 ? 'bookmarked' : 'title';
     $class = $poid > 0 ? 'poid' : $class;
 
-    $data['system_title'] .= '<a class="' . $class . '" href="javascript:void(0)" id="system_title" onclick="tofront(\'distance\');get_cs(\'system_2\', \'coords_2\');$(\'#system_6\').focus()" onmouseover="slide()" onmouseout="slideout()" title="Calculate distances">';
+    $name = $curName;
 
-    if (isset($curSys['name']) && !empty($curSys['name'])) {
-        $data['system_title'] .= htmlspecialchars($curSys['name']);
-        $data['system_title'] .= '</a>';
-        $data['system_title'] .= '</span><span style="margin-left: 10px;"><button class="btn" data-clipboard-target="#system_title"><img src="/style/img/clipboard.png" alt="Copy" width="13" align="right"></button></span>';
+    $data['system_title'] .= '<span class="' . $class . '">';
+
+    if ($name !== '') {
+        $data['system_title'] .= htmlspecialchars($name);
+        $data['system_title'] .= '&nbsp;<img src="/style/img/copy.png" class="copy" title="Copy system name" />';
     } else {
         $data['system_title'] .= 'Location unavailable';
-        $data['system_title'] .= '</a>';
-
-        $data['system_title'] .= '<img class="icon20" src="/style/img/help.png" alt="Help" style="margin-left: 6px" onclick="$(\'#location_help\').fadeToggle(\'fast\')">';
-        $data['system_title'] .= '</span>';
-        $data['system_title'] .= '<div class="info" id="location_help" style="position: fixed;  left: 60px; top: 40px">';
-        $data['system_title'] .= 'If you\'re having trouble getting ED ToolBox to<br>show your current location, check the<br>';
-        $data['system_title'] .= '<a href="http://edtb.xyz/?q=common-issues#location_unavailable" target="_blank">Common issues</a> page at EDTB.xyz for help.';
+        $data['system_title'] .= '&nbsp;<img src="/style/img/help.png" class="help" title="Help" />';
+        $data['system_title'] .= '<div class="helptext">';
+        $data['system_title'] .= 'If you\'re having trouble getting ED ToolBox to show your current location, check the ';
+        $data['system_title'] .= '<a href="https://edtb.xyz/common-issues" target="_blank">Common issues</a> page at EDTB.xyz for help.';
         $data['system_title'] .= '</div>';
     }
 
-    $data['system_title'] .= '</div>';
+    $data['system_title'] .= '</span>';
+    $data['system_title'] .= '</div>'; // .title
 } else {
-    $data['system_title'] .= '<div style="display: none" id="system_title">' . $curSys['name'] . '</div>';
+    $name = $curSys['name'] ?? '';
+    $data['system_title'] .= '<div class="title">' . htmlspecialchars($name) . '</div>';
 }
+
+$data['system_title'] .= '</div>'; // .titlewrap
 
 /**
  * User balance from FD API

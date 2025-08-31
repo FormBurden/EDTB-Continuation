@@ -200,7 +200,7 @@ if ($newSystem !== false || $request == 0) {
     }
 
     $data['current_system_name'] = $curSys['name'] ?? '';
-    $data['current_coordinates'] = $curSys['coordinates'];
+    $data['current_coordinates'] = $curSys['coordinates'] ?? null;
 
     /**
      * Data for the left column

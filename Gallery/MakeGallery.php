@@ -144,7 +144,10 @@ class MakeGallery
                     WHERE system_name = '$escGalleryName'
                     ORDER BY visit DESC
                     LIMIT 1";
-
+        if ($mysqli->query("SHOW TABLES LIKE 'user_visited_systems'")->num_rows === 0) {
+            // table missing: nothing to build yet
+            return;
+        }
         $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
 
         $obj = $result->fetch_object();
