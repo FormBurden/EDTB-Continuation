@@ -32,12 +32,20 @@
 
 /** @require config */
 require_once __DIR__ . '/config.inc.php';
-require_once $settings['install_path'] . '/data/server_config.inc.php';
+$settings = include __DIR__ . '/../data/server_config.inc.php';
+
 
 /**
  * Connect to MySQL database
  */
-$mysqli = new mysqli($server, $user, $pwd, $db);
+ $mysqli = new mysqli(
+   $settings['db_host'] ?? '127.0.0.1',
+   $settings['db_user'] ?? 'edtb',
+   $settings['db_pass'] ?? 'edtbpass',
+   $settings['db_name'] ?? 'edtb',
+   (int)($settings['db_port'] ?? 3306)
+ );
+ $mysqli->set_charset('utf8mb4');
 
 /**
  * check connection
