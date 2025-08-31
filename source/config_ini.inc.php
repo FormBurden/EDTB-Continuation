@@ -64,20 +64,54 @@ spl_autoload_register(function ($class) {
     }
 });
 
-$iniPath = __DIR__ . '/data/edtoolbox_v1.ini';
+// Always define dir + path
+$iniDir  = __DIR__ . '/data';
+$iniPath = $iniDir . '/edtoolbox_v1.ini';
+
+// Create a safe default INI if missing
 if (!is_file($iniPath)) {
-    @mkdir(__DIR__ . '/data', 0775, true);
-    file_put_contents($iniPath, "[settings]\nedtb_version=dev\ndefault_map=system_map\n");
+    @mkdir($iniDir, 0775, true);
+    file_put_contents($iniPath, <<<INI
+[database]
+host="127.0.0.1"
+name="edtb"
+user="edtb"
+pass="edtbpass"
+port=3306
+
+[paths]
+log_dir="/mnt/Unlimited-Gaming/SteamLibrary/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"
+screens_dir="/mnt/Unlimited-Gaming/SteamLibrary/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Pictures/Frontier Developments/Elite Dangerous"
+data_dir="/mnt/Unlimited-Gaming/Modding/Elite Dangerous/MyProject/EDTB-Continuation/data"
+
+[settings]
+edtb_version="dev"
+default_map="system_map"
+cmdr_name=""
+game_time="UTC"
+ext_links=""
+INI);
 }
-$ini = parse_ini_file($iniPath, true, INI_SCANNER_TYPED) ?: [];
-$settings = array_merge([
-    'edtb_version' => 'dev',
-    'game_time'    => 'UTC',
-    'cmdr_name'    => 'CMDR',
-    'default_map'  => 'system_map',
-    'ext_links'    => [],
-    'install_path' => dirname(__DIR__),
-], $ini['settings'] ?? []);
+
+// Be lenient with odd values (use RAW)
+$ini = parse_ini_file($iniPath, true, INI_SCANNER_RAW) ?: [];
+
+// Bridge values to your PHP config array ($server)
+$settings = [
+    'db_host'     => $ini['database']['host']   ?? ($server['db_host'] ?? '127.0.0.1'),
+    'db_name'     => $ini['database']['name']   ?? ($server['db_name'] ?? 'edtb'),
+    'db_user'     => $ini['database']['user']   ?? ($server['db_user'] ?? 'edtb'),
+    'db_pass'     => $ini['database']['pass']   ?? ($server['db_pass'] ?? 'edtbpass'),
+    'db_port'     => (int)($ini['database']['port'] ?? ($server['db_port'] ?? 3306)),
+    'log_dir'     => $ini['paths']['log_dir']   ?? ($server['netlog_dir']  ?? null),
+    'screens_dir' => $ini['paths']['screens_dir'] ?? ($server['screens_dir'] ?? null),
+    'data_dir'    => $ini['paths']['data_dir']  ?? ($server['data_dir']    ?? (__DIR__.'/../data')),
+    'edtb_version'=> $ini['settings']['edtb_version'] ?? 'dev',
+    'default_map' => $ini['settings']['default_map']  ?? 'system_map',
+    'cmdr_name'   => $ini['settings']['cmdr_name']    ?? 'CMDR',
+    'game_time'   => $ini['settings']['game_time']    ?? 'UTC',
+    'ext_links'   => $ini['settings']['ext_links']    ?? [],
+];
 
 /**
  * set the new screendir if it's empty

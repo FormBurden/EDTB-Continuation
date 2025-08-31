@@ -151,7 +151,18 @@ if (isset($_GET['maxdistance']) && is_numeric($_GET['maxdistance'])) {
                 <input type="hidden" name="mode" value="<?= $mode?>">
                 <select title="Range" class="distance" name="maxdistance" onchange="this.form.submit()">
                     <?php
-                    $dropdowns = array_unique($dropdown);
+                    $dropdown = $dropdown ?? ($_GET['maxdistance'] ?? null);
+                    // Normalize to array of ints
+                    if (!is_array($dropdown)) {
+                        $dropdown = $dropdown !== null ? [$dropdown] : [];
+                    }
+                    $dropdown = array_values(array_unique(array_map('intval', $dropdown)));
+
+                    // ...then render options from $dropdown safely
+                    foreach ($dropdown as $dist) {
+                        // echo "<option ...>{$dist}</option>";
+                    }
+
                     sort($dropdowns);
 
                     foreach ($dropdowns as $value) {
