@@ -32,8 +32,6 @@
 
 /** @require config */
 require_once __DIR__ . '/config.inc.php';
-/** @require MySQL */
-require_once __DIR__ . '/MySQL.php';
 /** @require other functions */
 require_once __DIR__ . '/functions_safe.php';
 /** @require curSys */

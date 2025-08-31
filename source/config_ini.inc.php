@@ -118,6 +118,47 @@ $settings = [
  */
 $settings['new_screendir'] = empty($settings['new_screendir']) ? $iniDir . '/EDTB/screenshots' : $settings['new_screendir'];
 
+// --- Linux: guess Elite Dangerous paths under Proton and set sane defaults ---
+// NOTE: These defaults only apply if a value was not already provided in INI or DB.
+
+$home = rtrim(getenv('HOME') ?: '', '/');
+
+// Common Proton locations for Elite Dangerous (Steam app 359320)
+$protonUser   = $home . '/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser';
+$protonSaved  = $protonUser . '/Saved Games/Frontier Developments/Elite Dangerous';
+$protonShots  = $protonSaved . '/Screenshots';
+
+// If the guessed folders exist, prefer them; otherwise fall back to EDTB-managed folder
+if (empty($settings['elite_saved_games_dir']) || !is_dir($settings['elite_saved_games_dir'])) {
+    $settings['elite_saved_games_dir'] = is_dir($protonSaved)
+        ? $protonSaved
+        : $settings['install_path'] . '/EDTB/saved-games';
+}
+
+if (empty($settings['elite_screenshots_dir']) || !is_dir($settings['elite_screenshots_dir'])) {
+    $settings['elite_screenshots_dir'] = is_dir($protonShots)
+        ? $protonShots
+        : $settings['new_screendir'];
+}
+
+// Backwards compat: if the legacy Gallery “old_screendir” isn’t set on Linux, make it useful.
+// This replaces the Windows C:\ path checks we removed earlier.
+if (empty($settings['old_screendir']) || !is_dir($settings['old_screendir'])) {
+    $settings['old_screendir'] = $settings['elite_screenshots_dir'];
+}
+
+// Ensure the EDTB-managed directories exist so uploads/moves don’t fail.
+foreach ([
+    $settings['install_path'] . '/cache',
+    $settings['install_path'] . '/EDTB',
+    $settings['new_screendir'],
+] as $mustDir) {
+    if (!is_dir($mustDir)) {
+        @mkdir($mustDir, 0755, true);
+    }
+}
+
+
 $settings['cookie_file'] = $settings['install_path'] . '/cache/cookies';
 
 $settings['curl_exe'] = '/usr/bin/curl';

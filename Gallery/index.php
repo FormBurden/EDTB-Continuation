@@ -57,9 +57,7 @@ $header->displayHeader();
                 }
             }
 
-            if (is_dir($settings['old_screendir']) && $settings['old_screendir'] !== "C:\\Users" &&
-                $settings['old_screendir'] !== "C:\\Users\\"
-            ) {
+            if (is_dir($settings['old_screendir'])) {
                 ?>
                 <table id="wrapper">
                     <tr>

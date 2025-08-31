@@ -50,7 +50,7 @@ $header->displayHeader();
 $batchLimit = 104857600; // 100 MB
 $batchesLeft = $_GET['batches_left'] ?? '';
 
-$importedLogsFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/imported_logs.txt';
+$importedLogsFile = $settings['install_path'] . '/cache/imported_logs.txt';
 
 echo '<div class="entries"><div class="entries_inner">';
 
