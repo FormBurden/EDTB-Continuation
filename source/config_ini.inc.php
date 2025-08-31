@@ -112,6 +112,13 @@ ext_links=""
 INI);
 }
 
+ // --- Ensure $iniDir/$iniPath are defined before first use (Linux portable) ---
+$iniDir = $iniPath ? dirname($iniPath) : (defined('DATA_DIR') ? DATA_DIR : dirname(__DIR__) . '/data');
+if (!$iniPath) {
+     $iniPath = rtrim($iniDir, '/') . '/edtoolbox_v1.ini';
+}
+
+
 // Be lenient with odd values (use RAW)
 $ini = parse_ini_file($iniPath, true, INI_SCANNER_RAW) ?: [];
 
@@ -131,6 +138,15 @@ $settings = [
     'game_time'   => $ini['settings']['game_time']    ?? 'UTC',
     'ext_links'   => $ini['settings']['ext_links']    ?? [],
 ];
+
+// --- Guarantee install_path exists for downstream path composition ---
+if (empty($settings['install_path'])) {
+    // Prefer INSTALL_PATH from config.inc.php / server_config.inc.php, else repo root
+    $settings['install_path'] = defined('INSTALL_PATH')
+        ? rtrim(INSTALL_PATH, '/')
+        : rtrim((defined('EDTB_ROOT') ? EDTB_ROOT : dirname(__DIR__)), '/');
+}
+
 
 /**
  * set the new screendir if it's empty
