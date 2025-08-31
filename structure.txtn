@@ -32,6 +32,8 @@
 ├── composer.json
 ├── composer.lock
 ├── data
+│   ├── gallery
+│   ├── server_config.inc.php
 │   ├── systems_populated.csv
 │   └── systems_sample.csv
 ├── database
@@ -67,7 +69,8 @@
 │   ├── getRatingAndClass.php
 │   ├── getStationNames.php
 │   ├── getSystemNames.php
-│   └── getWikipediaData.php
+│   ├── getWikipediaData.php
+│   └── refresh.sh
 ├── .gitignore
 ├── index.php
 ├── Log
@@ -102,7 +105,9 @@
 ├── README.md
 ├── scripts
 │   ├── import_systems.php
-│   └── install_dev_arch.sh
+│   ├── install_dev_arch.sh
+│   ├── nowplaying-loop.sh
+│   └── screenshot-mirror.sh
 ├── Setup
 │   ├── EDTBManager_1.1.2.rar
 │   ├── EDTBManager_1.1.3.rar
@@ -123,6 +128,8 @@
 │   ├── config_ini.inc.php
 │   ├── config.legacy.php
 │   ├── curSys.php
+│   ├── data
+│   │   └── edtoolbox_v1.ini
 │   ├── FDMaps.php
 │   ├── functions.php
 │   ├── functions_safe.php
@@ -362,4 +369,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-53 directories, 310 files
+55 directories, 315 files

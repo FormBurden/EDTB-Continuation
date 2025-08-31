@@ -203,10 +203,7 @@ class Header extends Theme
                      * session log
                      */
                     // get old session log
-                    if (!$sessionlog = file_get_contents($settings['install_path'] . '/data/sessionlog.txt')) {
-                        $error = error_get_last();
-                        write_log('Error: ' . $error['message'], __FILE__, __LINE__);
-                    }
+                    $log = @file_get_contents(($server['data_dir'] ?? (__DIR__.'/../data')).'/sessionlog.txt');
                     ?>
                     <div class="seslog" id="seslog">
                         <textarea title="Session log" class="seslogtext" cols="40" rows="13" id="logtext" oninput="showsave()"><?= $sessionlog?></textarea>
