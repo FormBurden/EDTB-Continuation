@@ -1,5 +1,15 @@
 <?php
+// Allow legacy config but don't require it
+if (is_file('/data/server_config.inc.php')) {
+    require_once '/data/server_config.inc.php';
+}
+
 declare(strict_types=1);
+
+if (!isset($main['install_path'])) {
+    $main['install_path'] = getenv('ROOT_DIR') ?: dirname(__DIR__);
+}
+
 
 /**
  * Legacy compatibility bootstrap for EDTB on Linux.
