@@ -165,119 +165,129 @@ if (empty($curSys['coordinates']) && !empty($curSys['name'])) {
     }
 }
 
-/**
- * Stations for the left column
- */
+/** * Stations for the left column (null-safe) */
 if (!isset($_COOKIE['style']) || $_COOKIE['style'] !== 'narrow') {
-    $query = "  SELECT SQL_CACHE
-                id, name, ls_from_star, max_landing_pad_size, faction, government, allegiance,
-                state, type, import_commodities, export_commodities,
-                prohibited_commodities, economies, selling_ships, shipyard,
-                outfitting, commodities_market, black_market, refuel, repair, rearm, is_planetary
-                FROM edtb_stations
-                WHERE system_id = '" . $curSys['id'] . "'
-                ORDER BY -ls_from_star DESC, name
-                LIMIT 5";
+    // ensure these exist
+    $stationData = $stationData ?? '';
+    $calcCoord   = $calcCoord   ?? '';
 
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-    $count = $result->num_rows;
+    // lock down the current system id
+    $curSysId = (isset($curSys) && is_array($curSys) && isset($curSys['id']) && is_numeric($curSys['id']))
+        ? (int)$curSys['id']
+        : null;
 
-    if ($count > 0) {
-        $c = 0;
-        while ($stationObj = $result->fetch_object()) {
-            $stationName = $stationObj->name;
-
-            if ($c === 0) {
-                $firstStationName = $stationObj->name;
-                $firstStationLsFrom_star = $stationObj->ls_from_star;
-            }
-
-            $lsFromStar = $stationObj->ls_from_star;
-            $maxLandingPadSize = $stationObj->max_landing_pad_size === '' ? '' : '<strong>Landing pad:</strong> ' . $stationObj->max_landing_pad_size . '<br>';
-            $stationId = $stationObj->id;
-
-            $faction = $stationObj->faction === '' ? '' : '<strong>Faction:</strong> ' . $stationObj->faction . '<br>';
-            $government = $stationObj->government === '' ? '' : '<strong>Government:</strong> ' . $stationObj->government . '<br>';
-            $allegiance = $stationObj->allegiance === '' ? '' : '<strong>Allegiance:</strong> ' . $stationObj->allegiance . '<br>';
-
-            $state = $stationObj->state === '' ? '' : '<strong>State:</strong> ' . $stationObj->state . '<br>';
-            $sType = $stationObj->type;
-            $type = $stationObj->type === '' ? '' : '<strong>Type:</strong> ' . $stationObj->type . '<br>';
-            $economies = $stationObj->economies === '' ? '' : '<strong>Economies:</strong> ' . $stationObj->economies . '<br>';
-
-            $importCommodities = $stationObj->import_commodities === '' ? '' : '<br><strong>Import commodities:</strong> ' . $stationObj->import_commodities . '<br>';
-            $exportCommodities = $stationObj->export_commodities === '' ? '' : '<strong>Export commodities:</strong> ' . $stationObj->export_commodities . '<br>';
-            $prohibitedCommodities = $stationObj->prohibited_commodities === '' ? '' : '<strong>Prohibited commodities:</strong> ' . $stationObj->prohibited_commodities . '<br>';
-
-            $sellingShips = $stationObj->selling_ships === '' ? '' : '<br><strong>Selling ships:</strong> ' . str_replace("'", '', $stationObj->selling_ships) . '<br>';
-
-            $shipyard = $stationObj->shipyard;
-            $outfitting = $stationObj->outfitting;
-            $commoditiesMarket = $stationObj->commodities_market;
-            $blackMarket = $stationObj->black_market;
-            $refuel = $stationObj->refuel;
-            $repair = $stationObj->repair;
-            $rearm = $stationObj->rearm;
-            $isPlanetary = $stationObj->is_planetary;
-
-            $icon = getStationIcon($sType, $isPlanetary, 'margin:3px;margin-left:0px;margin-right:6px');
-
-            $includes = [
-                'shipyard' => $shipyard,
-                'outfitting' => $outfitting,
-                'commodities market' => $commoditiesMarket,
-                'black market' => $blackMarket,
-                'refuel' => $refuel,
-                'repair' => $repair,
-                'restock' => $rearm
-            ];
-
-            $i = 0;
-            $services = '';
-            foreach ($includes as $name => $included) {
-                if ($included == 1) {
-                    if ($i != 0) {
-                        $services .= ', ';
-                    } else {
-                        $services .= '<strong>Facilities:</strong> ';
-                    }
-
-                    $services .= $name;
-
-                    $i++;
-                }
-            }
-            $services .= '<br>';
-
-            $info = $type . $maxLandingPadSize . $faction . $government . $allegiance . $state . $economies . $services . $importCommodities . $exportCommodities . $prohibitedCommodities . $sellingShips;
-
-            $info = str_replace("['", '', $info);
-            $info = str_replace("']", '', $info);
-            $info = str_replace("', '", ', ', $info);
-
-            //$info = $info == "" ? "Edit station information" : $info;
-
-            // $stationData .= '<div><a href="javascript:void(0)" onclick="update_values(\'/get/getStationEditData.php?station_id=' . $stationId . '\',\'' . $stationId . '\');tofront(\'addstation\')" style="color: inherit" onmouseover="$(\'#statinfo_' . $stationId . '\').toggle()" onmouseout="$(\'#statinfo_' . $stationId . '\').toggle()">' . $stationName;
-            $stationData .= '<div>' . $icon  . '<a href="javascript:void(0)" style="color: inherit" onmouseover="$(\'#statinfo_' . $stationId . '\').fadeToggle(\'fast\')" onmouseout="$(\'#statinfo_' . $stationId . '\').toggle()">' . $stationName;
-
-            if (!empty($lsFromStar)) {
-                $stationData .= ' (' . number_format($lsFromStar) . ' ls)';
-            }
-
-            $stationData .= "</a>&nbsp;<a href='javascript:void(0)' title='Add to new log as station' onclick='addstation(\"" . $stationName . "\")'><img src='/style/img/right.png' alt='Add to log' class='addstations'></a>";
-
-            $stationData .= '<div class="stationinfo" id="statinfo_' . $stationId . '">' . $info . '</div></div>';
-
-            $c++;
-        }
-    } else {
-        $stationData .= $calcCoord;
-        $stationData .= 'No station data available';
+    // check if stations table exists (avoid mysqli_sql_exception in strict mode)
+    $hasStationsTable = false;
+    if (isset($mysqli)) {
+        $__chk = $mysqli->query("SHOW TABLES LIKE 'edtb_stations'");
+        $hasStationsTable = ($__chk && $__chk->num_rows > 0);
+        if ($__chk) { $__chk->close(); }
     }
-    $result->close();
+
+    if ($curSysId !== null && $curSysId !== -1 && $hasStationsTable) {
+        $query = "
+            SELECT SQL_CACHE
+                id, name, ls_from_star, max_landing_pad_size, faction, government, allegiance, state, type,
+                import_commodities, export_commodities, prohibited_commodities, economies,
+                selling_ships, shipyard, outfitting, commodities_market, black_market, refuel, repair, rearm,
+                is_planetary
+            FROM edtb_stations
+            WHERE system_id = '{$curSysId}'
+            ORDER BY -ls_from_star DESC, name
+            LIMIT 5
+        ";
+
+        $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
+        $count  = $result->num_rows;
+
+        if ($count > 0) {
+            $c = 0;
+            while ($stationObj = $result->fetch_object()) {
+                $stationName = $stationObj->name;
+
+                if ($c === 0) {
+                    $firstStationName       = $stationObj->name;
+                    $firstStationLsFrom_star = $stationObj->ls_from_star;
+                }
+
+                $lsFromStar         = $stationObj->ls_from_star;
+                $maxLandingPadSize  = $stationObj->max_landing_pad_size === '' ? '' : 'Landing pad: ' . $stationObj->max_landing_pad_size . "\n";
+                $stationId          = $stationObj->id;
+                $faction            = $stationObj->faction    === '' ? '' : 'Faction: '     . $stationObj->faction    . "  \n";
+                $government         = $stationObj->government === '' ? '' : 'Government: '  . $stationObj->government . "  \n";
+                $allegiance         = $stationObj->allegiance === '' ? '' : 'Allegiance: '  . $stationObj->allegiance . "  \n";
+                $state              = $stationObj->state      === '' ? '' : 'State: '       . $stationObj->state      . "  \n";
+                $sType              = $stationObj->type;
+                $type               = $stationObj->type       === '' ? '' : 'Type: '        . $stationObj->type       . "\n";
+                $economies          = $stationObj->economies  === '' ? '' : 'Economies: '   . $stationObj->economies  . "  \n";
+                $importCommodities  = $stationObj->import_commodities     === '' ? '' : "  \nImport commodities: "     . $stationObj->import_commodities     . "  \n";
+                $exportCommodities  = $stationObj->export_commodities     === '' ? '' : "Export commodities: "         . $stationObj->export_commodities     . "\n";
+                $prohibitedCommodities = $stationObj->prohibited_commodities === '' ? '' : "Prohibited commodities: " . $stationObj->prohibited_commodities . "  \n";
+                $sellingShips       = $stationObj->selling_ships          === '' ? '' : "  \nSelling ships: "          . str_replace(\"'\", '', $stationObj->selling_ships) . "\n";
+
+                $shipyard           = $stationObj->shipyard;
+                $outfitting         = $stationObj->outfitting;
+                $commoditiesMarket  = $stationObj->commodities_market;
+                $blackMarket        = $stationObj->black_market;
+                $refuel             = $stationObj->refuel;
+                $repair             = $stationObj->repair;
+                $rearm              = $stationObj->rearm;
+                $isPlanetary        = $stationObj->is_planetary;
+
+                $icon = getStationIcon($sType, $isPlanetary, 'margin:3px;margin-left:0px;margin-right:6px');
+
+                $includes = [
+                    'shipyard'           => $shipyard,
+                    'outfitting'         => $outfitting,
+                    'commodities market' => $commoditiesMarket,
+                    'black market'       => $blackMarket,
+                    'refuel'             => $refuel,
+                    'repair'             => $repair,
+                    'restock'            => $rearm,
+                ];
+
+                $i = 0;
+                $services = '';
+                foreach ($includes as $name => $included) {
+                    if ((int)$included === 1) {
+                        if ($i !== 0) { $services .= ', '; }
+                        else { $services .= 'Facilities: '; }
+                        $services .= $name;
+                        $i++;
+                    }
+                }
+                $services .= "\n";
+
+                $info = $type . $maxLandingPadSize . $faction . $government . $allegiance . $state . $economies . $services
+                      . $importCommodities . $exportCommodities . $prohibitedCommodities . $sellingShips;
+
+                $info = str_replace([\"['\", \"']\", \"', '\"], ['', '', ', '], $info);
+
+                $stationData .= \"\n\" . $icon . $stationName;
+                if (!empty($lsFromStar)) {
+                    $stationData .= ' (' . number_format((float)$lsFromStar) . ' ls)';
+                }
+                $stationData .= \" \" . get_icon('log_add') . \"\n\"; // keep your existing “Add to log” image helper
+
+                $stationData .= \"\n\" . $info . \"\n\";
+                $c++;
+            }
+        } else {
+            $stationData .= $calcCoord;
+            $stationData .= 'No station data available';
+        }
+
+        $result->close();
+    } else {
+        // No ID yet, or table not present during Linux overhaul — just render the calc link / placeholder
+        $stationData .= $calcCoord;
+    }
 } else {
     $stationData .= $calcCoord;
 }
+
+$data['station_data'] = $stationData;
+
 
 /**
  * if system coords are user calculated, show calc button

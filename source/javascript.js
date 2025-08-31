@@ -189,33 +189,43 @@ var requestno = 0;
  */
 function get_data(override) {
     override = override || false;
-
     if (override === true) {
         requestno = 0;
     }
 
-    var time = 4000, system_id = getUrlVars().system_id, system_name = getUrlVars().system_name,
+    var time = 4000;
+    var gv = getUrlVars();
 
-        slog_sort = getUrlVars().slog_sort, glog_sort = getUrlVars().glog_sort, page_sys = $('#system_title').html();
+    var system_id = (typeof gv.system_id === 'undefined' || gv.system_id === 'undefined') ? '' : gv.system_id;
+    var system_name = (typeof gv.system_name === 'undefined' || gv.system_name === 'undefined') ? '' : gv.system_name;
+    var slog_sort = (typeof gv.slog_sort === 'undefined' || gv.slog_sort === 'undefined') ? '' : gv.slog_sort;
+    var glog_sort = (typeof gv.glog_sort === 'undefined' || gv.glog_sort === 'undefined') ? '' : gv.glog_sort;
 
+    var page_sys = $('#system_title').html();
     if (requestno === 0) {
         time = 200;
     }
 
-    /**
-     * fetch info for left panel, system.php and maps
-     */
     $.ajax({
         url: "/get/getData.php?action=onlysystem",
         cache: false,
-        success: function(onlysystem) {
+        success: function (onlysystem) {
             if (onlysystem !== page_sys || override === true) {
                 requestno = 0;
+
+                var qs = [];
+                if (system_id !== '') qs.push("system_id=" + encodeURIComponent(system_id));
+                if (system_name !== '') qs.push("system_name=" + encodeURIComponent(system_name));
+                if (slog_sort !== '') qs.push("slog_sort=" + encodeURIComponent(slog_sort));
+                if (glog_sort !== '') qs.push("glog_sort=" + encodeURIComponent(glog_sort));
+
+                var url = "/get/getData.php?request=" + requestno + (qs.length ? "&" + qs.join("&") : "");
+
                 $.ajax({
-                    url: "/get/getData.php?request=" + requestno + "&system_id=" + system_id + "&system_name=" + system_name + "&slog_sort=" + slog_sort + "&glog_sort=" + glog_sort,
+                    url: url,
                     cache: false,
                     dataType: "json",
-                    success: function(result) {
+                    success: function (result) {
                         $('#nowplaying').html(result.now_playing);
 
                         if (onlysystem !== page_sys) {
@@ -243,7 +253,6 @@ function get_data(override) {
                             }
                         }
 
-                        // clear reference distances if we're in a new system
                         if (result.new_sys !== "false") {
                             $('#ref_1_dist').val('');
                             $('#ref_2_dist').val('');
@@ -251,31 +260,18 @@ function get_data(override) {
                             $('#ref_4_dist').val('');
                         }
 
-                        // if we're on the system info page
-                        if ($('#system_page').length) {
-                            $('#si_name').html(result.si_name);
-                            $('#si_stations').html(result.si_stations);
-                            $('#si_detailed').html(result.si_detailed);
-
-                            //log(result.si_name);
-                            //log(result.si_stations);
-                            //log(result.si_detailed);
-                        }
-
                         var cont = $('#container');
                         if (cont.length) {
                             log("Updating Neighborhood Map");
                             var chart = cont.highcharts();
-
                             if (chart) {
                                 cont.highcharts().destroy();
                             }
-
-                            var mode = getUrlVars().mode, maxdistance = getUrlVars().maxdistance,
+                            var mode = getUrlVars().mode,
+                                maxdistance = getUrlVars().maxdistance,
                                 script = document.createElement("script");
                             script.type = "text/javascript";
                             script.src = "/Map/getMapPoints.js.php?mode=" + mode + "&maxdistance=" + maxdistance;
-
                             $("head").append(script);
                         }
 
@@ -294,10 +290,10 @@ function get_data(override) {
                         } else {
                             update_api(time, "false", "true");
                         }
+
                         requestno = 1;
-                        //log("Success: requesting /get/getData.php ok");
                     },
-                    error: function() {
+                    error: function () {
                         log("Error: requesting /get/getData.php failed");
                     }
                 });
@@ -306,6 +302,7 @@ function get_data(override) {
         }
     });
 }
+
 
 $(function() {
     get_data();
