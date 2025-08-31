@@ -1,0 +1,17 @@
+-- Points of Interest (Bookmarks)
+CREATE TABLE IF NOT EXISTS poi (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(128) NOT NULL,
+  system_name VARCHAR(128) NOT NULL,
+  x DOUBLE NULL,
+  y DOUBLE NULL,
+  z DOUBLE NULL,
+  notes TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_poi_name_system (name, system_name),
+  KEY idx_poi_system (system_name),
+  CONSTRAINT fk_poi_system
+    FOREIGN KEY (system_name) REFERENCES systems(name)
+    ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use EDTB\Config;
+use EDTB\DB;
+use EDTB\Migrator;
+
+$config = Config::fromEnv(__DIR__ . '/../');
+$db     = DB::connect($config);
+
+Migrator::run($db->pdo(), __DIR__ . '/../database/migrations');

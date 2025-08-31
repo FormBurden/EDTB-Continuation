@@ -1,0 +1,365 @@
+.
+├── action
+│   ├── addEDSMComment.php
+│   ├── addImgurURL.php
+│   ├── saveSessionLog.php
+│   ├── shipControls.php
+│   └── updateAPIdata.php
+├── Admin
+│   ├── adminer.php
+│   ├── adminer_plugins
+│   │   ├── dump-bz2.php
+│   │   └── enum-option.php
+│   ├── API_login.php
+│   ├── db_manager.php
+│   ├── Import.php
+│   ├── index.php
+│   ├── ini_editor.php
+│   ├── Log.php
+│   ├── plugin.php
+│   ├── setData.php
+│   └── SQL.php
+├── bin
+│   └── migrate
+├── Bookmarks
+│   ├── add_bookmark.php
+│   ├── add_poi.php
+│   ├── getBmEditData.php
+│   ├── getData_poi_bm.php
+│   ├── getPoiEditData.php
+│   ├── index.php
+│   └── PoiBm.php
+├── composer.json
+├── composer.lock
+├── data
+│   ├── systems_populated.csv
+│   └── systems_sample.csv
+├── database
+│   └── migrations
+│       ├── 20250831_0001_core.sql
+│       └── 20250831_0002_poi.sql
+├── DataPoint
+│   ├── functions.php
+│   ├── index.php
+│   └── Vendor
+│       └── MySQL_table_edit
+├── .env
+├── .env.example
+├── Gallery
+│   ├── deleteScreenshot.php
+│   ├── index.php
+│   ├── MakeGallery.php
+│   └── Vendor
+│       └── spgm
+├── GalMap
+│   ├── getMapPoints.json.php
+│   ├── index.php
+│   └── Vendor
+│       └── ED3D-Galaxy-Map
+├── GalNet
+│   └── index.php
+├── get
+│   ├── getData_checkForUpdates.php
+│   ├── getData_leftColumn.php
+│   ├── getData.php
+│   ├── getData_status.php
+│   ├── getEDSMComment.php
+│   ├── getRatingAndClass.php
+│   ├── getStationNames.php
+│   ├── getSystemNames.php
+│   └── getWikipediaData.php
+├── .gitignore
+├── index.php
+├── Log
+│   ├── add_log.php
+│   ├── getData_logs.php
+│   ├── getLogEditData.php
+│   ├── index.php
+│   ├── MakeLog.php
+│   └── saveAudio.php
+├── Map
+│   ├── getMapData.php
+│   ├── getMapPoints.js.php
+│   ├── index.php
+│   └── Vendor
+│       └── Highcharts
+├── Marvin
+│   ├── apiData.php
+│   ├── GalnetData.php
+│   ├── InterfaceData.php
+│   ├── NavigationData.php
+│   ├── Rants
+│   │   ├── Allegiance_Federation.txt
+│   │   ├── Power_Arissa Lavigny-Duval.txt
+│   │   ├── Power_Felicia Winters.txt
+│   │   └── Power_Zachary Hudson.txt
+│   └── SystemData.php
+├── NearestSystems
+│   ├── index.php
+│   └── NearestSystems.php
+├── public
+│   └── index.php
+├── README.md
+├── scripts
+│   ├── import_systems.php
+│   └── install_dev_arch.sh
+├── Setup
+│   ├── EDTBManager_1.1.2.rar
+│   ├── EDTBManager_1.1.3.rar
+│   ├── EDTBManager_1.1.4.rar
+│   ├── EDTBManager_1.2.0.rar
+│   ├── EDTBManager_1.2.1.rar
+│   ├── EDTBManager_1.2.2.rar
+│   ├── EDTBManager_1.2.3.rar
+│   ├── EDTBManager_1.2.4.rar
+│   ├── EDTBManager_1.2.5.rar
+│   ├── EDTBManager_1.2.6.rar
+│   ├── EDTBManager_1.2.7.rar
+│   ├── EDTBManager_1.2.8.rar
+│   └── EDTBManager_1.3.0.rar
+├── source
+│   ├── 404.php
+│   ├── config.inc.php
+│   ├── config_ini.inc.php
+│   ├── config.legacy.php
+│   ├── curSys.php
+│   ├── FDMaps.php
+│   ├── functions.php
+│   ├── functions_safe.php
+│   ├── javascript.js
+│   ├── Migrator.php
+│   ├── MySQL.php
+│   ├── System.php
+│   └── Vendor
+│       ├── adamwdraper-Numeral-js-7487acb
+│       ├── clipboard.min.js
+│       ├── codemirror
+│       ├── color-thief.js
+│       ├── jquery-2.2.0.min.js
+│       ├── jquery-ui-1.11.4
+│       ├── markitup
+│       ├── phpfastcache
+│       ├── Recordmp3js
+│       ├── three.min.js
+│       ├── timmywil-jquery-panzoom
+│       ├── utility.php
+│       └── wiselinks-1.2.2.min.js
+├── src
+│   ├── Config.php
+│   └── DB.php
+├── structure.txtn
+├── style
+│   ├── fonts
+│   │   ├── EUROCAPS.TTF
+│   │   ├── Sintony-Bold.ttf
+│   │   ├── Sintony-Regular.ttf
+│   │   └── telegrama_render.otf
+│   ├── Footer.php
+│   ├── Header.php
+│   ├── img
+│   │   ├── 1px.png
+│   │   ├── 404.jpg
+│   │   ├── about.png
+│   │   ├── alliance.png
+│   │   ├── api.png
+│   │   ├── audio.png
+│   │   ├── backg.jpg
+│   │   ├── back.jpg
+│   │   ├── bm.png
+│   │   ├── calculator2.png
+│   │   ├── calculator.png
+│   │   ├── callout_black.gif
+│   │   ├── cargo.png
+│   │   ├── check_24.png
+│   │   ├── check.png
+│   │   ├── clipboard.png
+│   │   ├── close.png
+│   │   ├── comment.png
+│   │   ├── css-tooltip-gradient-bg.png
+│   │   ├── cursor.png
+│   │   ├── dataview.png
+│   │   ├── delete.png
+│   │   ├── del.png
+│   │   ├── eddb.png
+│   │   ├── edit.png
+│   │   ├── elite-dangerous-toolbox.png
+│   │   ├── elite.png
+│   │   ├── empire.png
+│   │   ├── external_link.png
+│   │   ├── facilities
+│   │   ├── federation.png
+│   │   ├── find.png
+│   │   ├── fuel.png
+│   │   ├── gallery.png
+│   │   ├── galnet.png
+│   │   ├── goto-g.png
+│   │   ├── goto.png
+│   │   ├── grid_g.png
+│   │   ├── grid.png
+│   │   ├── help.png
+│   │   ├── icon.png
+│   │   ├── image.png
+│   │   ├── import.png
+│   │   ├── info.png
+│   │   ├── left.png
+│   │   ├── loading.gif
+│   │   ├── log2_24.png
+│   │   ├── log2.png
+│   │   ├── log.png
+│   │   ├── magic.png
+│   │   ├── map_settings.png
+│   │   ├── markItUp
+│   │   ├── minmax.png
+│   │   ├── music.png
+│   │   ├── news.png
+│   │   ├── notice_b.png
+│   │   ├── notice.png
+│   │   ├── pinned_not.png
+│   │   ├── pinned.png
+│   │   ├── planetary.png
+│   │   ├── plus.png
+│   │   ├── poi.png
+│   │   ├── powers
+│   │   ├── ranks
+│   │   ├── rare.png
+│   │   ├── recording.png
+│   │   ├── record.png
+│   │   ├── refresh_16.png
+│   │   ├── refresh_24.png
+│   │   ├── right.png
+│   │   ├── save.png
+│   │   ├── settings.png
+│   │   ├── ship.png
+│   │   ├── sort_a.png
+│   │   ├── sort_d.png
+│   │   ├── sort.png
+│   │   ├── spaceports
+│   │   ├── sql24.png
+│   │   ├── sql.png
+│   │   ├── station.png
+│   │   ├── stopped.png
+│   │   ├── stop.png
+│   │   ├── system_log.png
+│   │   ├── system.png
+│   │   ├── upgrade.png
+│   │   ├── upload.png
+│   │   ├── up.png
+│   │   ├── user.png
+│   │   └── vareditor.png
+│   ├── SASS
+│   │   ├── _3dmap.sass
+│   │   ├── _data_point.sass
+│   │   ├── _gallery.sass
+│   │   ├── _markitup.sass
+│   │   ├── style.sass
+│   │   └── _system_map.sass
+│   ├── style.css
+│   ├── style_.css
+│   ├── style.css.map
+│   ├── style_narrow.css
+│   └── Theme.php
+├── System
+│   ├── getData_systemInfo.php
+│   └── index.php
+├── SystemMap
+│   ├── add_systemMap.php
+│   ├── bodies
+│   │   ├── ammonia_world_0.png
+│   │   ├── ammonia_world_1.png
+│   │   ├── ammonia_world_2.png
+│   │   ├── ammonia_world_3.png
+│   │   ├── belt_cluster_0.png
+│   │   ├── black_hole_0.png
+│   │   ├── carbon_star_0.png
+│   │   ├── class_a_0.png
+│   │   ├── class_b_0.png
+│   │   ├── class_f_0.png
+│   │   ├── class_g_0.png
+│   │   ├── class_k_0.png
+│   │   ├── class_l_0.png
+│   │   ├── class_m_0.png
+│   │   ├── class_o_0.png
+│   │   ├── class_t_0.png
+│   │   ├── class_y_0.png
+│   │   ├── earth-like_world_0.png
+│   │   ├── earth-like_world_1.png
+│   │   ├── gas_giant_class_i_0.png
+│   │   ├── gas_giant_class_i_1.png
+│   │   ├── gas_giant_class_i_2.png
+│   │   ├── gas_giant_class_i_3.png
+│   │   ├── gas_giant_class_i_4.png
+│   │   ├── gas_giant_class_i_5.png
+│   │   ├── gas_giant_class_i_6.png
+│   │   ├── gas_giant_class_ii_0.png
+│   │   ├── gas_giant_class_ii_1.png
+│   │   ├── gas_giant_class_ii_2.png
+│   │   ├── gas_giant_class_ii_3.png
+│   │   ├── gas_giant_class_ii_4.png
+│   │   ├── gas_giant_class_ii_5.png
+│   │   ├── gas_giant_class_ii_6.png
+│   │   ├── gas_giant_class_iii_0.png
+│   │   ├── gas_giant_class_iii_1.png
+│   │   ├── gas_giant_class_iii_2.png
+│   │   ├── gas_giant_class_iii_3.png
+│   │   ├── gas_giant_class_iii_4.png
+│   │   ├── gas_giant_class_iii_5.png
+│   │   ├── gas_giant_class_iii_6.png
+│   │   ├── gas_giant_class_iv_0.png
+│   │   ├── gas_giant_class_iv_1.png
+│   │   ├── gas_giant_class_v_0.png
+│   │   ├── gas_giant_class_v_1.png
+│   │   ├── herbig_ae_0.png
+│   │   ├── herbig_be_0.png
+│   │   ├── high_metal_content_planet_0.png
+│   │   ├── high_metal_content_planet_1.png
+│   │   ├── high_metal_content_planet_2.png
+│   │   ├── high_metal_content_planet_3.png
+│   │   ├── high_metal_content_planet_4.png
+│   │   ├── high_metal_content_planet_5.png
+│   │   ├── high_metal_content_planet_6.png
+│   │   ├── high_metal_content_planet_7.png
+│   │   ├── high_metal_content_planet_9.png
+│   │   ├── icy_planet_0.png
+│   │   ├── icy_planet_1.png
+│   │   ├── icy_planet_2.png
+│   │   ├── icy_planet_3.png
+│   │   ├── icy_planet_4.png
+│   │   ├── landable.png
+│   │   ├── metal-rich_planet_0.png
+│   │   ├── metal-rich_planet_1.png
+│   │   ├── metal-rich_planet_2.png
+│   │   ├── neutron_star_0.png
+│   │   ├── ring_1.png
+│   │   ├── ring_2.png
+│   │   ├── ring_3.png
+│   │   ├── rocky_planet_0.png
+│   │   ├── rocky_planet_1.png
+│   │   ├── rocky_planet_2.png
+│   │   ├── rocky_planet_3.png
+│   │   ├── rocky_planet_4.png
+│   │   ├── terraformable_high_metal_content_planet_0.png
+│   │   ├── terraformable_high_metal_content_planet_1.png
+│   │   ├── terraformable_high_metal_content_planet_2.png
+│   │   ├── terraformable_high_metal_content_planet_3.png
+│   │   ├── terraformable_high_metal_content_planet_4.png
+│   │   ├── terraformable_rocky_planet_0.png
+│   │   ├── terraformable_water_world_0.png
+│   │   ├── terraformable_water_world_1.png
+│   │   ├── terraformable_water_world_2.png
+│   │   ├── t-tauri_0.png
+│   │   ├── water_giant_0.png
+│   │   ├── water_world_0.png
+│   │   ├── water_world_2.png
+│   │   ├── water_world_3.png
+│   │   ├── water_world_4.png
+│   │   ├── white_dwarf_0.png
+│   │   └── wolf-rayet_star_0.png
+│   ├── index.php
+│   └── SystemMap.js
+└── Trilateration
+    ├── coord.php
+    ├── getReferenceSystems.php
+    ├── ReferenceSystems.php
+    └── Trilateration.php
+
+53 directories, 310 files
