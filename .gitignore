@@ -5,3 +5,34 @@
 /.idea
 /.vscode
 /edtb_debug*
+/structure*
+
+# --- EDSM / ED data (downloads, extracts, caches, dumps) ---
+/data/dumps/
+/data/downloads/
+/data/extracts/
+/data/cache/
+/data/edsm/
+/data/eddb/
+/data/tmp/
+/data/logs/
+/data/phpfastcache/
+
+# Common big data formats produced by imports/extracts
+*.sql
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+*.csv
+*.csv.gz
+*.json.gz
+*.zip
+*.7z
+*.tar
+*.tar.gz
+
+# Keep placeholder files so folders can exist in repo
+!.gitkeep
+!.keep

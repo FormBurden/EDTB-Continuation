@@ -32,14 +32,21 @@
 ├── composer.json
 ├── composer.lock
 ├── data
-│   ├── gallery
+│   ├── edtb-units.txt
+│   ├── edtoolbox_v1.ini
 │   ├── server_config.inc.php
 │   ├── systems_populated.csv
 │   └── systems_sample.csv
 ├── database
 │   └── migrations
 │       ├── 20250831_0001_core.sql
-│       └── 20250831_0002_poi.sql
+│       ├── 20250831_0002_poi.sql
+│       ├── 20250831_0003_core_missing.sql
+│       ├── 20250831_0003_stations.sql
+│       ├── 20250831_0003_user_tables.sql
+│       ├── 20250831_0003_user_visited_systems.sql
+│       ├── 20250831_0004_seed_demo.sql
+│       └── 20250831_0005_powers.sql
 ├── DataPoint
 │   ├── functions.php
 │   ├── index.php
@@ -104,6 +111,8 @@
 │   └── index.php
 ├── README.md
 ├── scripts
+│   ├── collect_debug_bundle.sh
+│   ├── edtb-services.sh
 │   ├── import_systems.php
 │   ├── install_dev_arch.sh
 │   ├── nowplaying-loop.sh
@@ -126,10 +135,7 @@
 │   ├── 404.php
 │   ├── config.inc.php
 │   ├── config_ini.inc.php
-│   ├── config.legacy.php
 │   ├── curSys.php
-│   ├── data
-│   │   └── edtoolbox_v1.ini
 │   ├── FDMaps.php
 │   ├── functions.php
 │   ├── functions_safe.php
@@ -369,4 +375,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-55 directories, 315 files
+53 directories, 323 files
