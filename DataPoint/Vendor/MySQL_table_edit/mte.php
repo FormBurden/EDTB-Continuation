@@ -15,6 +15,9 @@ if (strtolower(basename($_SERVER['PHP_SELF'])) == strtolower(basename(__FILE__))
  */
 class MySQLtabledit
 {
+    /** guard properties for PHP 8+ */
+    public $where_search = '';
+    public $order_by = '';
     /**
      *
      * MySQL Edit Table
@@ -104,17 +107,16 @@ class MySQLtabledit
             $this->url_base = '.';
         }
 
-        // name of the script
-        //$break = explode("/", $_SERVER["SCRIPT_NAME"]);
-        //$this->url_script = $break[count($break) - 1];
+        $actionGet  = $_GET['mte_a']  ?? null;
+        $actionPost = $_POST['mte_a'] ?? null;
 
-        if ($_GET['mte_a'] == 'edit') {
+        if ($actionGet === 'edit') {
             $this->edit_rec();
-        } elseif ($_GET['mte_a'] == 'new') {
+        } elseif ($actionGet === 'new') {
             $this->edit_rec();
-        } elseif ($_GET['mte_a'] == 'del') {
+        } elseif ($actionGet === 'del') {
             $this->del_rec();
-        } elseif ($_POST['mte_a'] == 'save') {
+        } elseif ($actionPost === 'save') {
             $this->save_rec();
         } else {
             $this->show_list();
@@ -123,15 +125,16 @@ class MySQLtabledit
         $this->close_and_print();
     }
 
+
     /**
      * Edit or add record
      */
     private function edit_rec()
     {
-        $inId = $_GET['id'];
+        $inId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
         // edit or new?
-        $edit = $_GET['mte_a'] == 'edit' ? 1 : 0;
+        $edit = (($_GET['mte_a'] ?? '') === 'edit') ? 1 : 0;
 
         $this->count_required = 0;
 
@@ -236,7 +239,7 @@ class MySQLtabledit
     private function get_fields($rij)
     {
         // edit or new?
-        $edit = $_GET['mte_a'] == 'edit' ? 1 : 0;
+        $edit = (($_GET['mte_a'] ?? '') === 'edit') ? 1 : 0;
 
         $fieldType = $this->get_field_types();
 
@@ -360,49 +363,57 @@ class MySQLtabledit
      */
     private function show_list()
     {
-        // message after add or edit
+        // ensure we have a table to query
+        if (empty($this->table)) {
+            $keys = array_keys($this->links_to_db ?? []);
+            if (!empty($keys)) {
+                $this->table = $keys[0];
+            } else {
+                // nothing configured; render a minimal message and exit safely
+                $this->content .= '<div class="mte_content"><p>No table configured.</p></div>';
+                $this->close_and_print();
+                return;
+            }
+        }
+
         $this->content_saved = $_SESSION['content_saved'];
         $_SESSION['content_saved'] = '';
 
         // default sort (a = ascending)
-        $ad = 'a';
+        $sort = $_GET['sort'] ?? null;
+        $ad   = $_GET['ad']   ?? 'a';
 
-        if ($_GET['sort'] && in_array($_GET['sort'], $this->fields_in_list_view)) {
-            if ($_GET['ad'] == 'a') {
-                $ascDes = 'ASC';
-            }
-            if ($_GET['ad'] == 'd') {
-                $ascDes = 'DESC';
-            }
-            $this->order_by = 'ORDER by ' . $_GET['sort'] . ' ' . $ascDes ;
+        if ($sort && in_array($sort, $this->fields_in_list_view ?? [])) {
+            $ascDes = ($ad === 'd') ? 'DESC' : 'ASC';
+            $this->order_by = 'ORDER BY ' . $sort . ' ' . $ascDes;
         } else {
-            $this->order_by = "ORDER by $this->primary_key DESC";
+            $this->order_by = "ORDER BY $this->primary_key DESC";
         }
 
         // navigation 1/3
-        $start = $_GET['start'];
-        if (!$start) {
-            $start = 0;
-        } else {
-            $start *= 1;
-        }
+        $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
 
         /**
          * build query_string
          */
+        $queryString = ''; // init
+
         // navigation
         $queryString .= '&start=' . $start;
-        // sorting
-        $queryString .= '&ad=' . $_GET['ad']  . '&sort=' . $_GET['sort'] ;
-        // searching
-        $queryString .= '&s=' . $_GET['s']  . '&f=' . $_GET['f'] ;
-        //table
-        $queryString .= '&table=' . $_GET['table'];
 
-        /**
-         * search
-         */
-        if ($_GET['s'] && $_GET['f']) {
+        // sorting
+        $queryString .= '&ad=' . ($ad ?? 'a') . '&sort=' . ($sort ?? '');
+
+        // searching
+        $s = $_GET['s'] ?? '';
+        $f = $_GET['f'] ?? '';
+        $queryString .= '&s=' . $s . '&f=' . $f;
+
+        // table
+        $tblParam = $_GET['table'] ?? ($this->table ?? '');
+        $queryString .= '&table=' . $tblParam;
+
+        if (!empty($s) && !empty($f)) {
             $inSearch = addslashes(stripslashes($_GET['s']));
             $inSearchField = $_GET['f'];
 
@@ -412,6 +423,7 @@ class MySQLtabledit
                 $this->where_search = "WHERE $inSearchField LIKE '%$inSearch%' ";
             }
         }
+
 
         /**
          * get sql query
@@ -577,11 +589,12 @@ class MySQLtabledit
 
                             // add distance if x,y,z are defined
                             if ($dist1 !== false) {
-                                if ($_GET['sort'] == 'distance' && $_GET['ad'] == 'a') {
+                                if ($sort === 'distance' && $ad === 'a') {
                                     $sortImage = "<img src='/style/img/sort_a.png' style='width:9px;height:8px;border:none' alt=''>";
                                     $ad = 'd';
                                 }
-                                if ($_GET['sort'] == 'distance' && $_GET['ad'] == 'd') {
+                                if ($sort === 'distance' && $ad === 'd') {
+
                                     $sortImage = "<img src='/style/img/sort_d.png' style='width:9px;height:8px;border:none' alt=''>";
                                     $ad = 'a';
                                 }
@@ -778,13 +791,10 @@ class MySQLtabledit
         /**
          * if sorting by distance
          */
-        if ($_GET['sort'] && $_GET['sort'] == 'distance') {
-            if ($_GET['ad'] == 'a') {
-                $ascDes = 'DESC';
-            }
-            if ($_GET['ad'] == 'd') {
-                $ascDes = 'ASC';
-            }
+        $sort = $_GET['sort'] ?? null;
+        $ad   = $_GET['ad']   ?? 'a';
+        if ($sort && $sort === 'distance') {
+            $ascDes = ($ad === 'a') ? 'DESC' : 'ASC';
 
             // figure out what coords to calculate from
             $usableCoords = usableCoords();
@@ -931,7 +941,7 @@ class MySQLtabledit
         $sessionHistPage = $this->url_script . '?' . $_SERVER['QUERY_STRING'];
 
         // no page history on the edit page because after refresh the Go Back is useless
-        if (!$_GET['mte_a']) {
+        if (empty($_GET['mte_a'])) {
             $_SESSION['hist_page'] = $sessionHistPage;
         }
 
