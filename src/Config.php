@@ -20,27 +20,39 @@ final class Config
 
     private function __construct() {}
 
-    public static function fromEnv(string $projectRoot): self
+    public static function fromEnv(?string $projectRoot = null): self
     {
-        if (is_file($projectRoot . '/.env')) {
-            $dotenv = Dotenv::createImmutable($projectRoot);
+        $projectRoot = $projectRoot ?? dirname(__DIR__);
+
+        if (class_exists(\Dotenv\Dotenv::class) && is_file($projectRoot . '/.env')) {
+            $dotenv = \Dotenv\Dotenv::createImmutable($projectRoot);
             $dotenv->safeLoad();
         }
 
         $c = new self();
-        $c->env = $_ENV['APP_ENV'] ?? 'dev';
-        $c->debug = (bool) (int) ($_ENV['APP_DEBUG'] ?? '1');
-        $c->baseUrl = $_ENV['BASE_URL'] ?? 'http://localhost:8080';
 
-        $c->dbHost = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $c->dbPort = (int)($_ENV['DB_PORT'] ?? 3306);
-        $c->dbName = $_ENV['DB_NAME'] ?? 'edtb';
-        $c->dbUser = $_ENV['DB_USER'] ?? 'edtb';
-        $c->dbPass = $_ENV['DB_PASS'] ?? 'edtbpass';
+        $c->env     = $_ENV['APP_ENV']   ?? 'dev';
+        $c->debug   = (bool)(int)($_ENV['APP_DEBUG'] ?? '1');
+        $c->baseUrl = $_ENV['BASE_URL']  ?? 'http://localhost:8080';
 
-        $c->dataDir = rtrim((defined('DATA_DIR') ? DATA_DIR : ($_ENV['EDTB_DATA_DIR'] ?? $_ENV['DATA_DIR'] ?? ($projectRoot . '/data'))), '/');
+        $c->dbHost  = $_ENV['DB_HOST']   ?? '127.0.0.1';
+        $c->dbPort  = (int)($_ENV['DB_PORT'] ?? 3306);
+        $c->dbName  = $_ENV['DB_NAME']   ?? 'edtb';
+        $c->dbUser  = $_ENV['DB_USER']   ?? 'edtb';
+        $c->dbPass  = $_ENV['DB_PASS']   ?? 'edtbpass';
+
+        // Prefer a defined DATA_DIR; otherwise allow either EDTB_DATA_DIR or DATA_DIR envs; finally fall back to repo /data
+        $c->dataDir = rtrim(
+            (defined('DATA_DIR')
+                ? DATA_DIR
+                : ($_ENV['EDTB_DATA_DIR'] ?? $_ENV['DATA_DIR'] ?? ($projectRoot . '/data'))
+            ),
+            '/'
+        );
+
         $c->rootDir = rtrim($_ENV['ROOT_DIR'] ?? (realpath($projectRoot) ?: $projectRoot), '/');
 
         return $c;
     }
+
 }

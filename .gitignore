@@ -5,7 +5,6 @@
 /.idea
 /.vscode
 /edtb_debug*
-/structure*
 
 # --- EDSM / ED data (downloads, extracts, caches, dumps) ---
 /data/dumps/
@@ -19,7 +18,7 @@
 /data/phpfastcache/
 
 # Common big data formats produced by imports/extracts
-*.sql
+# *.sql
 *.sql.gz
 *.sqlite
 *.sqlite3

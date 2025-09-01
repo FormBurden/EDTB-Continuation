@@ -131,30 +131,34 @@ class NearestSystems
 
     private function ensureDbSelected(): void
     {
-        if (!($this->mysqli instanceof mysqli)) {
+        if (!($this->mysqli instanceof \mysqli)) {
             return;
         }
 
         // Already selected?
-        $probe = @$this->mysqli->query('SELECT DATABASE() AS db');
-        if ($probe && ($row = $probe->fetch_object()) && $row->db) {
-            $probe->close();
-            return;
-        }
-        if ($probe) {
+        if ($probe = @$this->mysqli->query('SELECT DATABASE() AS db')) {
+            if ($row = $probe->fetch_object()) {
+                if (!empty($row->db)) {
+                    $probe->close();
+                    return;
+                }
+            }
             $probe->close();
         }
 
-        // Try to discover the DB name from several places
+        // Gather candidate DB names
         $candidates = [];
 
-        if (isset($GLOBALS['db']) && $GLOBALS['db'] !== '') {
-            $candidates[] = $GLOBALS['db'];
-        }
-        if (!empty($_ENV['MYSQL_DATABASE'])) {
-            $candidates[] = $_ENV['MYSQL_DATABASE'];
+        // 1) In-process globals (legacy)
+        if (!empty($GLOBALS['db'])) {
+            $candidates[] = (string)$GLOBALS['db'];
         }
 
+        // 2) env vars
+        if (!empty($_ENV['DB_NAME']))          $candidates[] = $_ENV['DB_NAME'];
+        if (!empty($_ENV['MYSQL_DATABASE']))   $candidates[] = $_ENV['MYSQL_DATABASE'];
+
+        // 3) server_config.inc.php array form
         $paths = [
             dirname(__DIR__) . '/data/server_config.inc.php',
             __DIR__ . '/../data/server_config.inc.php',
@@ -162,31 +166,30 @@ class NearestSystems
         ];
         foreach ($paths as $p) {
             if (is_file($p)) {
-                $cfg = include $p; // expected to return an array
+                /** @noinspection PhpIncludeInspection */
+                $cfg = include $p;
                 if (is_array($cfg)) {
                     if (!empty($cfg['database']['name'])) {
                         $candidates[] = $cfg['database']['name'];
                     }
-                    if (!empty($cfg['db']['name'])) {
-                        $candidates[] = $cfg['db']['name'];
-                    }
-                    if (!empty($cfg['name'])) {
-                        $candidates[] = $cfg['name'];
+                    if (!empty($cfg['db_name'])) {
+                        $candidates[] = $cfg['db_name'];
                     }
                 }
-                break;
             }
         }
 
-        // Last-resort default
+        // 4) last resort default
         $candidates[] = 'edtb';
 
-        foreach ($candidates as $name) {
-            if ($name && @$this->mysqli->select_db($name)) {
+        // Try in order
+        foreach (array_unique($candidates) as $dbName) {
+            if ($dbName && @$this->mysqli->select_db($dbName)) {
                 return;
             }
         }
     }
+
 
     
     private function safeQuery(string $sql)
