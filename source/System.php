@@ -31,6 +31,7 @@
  */
 
 namespace EDTB\source;
+$data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
 
 /**
  * Functions relating to systems

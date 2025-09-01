@@ -65,7 +65,56 @@ $header->displayHeader();
  * initiate page footer
  */
 $footer = new Footer();
+?>
+<script>
+$(function () {
+    // Take incoming GET params from PHP and call the backend once on page load
+    var params = {};
+    var sName = <?php echo json_encode($_GET['system_name'] ?? ''); ?>;
+    var sId   = <?php echo json_encode($_GET['system_id'] ?? ''); ?>;
+    var sLegacy = <?php echo json_encode($_GET['system'] ?? ''); ?>;
+    if (!sName && sLegacy) sName = sLegacy;
 
+    if (sName) params.system_name = sName;
+    if (sId)   params.system_id   = sId;
+
+    // Seed the left title if empty (helps first paint)
+    if ($('#t1').text().trim() === '' && sName) {
+        $('#t1').text(sName);
+    }
+
+    // Pull system info (name header, stations list, detailed facts)
+    $.ajax({
+    url: '/System/getData_systemInfo.php',
+    data: params,
+    dataType: 'json',
+    cache: false
+}).done(function (d) {
+    var name = d && d.si_name ? d.si_name : '';
+    var st   = d && d.si_stations ? d.si_stations : '';
+    var det  = d && d.si_detailed ? d.si_detailed : '';
+
+    $('#si_name').html(name);
+    $('#si_stations').html(st);
+    $('#si_detailed').html(det);
+
+    // If backend returned nothing valid, show a clear hint
+    if (!name && !st && !det) {
+        $('#si_name').html('<div class="light">No data returned for "' + (sName || sId || '') + '".</div>');
+    }
+}).fail(function (xhr) {
+    var msg = 'Failed to load system info';
+    if (xhr && xhr.responseText) {
+        // escape and truncate any server output so it’s readable
+        var snippet = $('<div>').text(xhr.responseText).text().slice(0, 300);
+        msg += ': ' + snippet;
+    }
+    $('#si_name').html('<div class="light">' + msg + '</div>');
+});
+
+</script>
+
+<?php
 /**
  * display the footer
  */

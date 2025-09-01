@@ -636,6 +636,8 @@ class NearestSystems
      */
     private function filters()
     {
+    $hasModules = $this->tableExists('edtb_modules');
+
         ?>
         <div class="stationinfo_ns" id="si_statinfo"></div>
         <div class="info" id="sysinfo" style="position: fixed">
@@ -740,6 +742,21 @@ class NearestSystems
                 </td>
                 <!-- modules -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
+                <?php if (!$hasModules): ?>
+    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go">
+        <?php echo $this->hiddenInputs; ?>
+        <select title="Module" class="selectbox" name="group_id" style="width: 222px"
+                onchange="getCR($('select[name=group_id]').val(), '')">
+            <optgroup label="Module">
+                <option value="0">Module</option>
+            </optgroup>
+        </select><br/>
+        <select title="Rating" class="selectbox" name="rating" style="width: 222px">
+            <option value="0">Rating</option>
+        </select><br/>
+        <input class="button" type="submit" value="Search" style="width: 222px; margin-top: 5px"/>
+    </form>
+<?php else: ?>
                     <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go">
                         <?php
                         echo $this->hiddenInputs;
@@ -759,7 +776,6 @@ class NearestSystems
                                 $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
 
                                 $curCat = '';
-                                if ($result) {
                                 while ($modObj = $result->fetch_object()) {
                                     $catName = $modObj->category_name;
 
@@ -775,49 +791,30 @@ class NearestSystems
                                 }
 
                                 $result->close();
-                                }
                                 ?>
+                            </optgroup>
                         </select><br/>
-                        <select title="Class" class="selectbox" name="class" style="width: 222px" id="class"
-                                onchange="getCR($('select[name=group_id]').val(), $('select[name=class]').val())">
-                            <option value="0">Class</option>
-                            <?php
-                            $query = "  SELECT DISTINCT class
-                                        FROM edtb_modules WHERE class != ''" . $modi . '
-                                        ORDER BY class';
+                        <?php
+                        $query = '  SELECT DISTINCT rating
+                                    FROM edtb_modules
+                                    WHERE 1 = 1' . @$modi . '
+                                    ORDER BY rating';
 
-                            $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+                        $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
 
-                            while ($modObj = $result->fetch_object()) {
-                                $selected = $_GET['class'] == $modObj->class ? " selected='selected'" : '';
-                                echo '<option value="' . $modObj->class . '"' . $selected . '>Class ' . $modObj->class .
-                                    '</option>';
-                            }
+                        while ($modObj = $result->fetch_object()) {
+                            $selected = $_GET['rating'] == $modObj->rating ? " selected='selected'" : '';
+                            echo '<option value="' . $modObj->rating . '"' . $selected . '>Rating ' . $modObj->rating .
+                                '</option>';
+                        }
 
-                            $result->close();
-                            ?>
-                        </select><br/>
-                        <select title="Rating" class="selectbox" name="rating" style="width: 222px" id="rating">
-                            <option value="0">Rating</option>
-                            <?php
-                            $query = "  SELECT DISTINCT rating
-                                        FROM edtb_modules
-                                        WHERE rating != ''" . $modi . '
-                                        ORDER BY rating';
-
-                            $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
-
-                            while ($modObj = $result->fetch_object()) {
-                                $selected = $_GET['rating'] == $modObj->rating ? " selected='selected'" : '';
-                                echo '<option value="' . $modObj->rating . '"' . $selected . '>Rating ' . $modObj->rating .
-                                    '</option>';
-                            }
-
-                            $result->close();
-                            ?>
+                        $result->close();
+                        ?>
                         </select><br/>
                         <input class="button" type="submit" value="Search" style="width: 222px; margin-top: 5px"/>
                     </form>
+<?php endif; ?>
+
                 </td>
                 <!-- ships & facilities -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">

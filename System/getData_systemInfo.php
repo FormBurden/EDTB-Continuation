@@ -37,8 +37,9 @@ $curSys = is_array($curSys ?? null) ? $curSys : [];
 /**
  * if system id or name is set, show info about that system
  */
-$hasSystemId   = isset($_GET['system_id'])   && $_GET['system_id']   !== 'undefined' && $_GET['system_id']   !== '';
-$hasSystemName = isset($_GET['system_name']) && $_GET['system_name'] !== 'undefined' && $_GET['system_name'] !== '';
+$rawSystemName = $_GET['system_name'] ?? ($_GET['system'] ?? '');
+$hasSystemId   = isset($_GET['system_id']) && $_GET['system_id'] !== 'undefined' && $_GET['system_id'] !== '';
+$hasSystemName = $rawSystemName !== '' && $rawSystemName !== 'undefined';
 
 // defaults to avoid "Undefined array key" + "Undefined variable" warnings
 $siDistAdd = '';
@@ -52,7 +53,7 @@ $curSys['name'] = $curSys['name'] ?? '';
 if ($hasSystemId || $hasSystemName) {
     /** @var int $systemId */
     $systemId   = $hasSystemId ? (int)$_GET['system_id'] : -1;
-    $escSysName = $hasSystemName ? $mysqli->real_escape_string(urldecode($_GET['system_name'])) : '';
+    $escSysName = $hasSystemName ? $mysqli->real_escape_string(urldecode($rawSystemName)) : '';
 
     // If we only have a name, look up the id
     if ($systemId === -1 && $escSysName !== '') {
@@ -713,3 +714,7 @@ if ($exists == 0 && $_GET['system_id'] === 'undefined' && $_GET['system_name'] =
                                 <strong>Faction:</strong> ' . $siSystemRulingFaction . '
                             </span>';
 }
+
+if (function_exists('ob_get_length') && ob_get_length()) { ob_clean(); }
+header('Content-Type: application/json; charset=UTF-8');
+echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

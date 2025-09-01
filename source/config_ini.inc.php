@@ -86,6 +86,11 @@ if ($iniPath) {
     }
 }
 
+// --- Ensure $iniDir/$iniPath are defined before first use (Linux portable) ---
+$iniDir = $iniPath ? dirname($iniPath) : (defined('DATA_DIR') ? DATA_DIR : dirname(__DIR__) . '/data');
+if (!$iniPath) {
+    $iniPath = rtrim($iniDir, '/') . '/edtoolbox_v1.ini';
+}
 
 // Create a safe default INI if missing
 if (!is_file($iniPath)) {
@@ -111,13 +116,6 @@ game_time="UTC"
 ext_links=""
 INI);
 }
-
- // --- Ensure $iniDir/$iniPath are defined before first use (Linux portable) ---
-$iniDir = $iniPath ? dirname($iniPath) : (defined('DATA_DIR') ? DATA_DIR : dirname(__DIR__) . '/data');
-if (!$iniPath) {
-     $iniPath = rtrim($iniDir, '/') . '/edtoolbox_v1.ini';
-}
-
 
 // Be lenient with odd values (use RAW)
 $ini = parse_ini_file($iniPath, true, INI_SCANNER_RAW) ?: [];
