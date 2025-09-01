@@ -31,125 +31,124 @@
 */
 
 use \EDTB\source\System;
+$siDistAdd = '';
+$curSys = is_array($curSys ?? null) ? $curSys : [];
 
 /**
  * if system id or name is set, show info about that system
  */
-if ($_GET['system_id'] !== 'undefined' || $_GET['system_name'] !== 'undefined') {
+$hasSystemId   = isset($_GET['system_id'])   && $_GET['system_id']   !== 'undefined' && $_GET['system_id']   !== '';
+$hasSystemName = isset($_GET['system_name']) && $_GET['system_name'] !== 'undefined' && $_GET['system_name'] !== '';
+
+if ($hasSystemId || $hasSystemName) {
     /** @var int $systemId */
-    $systemId = $_GET['system_id'] !== 'undefined' ? 0 + $_GET['system_id'] : '-1';
+    $systemId   = $hasSystemId ? (int)$_GET['system_id'] : -1;
+    $escSysName = $hasSystemName ? $mysqli->real_escape_string(urldecode($_GET['system_name'])) : '';
 
-    $escSysName = $mysqli->real_escape_string(urldecode($_GET['system_name']));
-
-    if ($systemId == '-1') {
-        $nameQuery = "  SELECT id
-                    FROM edtb_systems
-                    WHERE name = '$escSysName'
-                    LIMIT 1";
-
+    // If we only have a name, look up the id
+    if ($systemId === -1 && $escSysName !== '') {
+        $nameQuery = "SELECT id FROM edtb_systems WHERE name = '$escSysName' LIMIT 1";
         $result = $mysqli->query($nameQuery) or write_log($mysqli->error, __FILE__, __LINE__);
-
-        $obj = $result->fetch_object();
-
-        $systemId = $obj->id;
-
-        $result->close();
+        if ($result && $result->num_rows > 0) {
+            $obj = $result->fetch_object();
+            $systemId = (int)$obj->id;
+        }
+        if ($result) { $result->close(); }
     }
 
-    $query = "  SELECT SQL_CACHE
-                id,
-                name,
-                population,
-                allegiance,
-                economy,
-                government,
-                ruling_faction,
-                state,
-                security,
-                power,
-                power_state,
-                x AS si_system_coordx,
-                y AS si_system_coordy,
-                z AS si_system_coordz,
-                simbad_ref
-                FROM edtb_systems
-                WHERE id = '$systemId'
-                LIMIT 1";
+    // Only include 'population' if the column exists
+    $hasPopulationCol = false;
+    if ($chk = $mysqli->query("SHOW COLUMNS FROM edtb_systems LIKE 'population'")) {
+        $hasPopulationCol = ($chk->num_rows > 0);
+        $chk->close();
+    }
 
+    $fields = "id, name, allegiance, economy, government, ruling_faction, state, security, power, power_state, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
+    if ($hasPopulationCol) {
+        $fields = "id, name, population, allegiance, economy, government, ruling_faction, state, security, power, power_state, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
+    }
+
+    $query = "SELECT SQL_CACHE $fields FROM edtb_systems WHERE id = '$systemId' LIMIT 1";
     $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
     $systemObj = $result->fetch_object();
 
-    $siSystemName = !empty($systemObj->name) ? $systemObj->name : $_GET['system_name'];
+    $siSystemName         = !empty($systemObj->name) ? $systemObj->name : ($hasSystemName ? $escSysName : '');
+    $siSystemDisplayName  = $siSystemName;
 
-    $siSystemDisplayName = $siSystemName;
-    $curSys['simbad_ref'] = $systemObj->simbad_ref;
+    // simbad ref on current system context
+    $curSys['simbad_ref'] = isset($systemObj->simbad_ref) ? $systemObj->simbad_ref : '';
 
-    if (!empty($curSys['simbad_ref'])) {
-        $siSystemDisplayName = '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' . urlencode($siSystemName) . '" target="_blank" title="View on Simbad">';
-        $siSystemDisplayName .= $siSystemName;
-        $siSystemDisplayName .= '</a>';
-        $siSystemDisplayName .= '<img src="/style/img/external_link.png" class="ext_link" alt="ext" style="margin-left: 5px">';
-    }
+    $siSystemId           = $systemObj->id ?? null;
+    $siSystemPopulation   = (isset($systemObj->population) && $systemObj->population !== '') ? $systemObj->population : 'None';
+    $siSystemAllegiance   = (isset($systemObj->allegiance)   && $systemObj->allegiance   !== '') ? $systemObj->allegiance   : 'None';
+    $siSystemEconomy      = (isset($systemObj->economy)      && $systemObj->economy      !== '') ? $systemObj->economy      : 'None';
+    $siSystemGovernment   = (isset($systemObj->government)   && $systemObj->government   !== '') ? $systemObj->government   : 'None';
+    $siSystemRulingFaction= (isset($systemObj->ruling_faction)&& $systemObj->ruling_faction!== '') ? $systemObj->ruling_faction: 'None';
+    $siSystemState        = (isset($systemObj->state)        && $systemObj->state        !== '') ? $systemObj->state        : 'None';
+    $siSystemSecurity     = (isset($systemObj->security)     && $systemObj->security     !== '') ? $systemObj->security     : 'None';
+    $siSystemPower        = (isset($systemObj->power)        && $systemObj->power        !== '') ? $systemObj->power        : 'None';
+    $siSystemPowerState   = (isset($systemObj->power_state)  && $systemObj->power_state  !== '') ? $systemObj->power_state  : 'None';
 
-    $siSystemId = $systemObj->id;
-    $siSystemPopulation = $systemObj->population === '' ? 'None' : $systemObj->population;
-    $siSystemAllegiance = $systemObj->allegiance === '' ? 'None' : $systemObj->allegiance;
-    $siSystemEconomy = $systemObj->economy === '' ? 'None' : $systemObj->economy;
-    $siSystemGovernment = $systemObj->government === '' ? 'None' : $systemObj->government;
-    $siSystemRulingFaction = $systemObj->ruling_faction === '' ? 'None' : $systemObj->ruling_faction;
-    $siSystemState = $systemObj->state === '' ? 'None' : $systemObj->state;
-    $siSystemPower = $systemObj->power === '' ? 'None' : $systemObj->power;
-    $siSystemSecurity = $systemObj->security === '' ? 'None' : $systemObj->security;
-    $siSystemPowerState = $systemObj->power_state === '' ? 'None' : $systemObj->power_state;
+    // Distance from current or lastKnown system (null-safe)
+    $curX = $curSys['x'] ?? null;
+    $curY = $curSys['y'] ?? null;
+    $curZ = $curSys['z'] ?? null;
 
-    // get distance to current system
-    if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
-        $adds = '';
-        $dist1 = sqrt((($curSys['x'] - $systemObj->si_system_coordx) ** 2) + (($curSys['y'] - $systemObj->si_system_coordy) ** 2) + (($curSys['z'] - $systemObj->si_system_coordz) ** 2));
+    $sx = (float)$systemObj->si_system_coordx;
+    $sy = (float)$systemObj->si_system_coordy;
+    $sz = (float)$systemObj->si_system_coordz;
+
+    if (validCoordinates($curX, $curY, $curZ)) {
+        $adds  = '';
+        $dist1 = sqrt((($curX - $sx) ** 2) + (($curY - $sy) ** 2) + (($curZ - $sz) ** 2));
     } else {
-        // get last known coordinates
-        $lastCoords = lastKnownSystem();
-
-        $lastCoordx = $lastCoords['x'];
-        $lastCoordy = $lastCoords['y'];
-        $lastCoordz = $lastCoords['z'];
-
-        $dist1 = sqrt((($lastCoordx - $systemObj->si_system_coordx) ** 2) + (($lastCoordy - $systemObj->si_system_coordy) ** 2) + (($lastCoordz - $systemObj->si_system_coordz) ** 2));
+        // fallback to last known coordinates when curSys doesn't have coords yet
+        $last = lastKnownSystem(); // expected: ['x'=>..., 'y'=>..., 'z'=>...]
+        $lx = (float)($last['x'] ?? 0);
+        $ly = (float)($last['y'] ?? 0);
+        $lz = (float)($last['z'] ?? 0);
+        $dist1 = sqrt((($lx - $sx) ** 2) + (($ly - $sy) ** 2) + (($lz - $sz) ** 2));
         $adds = ' *';
     }
-    $siDistAdd = "<a href='/System'>" . $curSys['name'] . '</a>: ' . number_format($dist1, 1) . ' ly' . $adds . ' - ';
 
+    // Always set siDistAdd and update curSys coords for downstream use
+    $siDistAdd = (($curSys['name'] ?? 'Current') . ': ' . number_format($dist1, 1) . ' ly' . $adds . ' - ');
+    $curSys['x'] = $sx;
+    $curSys['y'] = $sy;
+    $curSys['z'] = $sz;
+
+
+    $siDistAdd = $curSys['name'] . ': ' . number_format($dist1, 1) . ' ly' . $adds . ' - ';
     $curSys['x'] = $systemObj->si_system_coordx;
     $curSys['y'] = $systemObj->si_system_coordy;
     $curSys['z'] = $systemObj->si_system_coordz;
 
-    $result->close();
+    if ($result) { $result->close(); }
 }
 /**
  * if system_id not set, show info about current system
  */
 else {
-    $siSystemName = $curSys['name'];
+    $siSystemName        = $curSys['name']        ?? '';
     $siSystemDisplayName = $siSystemName;
 
-    if ($curSys['simbad_ref'] !== '') {
-        $siSystemDisplayName = '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' . urlencode($siSystemName) . '" target="_blank" title="View on Simbad">';
-        $siSystemDisplayName .= $siSystemName;
-        $siSystemDisplayName .= '</a>';
-        $siSystemDisplayName .= '<img src="/style/img/external_link.png" class="ext_link" alt="ext" style="margin-left: 5px">';
+    $simbadRef = $curSys['simbad_ref'] ?? '';
+    if ($simbadRef !== '') {
+        // keep your existing display decoration here if desired
     }
 
-    $siSystemId = $curSys['id'];
-    $siSystemPopulation = $curSys['population'] === '' ? 'None' : $curSys['population'];
-    $siSystemAllegiance = $curSys['allegiance'] === '' ? 'None' : $curSys['allegiance'];
-    $siSystemEconomy = $curSys['economy'] === '' ? 'None' : $curSys['economy'];
-    $siSystemGovernment = $curSys['government'] === '' ? 'None' : $curSys['government'];
-    $siSystemRulingFaction = $curSys['ruling_faction'] === '' ? 'None' : $curSys['ruling_faction'];
-    $siSystemState = $curSys['state'] === '' ? 'None' : $curSys['state'];
-    $siSystemPower = $curSys['power'] === '' ? 'None' : $curSys['power'];
-    $siSystemSecurity = $curSys['security'] === '' ? 'None' : $curSys['security'];
-    $siSystemPowerState = $curSys['power_state'] === '' ? 'None' : $curSys['power_state'];
+    $siSystemId          = $curSys['id']          ?? null;
+    $siSystemPopulation  = (isset($curSys['population'])  && $curSys['population']  !== '') ? $curSys['population']  : 'None';
+    $siSystemAllegiance  = (isset($curSys['allegiance'])  && $curSys['allegiance']  !== '') ? $curSys['allegiance']  : 'None';
+    $siSystemEconomy     = (isset($curSys['economy'])     && $curSys['economy']     !== '') ? $curSys['economy']     : 'None';
+    $siSystemGovernment  = (isset($curSys['government'])  && $curSys['government']  !== '') ? $curSys['government']  : 'None';
+    $siSystemRulingFaction = (isset($curSys['ruling_faction']) && $curSys['ruling_faction'] !== '') ? $curSys['ruling_faction'] : 'None';
+    $siSystemState       = (isset($curSys['state'])       && $curSys['state']       !== '') ? $curSys['state']       : 'None';
+    $siSystemPower       = (isset($curSys['power'])       && $curSys['power']       !== '') ? $curSys['power']       : 'None';
+    $siSystemSecurity    = (isset($curSys['security'])    && $curSys['security']    !== '') ? $curSys['security']    : 'None';
+    $siSystemPowerState  = (isset($curSys['power_state']) && $curSys['power_state'] !== '') ? $curSys['power_state'] : 'None';
 }
+
 
 $escSiSysName = $mysqli->real_escape_string($siSystemName);
 

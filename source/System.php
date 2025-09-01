@@ -229,22 +229,27 @@ class System
      * @return int
      * @author Mauri Kujala <contact@edtb.xyz>
      */
-    public static function numVisits($system): int
+    public static function numVisits($mysqli, $systemId)
     {
-        global $mysqli;
+        $systemId = (int)$systemId;
 
-        $escSystemName = $mysqli->real_escape_string($system);
+        // If the table doesn't exist yet, return 0 visits instead of throwing
+        $chk = $mysqli->query("SHOW TABLES LIKE 'user_visited_systems'");
+        if (!$chk || $chk->num_rows === 0) {
+            if ($chk) { $chk->close(); }
+            return 0;
+        }
+        $chk->close();
 
-        $query = "  SELECT id
-                    FROM user_visited_systems
-                    WHERE system_name = '$escSystemName'";
+        $q = "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_id = {$systemId}";
+        $res = $mysqli->query($q);
+        if (!$res) {
+            // Be defensive: on any query error, treat as zero
+            return 0;
+        }
+        $row = $res->fetch_object();
+        $res->close();
 
-        $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-        $numVisits = $result->num_rows;
-
-        $result->close();
-
-        return $numVisits;
+        return (int)($row->c ?? 0);
     }
 }
