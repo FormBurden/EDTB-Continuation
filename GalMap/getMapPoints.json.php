@@ -1,441 +1,212 @@
 <?php
-/**
- * Ajax backend file to fetch map points for Galaxy Map
- *
- * No description
- *
- * @package EDTB\Backend
- * @author Mauri Kujala <contact@edtb.xyz>
- * @copyright Copyright (C) 2016, Mauri Kujala
- * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU Public License version 2
- */
-
- /*
- * ED ToolBox, a companion web app for the video game Elite Dangerous
- * (C) 1984 - 2016 Frontier Developments Plc.
- * ED ToolBox or its creator are not affiliated with Frontier Developments Plc.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-/** @require congig */
-require_once __DIR__ . '/../source/config.inc.php';
-/** @require functions */
-require_once __DIR__ . '/../source/functions.php';
-/** @require MySQL */
-require_once __DIR__ . '/../source/MySQL.php';
-/** @require curSys */
-require_once __DIR__ . '/../source/curSys.php';
-
-header('content-type: application/json');
-
-$lastSystemName = $curSys['name'];
-if (!validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
-    // get last known coordinates
-    $lastCoords = lastKnownSystem();
-
-    $curSys['x'] = $lastCoords['x'];
-    $curSys['y'] = $lastCoords['y'];
-    $curSys['z'] = $lastCoords['z'];
-
-    $lastSystemName = $lastCoords['name'];
-}
-
-$data = '';
-$dataStart = '{"categories":{';
-if ($settings['galmap_show_visited_systems'] === 'true') {
-    $dataStart .= '"Visited Systems":{"1":{"name":"Empire","color":"e7d884"},"2":{"name":"Federation","color":"FFF8E6"},"3":{"name":"Alliance","color":"09b4f4"},"21":{"name":"Independent","color":"34242F"},"99":{"name":"Rest","color":"8c8c8c"}},';
-}
-$dataStart .= '"Other":{"5":{"name":"Current location","color":"FF0000"},';
-
-if ($settings['galmap_show_bookmarks'] === 'true') {
-    $dataStart .= '"6":{"name":"Bookmarked systems","color":"F7E707"},';
-}
-if ($settings['galmap_show_pois'] === 'true') {
-    $dataStart .= '"7":{"name":"Points of interest, unvisited","color":"E87C09"},"8":{"name":"Points of interest, visited","color":"00FF1E"},';
-}
-if ($settings['galmap_show_rares'] === 'true') {
-    $dataStart .= '"10":{"name":"Rare commodities","color":"8B9F63"},';
-}
-$dataStart .= '"11":{"name":"Logged systems","color":"2938F8"}}}, "systems":[';
-
-$lastRow = '';
+declare(strict_types=1);
 
 /**
- * fetch visited systems data for the map
+ * Galaxy Map JSON feed for ED3D.
+ * Emits either a flat array of systems or (if you prefer) wrap in {"systems":[...]}.
+ * Minimal required fields: name, coords{x,y,z}
  */
-if ($settings['galmap_show_visited_systems'] === 'true') {
-    $query = '  SELECT
-                user_visited_systems.system_name AS system_name, user_visited_systems.visit,
-                edtb_systems.x, edtb_systems.y, edtb_systems.z, edtb_systems.id AS sysid, edtb_systems.allegiance
-                FROM user_visited_systems
-                LEFT JOIN edtb_systems ON user_visited_systems.system_name = edtb_systems.name
-                GROUP BY user_visited_systems.system_name
-                ORDER BY user_visited_systems.visit ASC';
 
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
+header('Content-Type: application/json; charset=utf-8');
+// Prevent any warnings/notices from corrupting JSON output:
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
 
-    while ($row = $result->fetch_object()) {
-        $info = '';
+// Hard-fail catcher to return a valid JSON error if something goes sideways:
+set_exception_handler(function ($e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'server_error', 'message' => $e->getMessage()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+});
+set_error_handler(function($severity, $message, $file, $line) {
+    // Convert to exception so our handler above returns JSON
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 
-        $name = $row->system_name;
+$root = dirname(__DIR__);
+require_once $root . '/source/config.inc.php';
 
-        $sysid = $row->sysid;
-        // coordinates
-        $vsCoordx = $row->x;
-        $vsCoordy = $row->y;
-        $vsCoordz = $row->z;
-
-        /**
-         * if coords are not set, see if user has calculated them
-         */
-        if (!validCoordinates($vsCoordx, $vsCoordy, $vsCoordz)) {
-            $escName = $mysqli->real_escape_string($name);
-
-            $query = "  SELECT x, y, z
-                        FROM user_systems_own
-                        WHERE name = '$escName'
-                        LIMIT 1";
-
-            $coordRes = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-            $obj = $coordRes->fetch_object();
-
-            $vsCoordx = $obj->x;
-            $vsCoordy = $obj->y;
-            $vsCoordz = $obj->z;
-        }
-
-        /**
-         * if we now have valid coordinates, get on with it
-         */
-        if (validCoordinates($vsCoordx, $vsCoordy, $vsCoordz)) {
-            $allegiance = $row->allegiance;
-            $visit = $row->visit;
-            $visitOg = $row->visit;
-
-            switch ($allegiance) {
-                case 'Empire':
-                    $cat = ',"cat":[1]';
-                    break;
-                case 'Alliance':
-                    $cat = ',"cat":[3]';
-                    break;
-                case 'Federation':
-                    $cat = ',"cat":[2]';
-                    break;
-                case 'Independent':
-                    $cat = ',"cat":[21]';
-                    break;
-                default:
-                    $cat = ',"cat":[99]';
+// Try to acquire DB settings/connection in a portable way
+$mysqli = null;
+$server = [];
+try {
+    // Preferred: central MySQL helper (if your project uses it)
+    $mysqlHelper = $root . '/source/MySQL.php';
+    if (is_file($mysqlHelper)) {
+        require_once $mysqlHelper;
+        // Many EDTB forks instantiate $mysqli globally in MySQL.php; use it if available.
+        if (isset($mysqli) && $mysqli instanceof mysqli) {
+            // ok
+        } else {
+            // Fallback: read settings directly if MySQL.php exposes none
+            $dataCfg = defined('EDTB_DATA') ? EDTB_DATA . '/server_config.inc.php' : $root . '/data/server_config.inc.php';
+            if (is_file($dataCfg)) {
+                $server = include $dataCfg;
             }
-
-            $info .= '<div class="map_info"><span class="map_info_title">Visited system</span><br>';
-
-            if (isset($visit)) {
-                $visit = date_create($visit);
-                $visitDate = date_modify($visit, '+1286 years');
-
-                $visit = date_format($visitDate, 'd.m.Y, H:i');
-
-                $visitUnix = strtotime($visitOg);
-                $visitAgo = get_timeago($visitUnix);
-
-                $info .= '<strong>First visit</strong><br>' . $visit . ' (' . $visitAgo . ')<br>';
-            }
-
-            $info .= '</div>';
-
-            $data = $lastRow;
-            if (isset($name) && isset($vsCoordx) && isset($vsCoordy) && isset($vsCoordz)) {
-                $data =
-                    '{"name":"' . $name . '"' . $cat . ',"coords":{"x":' . $vsCoordx . ',"y":' . $vsCoordy . ',"z":' . $vsCoordz .
-                    '},"infos":' . json_encode($info) . '}' . $lastRow;
-            }
-
-            $lastRow = ',' . $data;
-        }
-    }
-    $result->close();
-}
-
-/**
- *  fetch point of interest data for the map
- */
-if ($settings['galmap_show_pois'] === 'true') {
-    $query = "  SELECT user_poi.poi_name, user_poi.system_name,
-                user_poi.x, user_poi.y, user_poi.z, user_poi.text,
-                user_poi_categories.name AS category_name
-                FROM user_poi
-                LEFT JOIN user_poi_categories ON user_poi.category_id = user_poi_categories.id
-                WHERE user_poi.x != '' AND user_poi.y != '' AND user_poi.z != ''";
-
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-    while ($row = $result->fetch_object()) {
-        $info = '';
-        $cat = '';
-        $name = $row->system_name;
-
-        if (strtolower($name) !== strtolower($curSys['name'])) {
-            $escName = $mysqli->real_escape_string($name);
-            $dispName = $row->system_name;
-            $poiName = $row->poi_name;
-            $text = $row->text;
-            $categoryName = $row->category_name;
-
-            $poiCoordx = $row->x;
-            $poiCoordy = $row->y;
-            $poiCoordz = $row->z;
-
-            $query = "  SELECT id, visit
-                        FROM user_visited_systems
-                        WHERE system_name = '$escName'
-                        ORDER BY visit ASC
-                        LIMIT 1";
-
-            $visited = $mysqli->query($query)->num_rows;
-
-            $cat = $visited > 0 ? ',"cat":[8]' : ',"cat":[7]';
-
-            $info .= '<div class="map_info"><span class="map_info_title">Point of Interest</span><br>';
-            $info .= $categoryName === '' ? '' : '<strong>Category</strong><br>' . $categoryName . '<br><br>';
-            $info .= $poiName === '' ? '' : '<strong>Name</strong><br>' . $poiName . '<br><br>';
-            $info .= $text === '' ? '' : '<strong>Comment</strong><br>' . $text . '<br>';
-
-            $info .= '</div>';
-
-            $data = '{"name":"' . $dispName . '"' . $cat . ',"coords":{"x":' . $poiCoordx . ',"y":' . $poiCoordy . ',"z":' .
-                $poiCoordz . '},"infos":' . json_encode($info) . '}' . $lastRow;
-
-            $lastRow = ',' . $data;
-        }
-    }
-    $result->close();
-}
-
-/**
- *  fetch bookmark data for the map
- */
-if ($settings['galmap_show_bookmarks'] === 'true') {
-    $query = '  SELECT user_bookmarks.comment, user_bookmarks.added_on,
-                edtb_systems.name AS system_name, edtb_systems.x, edtb_systems.y, edtb_systems.z,
-                user_bm_categories.name AS category_name
-                FROM user_bookmarks
-                LEFT JOIN edtb_systems ON user_bookmarks.system_name = edtb_systems.name
-                LEFT JOIN user_bm_categories ON user_bookmarks.category_id = user_bm_categories.id';
-
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-    while ($row = $result->fetch_object()) {
-        $info = '';
-        $cat = '';
-        $bmSystemName = $row->system_name;
-
-        // coordinates
-        $bmCoordx = $row->x;
-        $bmCoordy = $row->y;
-        $bmCoordz = $row->z;
-
-        /**
-         * if coords are not set, see if user has calculated them
-         */
-        if (!validCoordinates($bmCoordx, $bmCoordy, $bmCoordz)) {
-            $escName = $mysqli->real_escape_string($bmSystemName);
-            $query = "  SELECT x, y, z
-                        FROM user_systems_own
-                        WHERE name = '$escName'
-                        LIMIT 1";
-
-            $coordRes = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-            $obj = $coordRes->fetch_object();
-
-            $bmCoordx = $obj->x;
-            $bmCoordy = $obj->y;
-            $bmCoordz = $obj->z;
-
-            $coordRes->close();
-        }
-
-        if (validCoordinates($bmCoordx, $bmCoordy, $bmCoordz)) {
-            if (strtolower($bmSystemName) !== strtolower($curSys['name'])) {
-                $bmComment = $row->comment;
-                $bmAddedOn = $row->added_on;
-                $bmCategoryName = $row->category_name;
-
-                $cat = ',"cat":[6]';
-
-                $info .= '<div class="map_info"><span class="map_info_title">Bookmarked System</span><br>';
-
-                if (isset($bmAddedOn)) {
-                    $bmAddedOnOg = $bmAddedOn;
-                    $bmAddedOn = gmdate("Y-m-d\TH:i:s\Z", $bmAddedOn);
-                    $bmAddedOn = date_create($bmAddedOn);
-                    $bmAddedOnDate = date_modify($bmAddedOn, '+1286 years');
-
-                    $bmAddedOn = date_format($bmAddedOnDate, 'd.m.Y, H:i');
-
-                    $bmAddedOnAgo = get_timeago($bmAddedOnOg);
-
-                    $info .= '<strong>Bookmarked on</strong><br>' . $bmAddedOn . ' (' . $bmAddedOnAgo . ')<br><br>';
+            // Try edtoolbox ini if present
+            if (!$server) {
+                $ini = $root . '/source/data/edtoolbox_v1.ini';
+                if (is_file($ini)) {
+                    $iniArr = parse_ini_file($ini, true, INI_SCANNER_TYPED) ?: [];
+                    if (isset($iniArr['database'])) {
+                        $server = [
+                            'db_host' => $iniArr['database']['host'] ?? '127.0.0.1',
+                            'db_name' => $iniArr['database']['name'] ?? 'edtb',
+                            'db_user' => $iniArr['database']['user'] ?? 'edtb',
+                            'db_pass' => $iniArr['database']['pass'] ?? ($iniArr['database']['password'] ?? ''),
+                            'db_port' => (int)($iniArr['database']['port'] ?? 3306),
+                        ];
+                    }
                 }
-                $info .= $bmCategoryName === '' ? '' : '<strong>Category</strong><br>' . $bmCategoryName . '<br><br>';
-                $info .= $bmComment === '' ? '' : '<strong>Comment</strong><br>' . $bmComment . '<br><br>';
-
-                $info .= '</div>';
-
-                $data = '{"name":"' . $bmSystemName . '"' . $cat . ',"coords":{"x":' . $bmCoordx . ',"y":' . $bmCoordy . ',"z":' .
-                    $bmCoordz . '},"infos":' . json_encode($info) . '}' . $lastRow;
-                $lastRow = ',' . $data;
+            }
+            if (!$server) {
+                // Last resort: environment
+                $server = [
+                    'db_host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
+                    'db_name' => $_ENV['DB_NAME'] ?? 'edtb',
+                    'db_user' => $_ENV['DB_USER'] ?? 'edtb',
+                    'db_pass' => $_ENV['DB_PASS'] ?? '',
+                    'db_port' => (int)($_ENV['DB_PORT'] ?? 3306),
+                ];
+            }
+            $mysqli = new mysqli(
+                $server['db_host'] ?? '127.0.0.1',
+                $server['db_user'] ?? 'edtb',
+                $server['db_pass'] ?? '',
+                $server['db_name'] ?? 'edtb',
+                (int)($server['db_port'] ?? 3306)
+            );
+            if ($mysqli->connect_errno) {
+                throw new RuntimeException('DB connect failed: ' . $mysqli->connect_error);
             }
         }
-    }
-    $result->close();
-}
-
-/**
- *  fetch rares data for the map
- */
-if ($settings['galmap_show_rares'] === 'true') {
-    $query = "  SELECT
-                edtb_rares.item, edtb_rares.station, edtb_rares.system_name, edtb_rares.ls_to_star,
-                edtb_systems.x, edtb_systems.y, edtb_systems.z
-                FROM edtb_rares
-                LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name
-                WHERE edtb_rares.system_name != ''";
-
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-    while ($row = $result->fetch_object()) {
-        $info = '';
-        $cat = '';
-        $rareSystem = $row->system_name;
-
-        // coordinates
-        $rareCoordx = $row->x;
-        $rareCoordy = $row->y;
-        $rareCoordz = $row->z;
-
-        if (strtolower($rareSystem) !== strtolower($curSys['name']) && validCoordinates($rareCoordx, $rareCoordy, $rareCoordz)) {
-            $rareItem = $row->item;
-            $rareStation = $row->station;
-            $rareDistToStar = number_format($row->ls_to_star);
-            $rareDispName = $rareSystem;
-
-            $cat = ',"cat":[10]';
-
-            $info .= '<div class="map_info"><span class="map_info_title">Rare Commodity</span><br>';
-            $info .= '<strong>Rare commodity</strong><br>' . $rareItem . '<br><br>';
-            $info .= '<strong>Station</strong><br>' . $rareStation . '<br><br>';
-            $info .= '<strong>Distance from star</strong><br>' . number_format($rareDistToStar) . ' ls';
-
-            $info .= '</div>';
-
-            $data = '{"name":"' . $rareDispName . '"' . $cat . ',"coords":{"x":' . $rareCoordx . ',"y":' . $rareCoordy . ',"z":' .
-                $rareCoordz . '},"infos":' . json_encode($info) . '}' . $lastRow;
-
-            $lastRow = ',' . $data;
+    } else {
+        // No helper present: go straight to config files/env
+        $dataCfg = defined('EDTB_DATA') ? EDTB_DATA . '/server_config.inc.php' : $root . '/data/server_config.inc.php';
+        if (is_file($dataCfg)) {
+            $server = include $dataCfg;
+        }
+        if (!$server) {
+            $ini = $root . '/source/data/edtoolbox_v1.ini';
+            if (is_file($ini)) {
+                $iniArr = parse_ini_file($ini, true, INI_SCANNER_TYPED) ?: [];
+                if (isset($iniArr['database'])) {
+                    $server = [
+                        'db_host' => $iniArr['database']['host'] ?? '127.0.0.1',
+                        'db_name' => $iniArr['database']['name'] ?? 'edtb',
+                        'db_user' => $iniArr['database']['user'] ?? 'edtb',
+                        'db_pass' => $iniArr['database']['pass'] ?? ($iniArr['database']['password'] ?? ''),
+                        'db_port' => (int)($iniArr['database']['port'] ?? 3306),
+                    ];
+                }
+            }
+        }
+        if (!$server) {
+            $server = [
+                'db_host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
+                'db_name' => $_ENV['DB_NAME'] ?? 'edtb',
+                'db_user' => $_ENV['DB_USER'] ?? 'edtb',
+                'db_pass' => $_ENV['DB_PASS'] ?? '',
+                'db_port' => (int)($_ENV['DB_PORT'] ?? 3306),
+            ];
+        }
+        $mysqli = new mysqli(
+            $server['db_host'] ?? '127.0.0.1',
+            $server['db_user'] ?? 'edtb',
+            $server['db_pass'] ?? '',
+            $server['db_name'] ?? 'edtb',
+            (int)($server['db_port'] ?? 3306)
+        );
+        if ($mysqli->connect_errno) {
+            throw new RuntimeException('DB connect failed: ' . $mysqli->connect_error);
         }
     }
-    $result->close();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'db_init_failed', 'message' => $e->getMessage()]);
+    exit;
 }
 
-/**
- *  fetch logged systems data for the map
- */
-$query = "  SELECT user_log.id, user_log.stardate, user_log.log_entry, user_log.system_name,
-            edtb_systems.x, edtb_systems.y, edtb_systems.z
-            FROM user_log
-            LEFT JOIN edtb_systems ON user_log.system_name = edtb_systems.name
-            WHERE user_log.system_name != ''";
-
-$result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-while ($row = $result->fetch_object()) {
-    $info = '';
-    $cat = '';
-    $logSystem = $row->system_name;
-
-    // coordinates
-    $logCoordx = $row->x;
-    $logCoordy = $row->y;
-    $logCoordz = $row->z;
-
-    if (!validCoordinates($logCoordx, $logCoordy, $logCoordz)) {
-        $escLogSysName = $mysqli->real_escape_string($logSystem);
-
-        $escName = $mysqli->real_escape_string($logSystem);
-        $query = "  SELECT x, y, z
-                    FROM user_systems_own
-                    WHERE name = '$escLogSysName'
-                    LIMIT 1";
-
-        $coordRes = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-        $obj = $coordRes->fetch_object();
-
-        $logCoordx = $obj->x;
-        $logCoordy = $obj->y;
-        $logCoordz = $obj->z;
-
-        $coordRes->close();
+// Helpers
+function table_exists(mysqli $db, string $table): bool {
+    $res = $db->query("SHOW TABLES LIKE '" . $db->real_escape_string($table) . "'");
+    return $res && $res->num_rows > 0;
+}
+function pick_first_existing_table(mysqli $db, array $candidates): ?string {
+    foreach ($candidates as $t) {
+        if (table_exists($db, $t)) return $t;
     }
+    return null;
+}
 
-    if (validCoordinates($logCoordx, $logCoordy, $logCoordz)) {
-        $logDate = $row->stardate;
-        $date = date_create($logDate);
-        $logAdded = date_modify($date, '+1286 years');
-        $text = $row->log_entry;
+// Inputs
+$limit       = max(1, min(50000, (int)($_GET['limit'] ?? 15000)));
+$visitedOnly = isset($_GET['visited_only']) && $_GET['visited_only'] === '1';
+$bmOnly      = isset($_GET['bookmarked_only']) && $_GET['bookmarked_only'] === '1';
 
-        if (mb_strlen($text) > 40) {
-            $text = substr($text, 0, 40) . '...';
-        }
+// Pick a source table for coordinates
+$sourceTable = pick_first_existing_table($mysqli, [
+    'edtb_systems',
+    'systems',
+    'eddb_systems'
+]);
+if (!$sourceTable) {
+    echo json_encode([], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-        $text = !empty($text) ? $text : 'No entry';
+// Optional joins for visited/bookmarks if present
+$visitedTable   = table_exists($mysqli, 'user_visited') ? 'user_visited' : (table_exists($mysqli, 'user_visited_systems') ? 'user_visited_systems' : null);
+$bookmarksTable = table_exists($mysqli, 'user_bookmarks') ? 'user_bookmarks' : (table_exists($mysqli, 'edtb_bookmarks') ? 'edtb_bookmarks' : null);
 
-        $cat = ',"cat":[11]';
+// Build WHERE/JOINS
+$joins = [];
+$where = ["s.x IS NOT NULL", "s.y IS NOT NULL", "s.z IS NOT NULL"];
+$order = "s.name ASC";
 
-        $info .= '<div class="map_info"><span class="map_info_title">Logged System</span><br>';
-        $info .= '<strong>Log entry</strong><br><a href="/Log?system=' . urlencode($logSystem) .
-            '" style="color: inherit; font-weight: 700" title="View the log for this system">' . $text . ' </a><br><br>';
-
-        $info .= '<strong>Added</strong><br>' . date_format($logAdded, 'j M Y, H:i') . '';
-
-        $info .= '</div>';
-
-        $data =
-            '{"name":"' . $logSystem . '"' . $cat . ',"coords":{"x":' . $logCoordx . ',"y":' . $logCoordy . ',"z":' . $logCoordz .
-            '},"infos":' . json_encode($info) . '}' . $lastRow;
-
-        $lastRow = ',' . $data;
+if ($visitedOnly && $visitedTable) {
+    $joins[] = "INNER JOIN {$visitedTable} uv ON (uv.system_name = s.name)";
+    $order = "uv.last_visit DESC";
+}
+if ($bmOnly && $bookmarksTable) {
+    $joins[] = "INNER JOIN {$bookmarksTable} bm ON (bm.system_name = s.name)";
+    if (!$visitedOnly) {
+        $order = "bm.added_at DESC";
     }
 }
-$result->close();
 
-//$info = '</div>';
-$curSysData = '';
+$sql = "SELECT s.name, s.x, s.y, s.z
+        FROM {$sourceTable} s
+        " . implode("\n        ", $joins) . "
+        WHERE " . implode(' AND ', $where) . "
+        ORDER BY {$order}
+        LIMIT {$limit}";
 
-if (strtolower($lastSystemName) === strtolower($curSys['name']) && validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
-    $comma = !empty($data) ? ',' : '';
-    $curSysData =
-        $comma . '{"name":"' . $curSys['name'] . '","cat":[5],"coords":{"x":' . $curSys['x'] . ',"y":' . $curSys['y'] . ',"z":' .
-        $curSys['z'] . '}}';
+$res = $mysqli->query($sql);
+if (!$res) {
+    throw new RuntimeException('Query failed: ' . $mysqli->error);
 }
 
-$data = $dataStart . $data . $curSysData . ']}';
+$out = [];
+while ($row = $res->fetch_assoc()) {
+    $name = (string)($row['name'] ?? '');
+    if ($name === '') {
+        continue;
+    }
+    $x = is_numeric($row['x'] ?? null) ? (float)$row['x'] : null;
+    $y = is_numeric($row['y'] ?? null) ? (float)$row['y'] : null;
+    $z = is_numeric($row['z'] ?? null) ? (float)$row['z'] : null;
+    if ($x === null || $y === null || $z === null) {
+        continue;
+    }
+    $out[] = [
+        'name'   => $name,
+        'coords' => ['x' => $x, 'y' => $y, 'z' => $z],
+        // Add optional keys here later if desired:
+        // 'infos' => 'Visited/bookmarked/etc.',
+        // 'url'   => '/System/?name=' . rawurlencode($name),
+    ];
+}
+$res->free();
 
-$mapJson = $_SERVER['DOCUMENT_ROOT'] . '/GalMap/map_points.json';
-file_put_contents($mapJson, $data);
-
-edtbCommon('last_map_update', 'unixtime', true, time());
+echo json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

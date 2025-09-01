@@ -79,7 +79,14 @@ if (!validCoordinates($ucoordx, $ucoordy, $ucoordz)) {
     <!-- ED3D-Galaxy-Map -->
     <link href="Vendor/ED3D-Galaxy-Map/css/styles.css?ver=<?= $settings['edtb_version']?>" rel="stylesheet" type="text/css" />
     <script src="Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
-
+    <link rel="stylesheet" href="Vendor/ED3D-Galaxy-Map/css/styles.css">
+    <script>
+    Ed3d.init({
+        container : 'edmap',
+        jsonPath  : './getMapPoints.json.php',
+        withHudPanel: false
+    });
+    </script>
     <div style="display: none" id="curx"><?= $ucoordx?></div>
     <div style="display: none" id="cury"><?= $ucoordy?></div>
     <div style="display: none" id="curz"><?= $ucoordz?></div>

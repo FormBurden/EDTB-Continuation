@@ -29,6 +29,12 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 */
+/** JSON endpoints must never emit warnings/notices */
+if (!headers_sent()) {
+    header('Content-Type: application/json; charset=utf-8');
+}
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 /** @require config */
 require_once __DIR__ . '/../source/config.inc.php';
@@ -38,6 +44,10 @@ require_once __DIR__ . '/../source/functions.php';
 require_once __DIR__ . '/../source/MySQL.php';
 /** @require curSys */
 require_once __DIR__ . '/../source/curSys.php';
+
+/** safer array get */
+function _g(array $a, string $k, $d=null) { return array_key_exists($k,$a) ? $a[$k] : $d; }
+
 
 use \EDTB\Gallery\MakeGallery;
 
@@ -229,5 +239,7 @@ if ($newSystem !== false || $request == 0) {
 } else {
     $data['renew'] = 'false';
 }
+
+if (function_exists('ob_get_length') && ob_get_length()) { ob_clean(); }
 
 echo json_encode($data);
