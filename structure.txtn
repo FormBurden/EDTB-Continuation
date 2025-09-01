@@ -20,6 +20,7 @@
 │   ├── setData.php
 │   └── SQL.php
 ├── bin
+│   ├── import_edsm
 │   └── migrate
 ├── Bookmarks
 │   ├── add_bookmark.php
@@ -32,6 +33,12 @@
 ├── composer.json
 ├── composer.lock
 ├── data
+│   ├── dumps
+│   │   ├── powerPlay.json.gz
+│   │   ├── stations.json.gz
+│   │   └── systemsPopulated.json.gz
+│   ├── EDTB
+│   │   └── screenshots
 │   ├── edtb-units.txt
 │   ├── edtoolbox_v1.ini
 │   ├── server_config.inc.php
@@ -39,6 +46,11 @@
 │   └── systems_sample.csv
 ├── database
 │   └── migrations
+│       ├── 0000_demote_views_to_tables.sql
+│       ├── 0001_linux_bootstrap.sql
+│       ├── 0002_indexes.sql
+│       ├── 0003_add_missing_systems_columns.sql
+│       ├── 0004_user_tables.sql
 │       ├── 20250831_0001_core.sql
 │       ├── 20250831_0002_poi.sql
 │       ├── 20250831_0003_core_missing.sql
@@ -52,6 +64,12 @@
 │   ├── index.php
 │   └── Vendor
 │       └── MySQL_table_edit
+├── EDTB
+├── edtb_collect_debug_bundle.log
+├── edtb-edsm-import.service.in
+├── edtb-edsm-import.timer.in
+├── .edtb-files.txt
+├── edtb_pick_min_153043.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -113,6 +131,8 @@
 ├── scripts
 │   ├── collect_debug_bundle.sh
 │   ├── edtb-services.sh
+│   ├── edtb-user-units.sh
+│   ├── import_edsm.py
 │   ├── import_systems.php
 │   ├── install_dev_arch.sh
 │   ├── nowplaying-loop.sh
@@ -274,6 +294,9 @@
 ├── System
 │   ├── getData_systemInfo.php
 │   └── index.php
+├── systemd-user
+│   ├── edtb-edsm-import.service
+│   └── edtb-edsm-import.timer
 ├── SystemMap
 │   ├── add_systemMap.php
 │   ├── bodies
@@ -375,4 +398,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-53 directories, 323 files
+58 directories, 341 files

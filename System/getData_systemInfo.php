@@ -209,15 +209,16 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     // get last known coordinates
     $lastCoords = lastKnownSystem();
 
-    $lastCoordx = $lastCoords['x'];
-    $lastCoordy = $lastCoords['y'];
-    $lastCoordz = $lastCoords['z'];
+    $lastCoordx = $lastCoords['x'] ?? null;
+    $lastCoordy = $lastCoords['y'] ?? null;
+    $lastCoordz = $lastCoords['z'] ?? null;
 
     $udCoordx = $lastCoordx;
     $udCoordy = $lastCoordy;
     $udCoordz = $lastCoordz;
 
     $add3 = ' *';
+
 
     $raresCloseby = 0;
 }
@@ -327,7 +328,18 @@ if (!System::isMapped($siSystemName)) {
     $siCrosslinks .= '</a>';
 }
 
-$numVisits = System::numVisits($siSystemName);
+$numVisits = 0;
+try {
+    $ref = new \ReflectionMethod(System::class, 'numVisits');
+    if ($ref->getNumberOfParameters() >= 2) {
+        $numVisits = System::numVisits($mysqli, $siSystemName);
+    } else {
+        $numVisits = System::numVisits($siSystemName);
+    }
+} catch (\Throwable $e) {
+    $numVisits = 0;
+}
+
 
 if ($actualNumRes > 0 && validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     $rareText = '&nbsp;&nbsp;<span onclick="$(\'#rares\').fadeToggle(\'fast\')">';
@@ -343,6 +355,13 @@ $data['si_name'] .= $rareText . $userDists . '</span>';
 /**
  * station info for System.php
  */
+$hasStationsTable = false;
+if ($__t = $mysqli->query("SHOW TABLES LIKE 'edtb_stations'")) {
+    $hasStationsTable = ($__t->num_rows > 0);
+    $__t->close();
+}
+if ($hasStationsTable) {
+
 $query = "  SELECT SQL_CACHE *
             FROM edtb_stations
             WHERE system_id = '$siSystemId'
@@ -650,6 +669,9 @@ if ($stationExists == 0) {
 }
 
 $stationResult->close();
+} else {
+    $data['si_stations'] = 'No station data available';
+}
 
 /**
  * detailed system info
