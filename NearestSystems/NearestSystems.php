@@ -188,7 +188,48 @@ class NearestSystems
         }
     }
 
-    
+        /**
+     * True if a table exists in the currently selected DB.
+     * Uses information_schema with a SHOW TABLES fallback.
+     */
+    private function tableExists(string $tableName): bool
+    {
+        $this->ensureDbSelected();
+
+        /** @var \mysqli|null $db */
+        $db = $this->db ?? $this->mysqli ?? null;
+        if (!$db instanceof \mysqli) {
+            return false;
+        }
+
+        $sql = "SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE() AND table_name = ?
+                LIMIT 1";
+
+        $stmt = $db->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param('s', $tableName);
+            $stmt->execute();
+            $stmt->store_result();
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+            return $exists;
+        }
+
+        // Fallback if information_schema is restricted or prepare failed
+        $stmt = $db->prepare("SHOW TABLES LIKE ?");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('s', $tableName);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $exists = $res && $res->num_rows > 0;
+        $stmt->close();
+        return $exists;
+    }
+
 
     /**
      *
