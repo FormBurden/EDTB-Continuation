@@ -150,12 +150,10 @@ class Header extends Theme
                      * External links
                      */
                     // normalize to an iterable
-                    if (is_string($SOMETHING)) {
-                        $SOMETHING = [];   // treat stray strings as "no items"
+                    if (!isset($settings['ext_links']) || !is_iterable($settings['ext_links'])) {
+                        $settings['ext_links'] = [];
                     }
-                    if (!is_iterable($SOMETHING)) {
-                        $SOMETHING = [];   // null/bool/int -> empty list
-                    }
+
                     if (!function_exists('edtb_to_array')) {
                         function edtb_to_array($v): array {
                             if (!isset($v) || $v === '' || $v === null) return [];

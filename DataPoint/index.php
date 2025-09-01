@@ -87,10 +87,10 @@ while ($columnObj = $result->fetch_object()) {
 $result->close();
 
 /** @var array links_to_db */
-$tabledit->links_to_db = $settings['data_view_table'];
+$tabledit->links_to_db = $settings['data_view_table'] ?? [$dataTable => $dataTable];
 
 /** @var array skip */
-$tabledit->skip = $settings['data_view_ignore'][$dataTable];
+$tabledit->skip = $settings['data_view_ignore'][$dataTable] ?? [];
 
 /** @var string primary_key the primary key of the table (must be AUTO_INCREMENT) */
 $tabledit->primary_key = 'id';
