@@ -1,45 +1,133 @@
 <?php
-declare(strict_types=1);
+/**
+ * Galaxy map
+ *
+ * Front-end file for Galaxy map
+ *
+ * @package EDTB\Backend
+ * @author Mauri Kujala <contact@edtb.xyz>
+ * @copyright Copyright (C) 2016, Mauri Kujala
+ * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU Public License version 2
+ */
 
-// Optional query params (kept safe if you want to use them later)
-$gx = isset($_GET['x']) && is_numeric($_GET['x']) ? (float)$_GET['x'] : 0.0;
-$gy = isset($_GET['y']) && is_numeric($_GET['y']) ? (float)$_GET['y'] : 0.0;
-$gz = isset($_GET['z']) && is_numeric($_GET['z']) ? (float)$_GET['z'] : 0.0;
-$zoom = isset($_GET['zoom']) && is_numeric($_GET['zoom']) ? (float)$_GET['zoom'] : 1.0;
+/*
+* ED ToolBox, a companion web app for the video game Elite Dangerous
+* (C) 1984 - 2016 Frontier Developments Plc.
+* ED ToolBox or its creator are not affiliated with Frontier Developments Plc.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+*/
+
+//http://ed-board.net/3Dgalnet/
+
+/** @require Theme class */
+require_once __DIR__ . '/../style/Theme.php';
+
+/**
+ * initiate page header
+ */
+$header = new Header();
+
+/** @var string page_title */
+$header->pageTitle = 'Galaxy Map&nbsp;&nbsp;&&nbsp;&nbsp;Neighborhood Map';
+
+/**
+ * display the header
+ */
+$header->displayHeader();
+
+/**
+ * determine coordinates for the map distance calculations
+ */
+if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
+    $ucoordx = $curSys['x'];
+    $ucoordy = $curSys['y'];
+    $ucoordz = -$curSys['z'];
+} else {
+    // get last known coordinates
+    $lastCoords = lastKnownSystem();
+
+    $ucoordx = $lastCoords['x'];
+    $ucoordy = $lastCoords['y'];
+    $ucoordz = -$lastCoords['z'];
+
+    $isUnknown = ' *';
+}
+
+if (!validCoordinates($ucoordx, $ucoordy, $ucoordz)) {
+    $ucoordx = '0';
+    $ucoordy = '0';
+    $ucoordz = '0';
+
+    $isUnknown = ' *';
+}
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>EDTB — Galaxy Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- ED3D CSS (absolute path from repo root) -->
-  <link rel="stylesheet" href="/Vendor/ED3D-Galaxy-Map/css/styles.css">
-  <style>
-    html, body { height:100%; margin:0; }
-    #edmap { width:100%; height:100vh; }
-  </style>
-</head>
-<body>
-  <div id="edmap"></div>
-
-  <!-- Required deps in this order: jQuery, Three.js, then ED3D -->
-  <script src="/Vendor/ED3D-Galaxy-Map/vendor/jquery/jquery-2.1.4.min.js"></script>
-  <script src="/Vendor/ED3D-Galaxy-Map/vendor/three/three.min.js"></script>
-  <script src="/Vendor/ED3D-Galaxy-Map/js/ed3dmap.min.js"></script>
-
-  <script>
-    const START = <?php echo json_encode(['x'=>$gx, 'y'=>$gy, 'z'=>$gz], JSON_UNESCAPED_SLASHES); ?>;
-    const ZOOM  = <?php echo json_encode($zoom, JSON_UNESCAPED_SLASHES); ?>;
-
+    <!-- Three.js -->
+    <script src="/source/Vendor/three.min.js"></script>
+    <!-- ED3D-Galaxy-Map -->
+    <link href="Vendor/ED3D-Galaxy-Map/css/styles.css?ver=<?= $settings['edtb_version']?>" rel="stylesheet" type="text/css" />
+    <script src="Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
+    <link rel="stylesheet" href="Vendor/ED3D-Galaxy-Map/css/styles.css">
+    <script>
     Ed3d.init({
-      container      : 'edmap',
-      jsonPath       : './getMapPoints.json.php',
-      withHudPanel   : false,
-      // Optional once you confirm it renders:
-      // playerPos   : [START.x, START.y, START.z],
-      // cameraPos   : [0, 45000, -45000]
+        container : 'edmap',
+        jsonPath  : './getMapPoints.json.php',
+        withHudPanel: false
     });
-  </script>
-</body>
-</html>
+    </script>
+    <div style="display: none" id="curx"><?= $ucoordx?></div>
+    <div style="display: none" id="cury"><?= $ucoordy?></div>
+    <div style="display: none" id="curz"><?= $ucoordz?></div>
+    <div style="display: none" id="rcurx"><?= round($ucoordx)?></div>
+    <div style="display: none" id="rcury"><?= round($ucoordy)?></div>
+    <div style="display: none" id="rcurz"><?= round($ucoordz)?></div>
+
+    <div class="entries" style="position: absolute;  bottom: 0; top: 0;height: auto">
+        <table class="edmap_table">
+            <tbody>
+            <tr>
+                <th style="text-align: center">
+                    <ul class="pagination">
+                        <li class="actives"><a href="/GalMap">Galaxy Map</a></li>
+                        <li><a href="/Map">Neighborhood Map</a></li>
+                    </ul>
+                </th>
+            </tr>
+            </tbody>
+        </table>
+        <div class="edmap" id="edmap"></div>
+        <!-- Launch ED3Dmap -->
+        <script type="text/javascript">
+            Ed3d.init({
+                basePath: 'Vendor/ED3D-Galaxy-Map/',
+                container: 'edmap',
+                jsonPath: '/GalMap/map_points.json',
+                withHudPanel: true,
+                startAnim: false,
+                effectScaleSystem: [15,50],
+                playerPos: [<?= $ucoordx?>,<?= $ucoordy?>,<?= $ucoordz?>]
+            });
+        </script>
+    </div>
+<?php
+/**
+ * initiate page footer
+ */
+$footer = new Footer();
+
+/**
+ * display the footer
+ */
+$footer->displayFooter();

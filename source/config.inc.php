@@ -65,6 +65,36 @@ $server_config = [
     'data_dir'     => EDTB_DATA,
 ];
 
+// ---------------------------------------------------------
+// phpFastCache: portable file-cache location (Linux/Windows)
+// ---------------------------------------------------------
+// Resolve the project data directory used elsewhere in this file.
+// We support either EDTB_DATA or EDTB_DATA_DIR, falling back to repo /data.
+$__edtbData = defined('EDTB_DATA')
+    ? EDTB_DATA
+    : (defined('EDTB_DATA_DIR')
+        ? EDTB_DATA_DIR
+        : (isset($EDTB_ROOT) ? ($EDTB_ROOT . '/data') : (dirname(__DIR__) . '/data')));
+
+// Define a cache dir under data/
+if (!defined('EDTB_CACHE_DIR')) {
+    define('EDTB_CACHE_DIR', rtrim($__edtbData, '/\\') . '/cache');
+}
+
+// Ensure it exists (don’t fatal if it can’t be created)
+if (!is_dir(EDTB_CACHE_DIR)) {
+    @mkdir(EDTB_CACHE_DIR, 0775, true);
+}
+
+// Configure phpFastCache if/when the class is available
+if (class_exists('phpFastCache')) {
+    phpFastCache::setup('storage', 'files');
+    phpFastCache::setup('path', EDTB_CACHE_DIR);
+    // Keep a single cache root name under the path (avoids per-host subdirs)
+    phpFastCache::setup('securityKey', 'phpfastcache');
+}
+
+
 // Load server_config.inc.php from the first place it exists.
 // (NEVER fatal if missing; we keep $server_config defaults.)
 $serverCfgCandidates = [
