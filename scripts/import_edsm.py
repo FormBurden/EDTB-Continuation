@@ -118,6 +118,36 @@ def ensure_indexes(cur):
     add_index('edtb_stations', 'idx_stations_system',    'system_id')
     add_index('edtb_stations', 'idx_stations_name',      'name')
 
+def _norm_dt(val):
+    """
+    Normalize EDSM timestamps to 'YYYY-MM-DD HH:MM:SS' or return None.
+    Accepts epoch ints/floats or ISO strings like '2025-08-31T12:34:56Z' or '2025-08-31 12:34:56.123Z'.
+    """
+    if val in (None, '', 0):
+        return None
+    # Epoch seconds
+    if isinstance(val, (int, float)):
+        try:
+            return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int(val)))
+        except Exception:
+            return None
+    # String variants
+    if isinstance(val, str):
+        s = val.strip()
+        if not s:
+            return None
+        s = s.replace('T', ' ').replace('Z', '')
+        if '.' in s:
+            s = s.split('.', 1)[0]
+        # Only date?
+        if len(s) == 10:
+            return s + ' 00:00:00'
+        # Full datetime at least 19 chars
+        if len(s) >= 19:
+            return s[:19]
+    return None
+
+
 def import_systems(dump_path, conn):
     print("Importing systems (populated)...")
     # Expected EDSM structure (per API docs): { id, name, coords{x,y,z}, information{allegiance,government,security,economy,population,...} }
@@ -183,8 +213,19 @@ def import_powers(dump_path, conn):
             conn.commit()
     print(f"Upserted ~{pow_count} power names, updated {sys_updates} systems")
 
+def _load_system_ids(conn):
+    sids = set()
+    with conn.cursor() as cur:
+        cur.execute("SELECT id FROM edtb_systems")
+        for row in cur.fetchall():
+            sids.add(int(row[0]))
+    return sids
+
+
 def import_stations(dump_path, conn):
     print("Importing stations...")
+    existing_sids = _load_system_ids(conn)
+
     sql = (
         "REPLACE INTO edtb_stations "
         "(id, system_id, name, type, max_landing_pad_size, economies, faction, allegiance, government, state, "
@@ -198,6 +239,7 @@ def import_stations(dump_path, conn):
         " %s,%s,%s,%s)"
     )
     count = 0
+    skipped = 0
     with gzip.open(dump_path, 'rb') as f, conn.cursor() as cur:
         parser = ijson.items(f, 'item')
         for rows in chunked(parser, 1000):
@@ -206,48 +248,77 @@ def import_stations(dump_path, conn):
                 sid = o.get('systemId')
                 stid = o.get('id')
                 name = o.get('name')
+
+                # Require essentials
+                if sid is None or stid is None or not name:
+                    skipped += 1
+                    continue
+
+                try:
+                    sid = int(sid)
+                    stid = int(stid)
+                except Exception:
+                    skipped += 1
+                    continue
+
+                # Skip if parent system is not present (avoids FK conflicts later)
+                if sid not in existing_sids:
+                    skipped += 1
+                    continue
+
                 stype = o.get('type')
                 maxpad = o.get('maxLandingPadSize')
+                if isinstance(maxpad, str) and len(maxpad) > 1:
+                    maxpad = maxpad[:1]
+
                 economies = None
                 if isinstance(o.get('economies'), list):
-                    economies = ", ".join([e for e in o['economies'] if isinstance(e, str)])
+                    economies = ", ".join([e for e in o['economies'] if isinstance(e, str) and e])
+
                 faction = o.get('faction')
                 allegiance = o.get('allegiance')
                 government = o.get('government')
                 state = o.get('state')
 
                 ls = o.get('distanceToStar') or o.get('distanceToArrival') or 0
+                try:
+                    ls = int(ls)
+                except Exception:
+                    ls = 0
 
-                haveMarket = 1 if o.get('haveMarket') else 0
+                haveMarket     = 1 if o.get('haveMarket') else 0
                 haveOutfitting = 1 if o.get('haveOutfitting') else 0
-                haveRearm = 1 if o.get('haveRearm') else 0
-                haveRefuel = 1 if o.get('haveRefuel') else 0
-                haveRepair = 1 if o.get('haveRepair') else 0
-                haveShipyard = 1 if o.get('haveShipyard') else 0
-                blackMarket = 1 if o.get('haveBlackmarket') else 0
+                haveRearm      = 1 if o.get('haveRearm') else 0
+                haveRefuel     = 1 if o.get('haveRefuel') else 0
+                haveRepair     = 1 if o.get('haveRepair') else 0
+                haveShipyard   = 1 if o.get('haveShipyard') else 0
+                blackMarket    = 1 if o.get('haveBlackmarket') else 0
 
-                sellingShips = ",".join(o.get('sellingShips', [])) if isinstance(o.get('sellingShips'), list) else None
+                sellingShips   = ",".join(o.get('sellingShips', [])) if isinstance(o.get('sellingShips'), list) else None
                 sellingModules = ",".join(o.get('sellingModules', [])) if isinstance(o.get('sellingModules'), list) else None
-                prohib = ",".join(o.get('prohibitedCommodities', [])) if isinstance(o.get('prohibitedCommodities'), list) else None
-                imports = ",".join(o.get('importCommodities', [])) if isinstance(o.get('importCommodities'), list) else None
-                exports = ",".join(o.get('exportCommodities', [])) if isinstance(o.get('exportCommodities'), list) else None
+                prohib         = ",".join(o.get('prohibitedCommodities', [])) if isinstance(o.get('prohibitedCommodities'), list) else None
+                imports        = ",".join(o.get('importCommodities', [])) if isinstance(o.get('importCommodities'), list) else None
+                exports        = ",".join(o.get('exportCommodities', [])) if isinstance(o.get('exportCommodities'), list) else None
 
-                is_planetary = 1 if o.get('isPlanetary') else 0
-                outfitting_updated_at = o.get('outfittingUpdatedAt')
-                shipyard_updated_at = o.get('shipyardUpdatedAt')
+                dt_outfit  = _norm_dt(o.get('outfittingUpdatedAt'))
+                dt_ship    = _norm_dt(o.get('shipyardUpdatedAt'))
 
                 params.append((
                     stid, sid, name, stype, maxpad, economies, faction, allegiance, government, state,
                     ls, haveMarket, haveOutfitting, haveRearm, haveRefuel, haveRepair, haveShipyard,
                     sellingShips, sellingModules, prohib, imports, exports,
-                    blackMarket, is_planetary, outfitting_updated_at, shipyard_updated_at
+                    blackMarket, 1 if o.get('isPlanetary') else 0, dt_outfit, dt_ship
                 ))
-            cur.executemany(sql, params)
-            conn.commit()
-            count += len(rows)
-            if count % 50000 == 0:
-                print(f"  {count} stations...")
-    print(f"Imported {count} stations")
+
+            if params:
+                cur.executemany(sql, params)
+                conn.commit()
+                count += len(params)
+                if count % 50000 == 0:
+                    print(f"  {count} stations...")
+
+    print(f"Imported {count} stations (skipped {skipped})")
+
 
 def main():
     parser = argparse.ArgumentParser()

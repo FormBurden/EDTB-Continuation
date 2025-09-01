@@ -1,0 +1,11 @@
+[Unit]
+Description=EDTB nightly EDSM import (user)
+
+[Service]
+Type=oneshot
+EnvironmentFile=__REPO__/edtb.env
+WorkingDirectory=__REPO__
+ExecStart=/usr/bin/env bash -lc 'cd "$REPO_DIR" && bin/import_edsm --quick'
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=5

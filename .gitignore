@@ -35,3 +35,10 @@
 # Keep placeholder files so folders can exist in repo
 !.gitkeep
 !.keep
+
+# Generated user units (contain absolute paths)
+systemd-user/*.service
+systemd-user/*.timer
+
+# Local env (machine-specific)
+edtb.env

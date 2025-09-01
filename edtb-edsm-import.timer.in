@@ -1,0 +1,11 @@
+[Unit]
+Description=Run EDTB EDSM import nightly (user)
+
+[Timer]
+OnCalendar=03:30
+AccuracySec=10m
+Persistent=true
+Unit=edtb-edsm-import.service
+
+[Install]
+WantedBy=timers.target
