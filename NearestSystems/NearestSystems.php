@@ -188,6 +188,19 @@ class NearestSystems
         }
     }
 
+    
+    private function safeQuery(string $sql)
+    {
+        $db = $this->mysqli ?? $this->db ?? null;
+        if (!$db) return false;
+
+        // If this SQL references a table we don't have (like edtb_modules), skip safely
+        if (stripos($sql, 'edtb_modules') !== false && !$this->tableExists('edtb_modules')) {
+            return false;
+        }
+        return $db->query($sql);
+    }
+
         /**
      * True if a table exists in the currently selected DB.
      * Uses information_schema with a SHOW TABLES fallback.
@@ -464,17 +477,18 @@ class NearestSystems
             }
 
             $query = "  SELECT group_name
-                        FROM edtb_modules
-                        WHERE group_id = '$groupId'
-                        LIMIT 1";
+            FROM edtb_modules
+            WHERE group_id = '$groupId'
+            LIMIT 1";
 
-            $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
-            $gObj = $result->fetch_object();
+            $result = $this->safeQuery($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+            $gObj = $result ? $result->fetch_object() : null;
 
-            $groupName = $gObj->group_name;
+            $groupName = $gObj?->group_name ?? 'modules';
             $groupName = substr($groupName, -1) === 's' ? $groupName : '' . $groupName . 's';
 
-            $result->close();
+            if ($result) { $result->close(); }
+
 
             if (!empty($rating)) {
                 $ratings = ' ' . $_GET['rating'] . ' rated ';
@@ -496,14 +510,15 @@ class NearestSystems
                         AND class = '$class'
                         LIMIT 1";
 
-                $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
-                $pObj = $result->fetch_object();
+                $result = $this->safeQuery($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+                $pObj = $result ? $result->fetch_object() : null;
 
-                $modulesPrice = number_format($pObj->price);
-                $price = ' (normal price ' . $modulesPrice . ' CR) ';
+                $modulesPrice = $pObj?->price ? number_format($pObj->price) : null;
+                $price = $modulesPrice ? ' (normal price ' . $modulesPrice . ' CR) ' : '';
 
-                $result->close();
+                if ($result) { $result->close(); }
             }
+
 
             $this->text .= ' stations selling ' . $ratings . $classes . $groupName . $price;
             $this->hiddenInputs .= '<input type="hidden" name="group_id" value="' . $groupId . '">';
@@ -741,6 +756,7 @@ class NearestSystems
                                 $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
 
                                 $curCat = '';
+                                if ($result) {
                                 while ($modObj = $result->fetch_object()) {
                                     $catName = $modObj->category_name;
 
@@ -756,6 +772,7 @@ class NearestSystems
                                 }
 
                                 $result->close();
+                                }
                                 ?>
                         </select><br/>
                         <select title="Class" class="selectbox" name="class" style="width: 222px" id="class"

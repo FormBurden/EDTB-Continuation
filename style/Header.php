@@ -156,7 +156,19 @@ class Header extends Theme
                     if (!is_iterable($SOMETHING)) {
                         $SOMETHING = [];   // null/bool/int -> empty list
                     }
-
+                    if (!function_exists('edtb_to_array')) {
+                        function edtb_to_array($v): array {
+                            if (!isset($v) || $v === '' || $v === null) return [];
+                            if (is_array($v)) return $v;
+                            if (is_string($v)) {
+                                // allow comma-separated config like: "A, B, C"
+                                $parts = array_filter(array_map('trim', explode(',', $v)));
+                                return $parts;
+                            }
+                            return [$v];
+                        }
+                    }
+                    
                     foreach ($settings['ext_links'] as $name => $linkHref) {
                         echo '<a href="' .  $linkHref . '" target="_blank" onclick="$(\'#ext_links\').fadeToggle(\'fast\')">';
                         echo '<div class="leftpanel-ext_links_link">' . $name . '</div>';
