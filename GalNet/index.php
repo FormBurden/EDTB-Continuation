@@ -63,7 +63,9 @@ if ($html === null) {
             <hr>
             <?php
             $rss = new DOMDocument();
-            $rss->load(GALNET_FEED);
+            $galnetUrl = defined('GALNET_FEED')
+                ? GALNET_FEED
+                : 'https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&page[offset]=0&page[limit]=12';
             $feed = [];
 
             /** @var DOMDocument $node */

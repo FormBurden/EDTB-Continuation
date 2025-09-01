@@ -149,6 +149,14 @@ class Header extends Theme
                     /**
                      * External links
                      */
+                    // normalize to an iterable
+                    if (is_string($SOMETHING)) {
+                        $SOMETHING = [];   // treat stray strings as "no items"
+                    }
+                    if (!is_iterable($SOMETHING)) {
+                        $SOMETHING = [];   // null/bool/int -> empty list
+                    }
+
                     foreach ($settings['ext_links'] as $name => $linkHref) {
                         echo '<a href="' .  $linkHref . '" target="_blank" onclick="$(\'#ext_links\').fadeToggle(\'fast\')">';
                         echo '<div class="leftpanel-ext_links_link">' . $name . '</div>';

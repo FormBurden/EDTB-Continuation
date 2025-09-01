@@ -121,3 +121,8 @@ if (defined('DATA_DIR') && empty($server_config['data_dir'])) {
 // Keep some helpful constants for the rest of the codebase.
 if (!defined('INSTALL_PATH')) define('INSTALL_PATH', $server_config['install_path']);
 if (!defined('DATA_DIR'))    define('DATA_DIR', $server_config['data_dir']);
+
+if (!defined('GALNET_FEED')) {
+    // Frontier GalNet JSON (newest first, 12 items)
+    define('GALNET_FEED', 'https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&page[offset]=0&page[limit]=12');
+}
