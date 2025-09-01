@@ -40,6 +40,15 @@ $curSys = is_array($curSys ?? null) ? $curSys : [];
 $hasSystemId   = isset($_GET['system_id'])   && $_GET['system_id']   !== 'undefined' && $_GET['system_id']   !== '';
 $hasSystemName = isset($_GET['system_name']) && $_GET['system_name'] !== 'undefined' && $_GET['system_name'] !== '';
 
+// defaults to avoid "Undefined array key" + "Undefined variable" warnings
+$siDistAdd = '';
+$curSys = is_array($curSys ?? null) ? $curSys : [];
+$curSys['x'] = $curSys['x'] ?? null;
+$curSys['y'] = $curSys['y'] ?? null;
+$curSys['z'] = $curSys['z'] ?? null;
+$curSys['name'] = $curSys['name'] ?? '';
+
+
 if ($hasSystemId || $hasSystemName) {
     /** @var int $systemId */
     $systemId   = $hasSystemId ? (int)$_GET['system_id'] : -1;
@@ -160,7 +169,7 @@ $escSiSysName = $mysqli->real_escape_string($siSystemName);
  * get coordinates for distance calculations
  * and rares nearby
  */
-if (validCoordinates($curSys['x'], $curSys['z'], $curSys['y'])) {
+if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     $add3 = '';
     $udCoordx = $curSys['x'];
     $udCoordy = $curSys['y'];
