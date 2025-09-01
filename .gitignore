@@ -4,3 +4,4 @@
 /.php-cs-fixer.cache
 /.idea
 /.vscode
+/edtb_debug*
