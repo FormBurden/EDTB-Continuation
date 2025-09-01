@@ -82,12 +82,41 @@ def chunked(iterable, size):
         yield batch
 
 def ensure_indexes(cur):
-    # light, query-friendly indexes
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_systems_name ON edtb_systems(name)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_systems_power ON edtb_systems(power)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_systems_allegiance ON edtb_systems(allegiance)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_stations_system ON edtb_stations(system_id)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_stations_name ON edtb_stations(name)")
+    """
+    Add useful indexes only if the target is a BASE TABLE and the index does not already exist.
+    This avoids crashes when old setups left similarly named VIEWS in place.
+    """
+    def index_exists(table, index):
+        cur.execute(
+            "SELECT 1 FROM information_schema.statistics "
+            "WHERE table_schema = DATABASE() AND table_name = %s AND index_name = %s LIMIT 1",
+            (table, index),
+        )
+        return cur.fetchone() is not None
+
+    def is_base_table(table):
+        cur.execute(
+            "SELECT TABLE_TYPE FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name = %s LIMIT 1",
+            (table,),
+        )
+        row = cur.fetchone()
+        return bool(row and row[0] == 'BASE TABLE')
+
+    def add_index(table, index, cols_csv):
+        if not is_base_table(table):
+            # Skip silently if it's a VIEW or missing
+            return
+        if index_exists(table, index):
+            return
+        # Safe because table/index names are fixed literals here
+        cur.execute(f"ALTER TABLE {table} ADD INDEX {index} ({cols_csv})")
+
+    add_index('edtb_systems',  'idx_systems_name',       'name')
+    add_index('edtb_systems',  'idx_systems_power',      'power')
+    add_index('edtb_systems',  'idx_systems_allegiance', 'allegiance')
+    add_index('edtb_stations', 'idx_stations_system',    'system_id')
+    add_index('edtb_stations', 'idx_stations_name',      'name')
 
 def import_systems(dump_path, conn):
     print("Importing systems (populated)...")
