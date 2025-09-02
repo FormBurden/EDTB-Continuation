@@ -52,6 +52,18 @@ function _g(array $a, string $k, $d=null) { return array_key_exists($k,$a) ? $a[
 use \EDTB\Gallery\MakeGallery;
 
 $action = $_GET['action'] ?? '';
+// Normalize legacy/variant action names to canonical handlers
+$__aliases = [
+    'coords'        => 'onlycoordinates',
+    'onlycoords'    => 'onlycoordinates',
+    'coordinates'   => 'onlycoordinates',
+    'system'        => 'onlysystem',
+    'currentsystem' => 'onlysystem',
+];
+if (isset($__aliases[$action])) {
+    $action = $__aliases[$action];
+}
+
 $request = $_GET['request'] ?? 0;
 $newSystem = false; // default on cold start
 

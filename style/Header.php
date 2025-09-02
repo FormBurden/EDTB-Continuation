@@ -33,6 +33,8 @@ require_once __DIR__ . '/../source/config.inc.php';
 /** @require functions */
 require_once __DIR__ . '/../source/functions.php';
 /** @require curSys */
+require_once __DIR__ . '/../source/MySQL.php';
+
 require_once __DIR__ . '/../source/curSys.php';
 
 use \EDTB\style\Theme;
@@ -127,7 +129,7 @@ class Header extends Theme
         <div class="leftpanel">
             <div class="leftpanel-top">
                 <!-- current system name will be rendered here -->
-                <div class="leftpanel-title" id="t1"></div>
+                <div class="leftpanel-title" id="t1"><?= htmlspecialchars($curSys['name'] ?? '') ?></div>
                 <!-- date and clock will be rendered here -->
                 <div id="datetime">
                     <?php

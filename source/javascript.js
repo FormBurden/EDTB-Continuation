@@ -351,7 +351,7 @@ function get_cs(formid, coordformid, onlyid) {
             cache: false,
             success: function(results) {
                 // split coordinates for distance calculations
-                var res = results.split(","), x = res[0], y = res[1], z = res[2];
+                var res = results.replace(/;/g, ",").split(","), x = res[0], y = res[1], z = res[2];
 
                 $('#coordsx_2').val(x);
                 $('#coordsy_2').val(y);
@@ -784,7 +784,7 @@ function showResult(str, divid, link, station, idlink, sysid, dp) {
  */
 function setResult(result, coordinates, divid) {
     $("#system_" + divid).val(result);
-    var res = coordinates.split(","), x = res[0], y = res[1], z = res[2];
+    var res = coordinates.replace(/;/g, ",").split(","), x = res[0], y = res[1], z = res[2];
 
     $("#coordsx_" + divid).val(x);
     $("#coordsy_" + divid).val(y);
@@ -829,7 +829,7 @@ function setl(name, stationid) {
  * @author Mauri Kujala <contact@edtb.xyz>
  */
 function setdp(name, coordinates, systemid) {
-    var res = coordinates.split(","), x = res[0], y = res[1], z = res[2];
+    var res = coordinates.replace(/;/g, ",").split(","), x = res[0], y = res[1], z = res[2];
 
     $('#system_name').val(name);
     $('#system_id').val(systemid);
