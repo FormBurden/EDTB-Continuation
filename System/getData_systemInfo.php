@@ -182,8 +182,24 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     if (isset($settings['rare_range']) && $settings['rare_range'] == '-1') {
         $raresCloseby = 0;
     } else {
+        // sanitize coords and search radius for the rares query
+        $rx = (float)($curSys['x'] ?? 0);
+        $ry = (float)($curSys['y'] ?? 0);
+        $rz = (float)($curSys['z'] ?? 0);
+
+        $range = (float)($settings['rare_range'] ?? 50.0);
+        if ($range <= 0) { $range = 50.0; }
+
+        $minX = $rx - $range; $maxX = $rx + $range;
+        $minY = $ry - $range; $maxY = $ry + $range;
+        $minZ = $rz - $range; $maxZ = $rz + $range;
+
         $query = '  SELECT SQL_CACHE
-                    sqrt(pow((edtb_systems.x-(' . $curSys['x'] . ')),2)+pow((edtb_systems.y-(' . $curSys['y'] . ')),2)+pow((edtb_systems.z-(' . $curSys['z'] . ')),2)) AS distance,
+                    sqrt(
+                        pow((edtb_systems.x-(' . (float)($curSys['x'] ?? 0) . ')),2)
+                      + pow((edtb_systems.y-(' . (float)($curSys['y'] ?? 0) . ')),2)
+                      + pow((edtb_systems.z-(' . (float)($curSys['z'] ?? 0) . ')),2)
+                    ) AS distance,
                     edtb_rares.item, edtb_rares.system_name, edtb_rares.station, edtb_rares.price,
                     edtb_rares.sc_est_mins, edtb_rares.ls_to_star,
                     edtb_rares.needs_permit, edtb_rares.max_landing_pad_size,
@@ -191,20 +207,29 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
                     FROM edtb_rares
                     LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name
                     WHERE
-                    edtb_systems.x BETWEEN ' . $curSys['x'] . '-' . $settings['rare_range'] . '
-                    AND ' . $curSys['x'] . '+' . $settings['rare_range'] . ' &&
-                    edtb_systems.y BETWEEN ' . $curSys['y'] . '-' . $settings['rare_range'] . '
-                    AND ' . $curSys['y'] . '+' . $settings['rare_range'] . ' &&
-                    edtb_systems.z BETWEEN ' . $curSys['z'] . '-' . $settings['rare_range'] . '
-                    AND ' . $curSys['z'] . '+' . $settings['rare_range'] . "
+                    edtb_systems.x BETWEEN ' . ((float)($curSys['x'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['x'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
+                    AND edtb_systems.y BETWEEN ' . ((float)($curSys['y'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['y'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
+                    AND edtb_systems.z BETWEEN ' . ((float)($curSys['z'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['z'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
                     ORDER BY
-                    edtb_rares.system_name = '$escSiSysName' DESC,
+                    edtb_rares.system_name = \'' . $escSiSysName . '\' DESC,
                     distance ASC
-                    LIMIT 10";
+                    LIMIT 10';
 
-        $rareResult = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
+        // Only run the rares query if the table exists (fresh DBs won’t have it yet)
+        $hasRares = false;
+        $chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_rares'");
+        if ($chk) {
+            $hasRares = ($chk->num_rows > 0);
+            $chk->close();
+        }
+        if ($hasRares) {
+            $rareResult = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
+            $raresCloseby = $rareResult->num_rows;
+        } else {
+            $raresCloseby = 0;
+        }
 
-        $raresCloseby = $rareResult->num_rows;
+
     }
 } else {
     // get last known coordinates

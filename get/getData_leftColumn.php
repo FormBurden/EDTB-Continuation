@@ -1,4 +1,15 @@
 <?php
+if (!function_exists('get_icon')) {
+    function get_icon($name)
+    {
+        $map = [
+            'log_add' => '/style/img/log_add.png',
+        ];
+        $src = $map[$name] ?? "/style/img/{$name}.png";
+        return '<img src="' . htmlspecialchars($src, ENT_QUOTES) . '" class="icon24" alt="">';
+    }
+}
+
 /**
  * Ajax backend file for the left column data
  *
@@ -224,7 +235,7 @@ if (!isset($_COOKIE['style']) || $_COOKIE['style'] !== 'narrow') {
                 $banned  = $stationObj->prohibited_commodities === '' ? '' : "Prohibited commodities: " . $stationObj->prohibited_commodities . " \n";
 
                 // Strip quotes from selling_ships cleanly (no complicated escapes)
-                $selling = $stationObj->selling_ships === '' ? '' : " \nSelling ships: " . str_replace("'", '', $stationObj->selling_ships) . "\n";
+                $selling = $stationObj->selling_ships === '' ? '' : " \nSelling ships: " . str_replace("'", '', ($stationObj->selling_ships ?? '')) . "\n";
 
                 // Facilities line
                 $includes = [

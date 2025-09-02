@@ -94,6 +94,25 @@ class System
         return false;
     }
 
+
+    private static function tableExists($mysqli, string $table): bool
+    {
+        if (!$mysqli) {
+            return false;
+        }
+        $esc = $mysqli->real_escape_string($table);
+        $sql = "SELECT 1 FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                AND table_name = '$esc' LIMIT 1";
+        $res = $mysqli->query($sql);
+        if (!$res) {
+            return false;
+        }
+        $exists = ($res->num_rows > 0);
+        $res->close();
+        return $exists;
+    }
+
     /**
      * Check if system is logged
      *
