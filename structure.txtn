@@ -68,6 +68,7 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
+├── edtb_issue_pick_test.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -396,4 +397,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-58 directories, 339 files
+58 directories, 340 files

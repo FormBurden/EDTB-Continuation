@@ -316,24 +316,21 @@ if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
         $curSys['users_own'] = false;
 
         // If edtb_systems exists, try to pull coordinates for the fallback system
-        $hasSystems = false;
-        if ($res = $mysqli->query("SHOW TABLES LIKE 'edtb_systems'")) {
-            $hasSystems = $res->num_rows > 0;
-            $res->close();
-        }
-        if ($hasSystems) {
-            $sysName = $mysqli->real_escape_string($curSys['name']);
-            $query = "SELECT id, x, y, z FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
-            if ($result = $mysqli->query($query)) {
-                if ($row = $result->fetch_object()) {
-                    $curSys['id'] = $row->id;
-                    $curSys['x'] = $row->x;
-                    $curSys['y'] = $row->y;
-                    $curSys['z'] = $row->z;
-                }
-                $result->close();
+        // If edtb_systems exists, try to pull coordinates for the fallback system
+        $sysName = $mysqli->real_escape_string($curSys['name'] ?: 'Sol');
+
+        $query = "SELECT id, x, y, z FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
+        if ($result = $mysqli->query($query)) {
+            if ($row = $result->fetch_object()) {
+                $curSys['id'] = $row->id;
+                $curSys['x'] = $row->x;
+                $curSys['y'] = $row->y;
+                $curSys['z'] = $row->z;
+                $curSys['coordinates'] = $curSys['x'] . ',' . $curSys['y'] . ',' . $curSys['z'];
             }
+            $result->close();
         }
+
     }
 
 } else {
