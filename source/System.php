@@ -128,6 +128,10 @@ class System
         if (empty($system)) {
             return false;
         }
+        if (!self::tableExists($mysqli, 'user_log')) {
+            return false;
+        }
+
 
         $escSystemName = $mysqli->real_escape_string($system);
 

@@ -58,7 +58,8 @@
 │       ├── 20250831_0003_user_tables.sql
 │       ├── 20250831_0003_user_visited_systems.sql
 │       ├── 20250831_0004_seed_demo.sql
-│       └── 20250831_0005_powers.sql
+│       ├── 20250831_0005_powers.sql
+│       └── 20250901_0010_windows_parity_system_columns.sql
 ├── DataPoint
 │   ├── functions.php
 │   ├── index.php
@@ -397,4 +398,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-58 directories, 340 files
+58 directories, 341 files

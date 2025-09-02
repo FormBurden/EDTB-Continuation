@@ -30,6 +30,56 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+$ROOT = realpath(__DIR__ . '/..');
+if (!isset($settings) || !is_array($settings)) {
+    // Prefer server_config.inc.php / .redacted.php (Windows-parity)
+    $cfg = null;
+    if (is_file($ROOT . '/server_config.inc.php')) {
+        $cfg = $ROOT . '/server_config.inc.php';
+    } elseif (is_file($ROOT . '/server_config.inc.redacted.php')) {
+        $cfg = $ROOT . '/server_config.inc.redacted.php';
+    }
+
+    if ($cfg) {
+        $settings = require $cfg;
+    } else {
+        // Linux-parity: fall back to .env / .env.redacted in the repo root
+        $envFile = null;
+        if (is_file($ROOT . '/.env')) {
+            $envFile = $ROOT . '/.env';
+        } elseif (is_file($ROOT . '/.env.redacted')) {
+            $envFile = $ROOT . '/.env.redacted';
+        }
+
+        if ($envFile) {
+            $env = [];
+            foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+                if ($line[0] === '#' || strpos($line, '=') === false) continue;
+                [$k, $v] = explode('=', $line, 2);
+                $v = trim($v, " \t\n\r\0\x0B\"'");
+                $env[$k] = $v;
+            }
+            $settings = [
+                'install_path' => $env['ROOT_DIR'] ?? $ROOT,
+                'data_dir'     => $env['DATA_DIR'] ?? ($ROOT . '/data'),
+
+                // DB params (names mapped to server_config keys)
+                'db_host'      => $env['DB_HOST'] ?? '127.0.0.1',
+                'db_name'      => $env['DB_NAME'] ?? 'edtb',
+                'db_user'      => $env['DB_USER'] ?? 'edtb',
+                'db_pass'      => $env['DB_PASS'] ?? '',
+                'db_port'      => isset($env['DB_PORT']) ? (int)$env['DB_PORT'] : 3306,
+            ];
+        } else {
+            die('Config not found: server_config.inc(.redacted).php or .env(.redacted) in ' . $ROOT);
+        }
+    }
+}
+require_once $ROOT . '/source/functions.php';
+require_once $ROOT . '/source/MySQL.php';
+require_once $ROOT . '/source/System.php';
+require_once $ROOT . '/source/curSys.php';
+
 use \EDTB\source\System;
 $siDistAdd = '';
 $curSys = is_array($curSys ?? null) ? $curSys : [];
