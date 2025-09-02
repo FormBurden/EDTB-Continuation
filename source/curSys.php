@@ -291,6 +291,51 @@ if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
             }
         }
     }
+    // Fallback: if no system could be resolved from logs, use last known or 'Sol'
+    if (empty($curSys) || empty($curSys['name'])) {
+        $fallbackName = edtbCommon('last_system', 'value');
+        if (empty($fallbackName)) {
+            $fallbackName = 'Sol';
+        }
+
+        $curSys['name'] = $fallbackName;
+        $curSys['esc_name'] = $mysqli->real_escape_string($curSys['name']);
+
+        // baseline defaults
+        $curSys['id'] = -1;
+        $curSys['population'] = '';
+        $curSys['government'] = '';
+        $curSys['allegiance'] = '';
+        $curSys['state'] = 'unknown';
+        $curSys['security'] = 'unknown';
+        $curSys['power'] = '';
+        $curSys['power_state'] = '';
+        $curSys['needs_permit'] = '';
+        $curSys['updated_at'] = '';
+        $curSys['simbad_ref'] = '';
+        $curSys['users_own'] = false;
+
+        // If edtb_systems exists, try to pull coordinates for the fallback system
+        $hasSystems = false;
+        if ($res = $mysqli->query("SHOW TABLES LIKE 'edtb_systems'")) {
+            $hasSystems = $res->num_rows > 0;
+            $res->close();
+        }
+        if ($hasSystems) {
+            $sysName = $mysqli->real_escape_string($curSys['name']);
+            $query = "SELECT id, x, y, z FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
+            if ($result = $mysqli->query($query)) {
+                if ($row = $result->fetch_object()) {
+                    $curSys['id'] = $row->id;
+                    $curSys['x'] = $row->x;
+                    $curSys['y'] = $row->y;
+                    $curSys['z'] = $row->z;
+                }
+                $result->close();
+            }
+        }
+    }
+
 } else {
     write_log('Error: ' . $settings['log_dir'] . " doesn't exist or is not readable", __FILE__, __LINE__);
 }

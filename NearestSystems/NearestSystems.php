@@ -415,6 +415,11 @@ class NearestSystems
         /**
          * nearest stations....
          */
+        // If stations have been requested but the table doesn't exist yet, fall back to systems.
+        if ($this->stations !== false && !$this->tableExists('edtb_stations')) {
+            $this->stations = false;
+        }
+
         if ($this->stations !== false) {
             $this->mainQuery = "   SELECT edtb_stations.system_id AS system_id, edtb_stations.name AS station_name,
                                     edtb_stations.ls_from_star, edtb_stations.max_landing_pad_size,

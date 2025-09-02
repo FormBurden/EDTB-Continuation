@@ -65,11 +65,9 @@
 │   └── Vendor
 │       └── MySQL_table_edit
 ├── EDTB
-├── edtb_collect_debug_bundle.log
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_pick_min_153043.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -398,4 +396,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-58 directories, 341 files
+58 directories, 339 files

@@ -56,13 +56,17 @@ $request = $_GET['request'] ?? 0;
 $newSystem = false; // default on cold start
 
 if ($action === 'onlycoordinates') {
-    echo $curSys['name'] ?? '';
-
+    $x = $curSys['x'] ?? 0;
+    $y = $curSys['y'] ?? 0;
+    $z = $curSys['z'] ?? 0;
+    echo $x . ';' . $y . ';' . $z;
     exit;
 }
 
+
 if ($action === 'onlysystem') {
-    echo $curSys['name'];
+    echo $curSys['name'] ?? '';
+
 
     exit;
 }
