@@ -54,6 +54,9 @@ class System
         if (empty($systemName)) {
             return false;
         }
+        if (!self::tableExists($mysqli, 'user_system_map')) {
+            return false;
+        }
 
         $escSystemName = $mysqli->real_escape_string($systemName);
 
