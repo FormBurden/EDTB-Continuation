@@ -71,7 +71,7 @@ if ($action === 'onlycoordinates') {
     $x = $curSys['x'] ?? 0;
     $y = $curSys['y'] ?? 0;
     $z = $curSys['z'] ?? 0;
-    echo $x . ';' . $y . ';' . $z;
+    echo $x . ',' . $y . ',' . $z;
     exit;
 }
 

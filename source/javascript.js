@@ -210,7 +210,7 @@ function get_data(override) {
         url: "/get/getData.php?action=onlysystem",
         cache: false,
         success: function (onlysystem) {
-            if (onlysystem !== page_sys || override === true) {
+            if (onlysystem !== page_sys || override === true || !page_sys) {
                 requestno = 0;
 
                 var qs = [];

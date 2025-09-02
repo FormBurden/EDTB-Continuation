@@ -171,4 +171,11 @@ if ($gnum > 0) {
 
 $glogRes->close();
 
+if ($logdata === '') {
+    $logdata = '<header><h2>Commander\'s Log</h2></header>'
+             . '<hr>'
+             . '<p>No log entries yet. Use the Log page to add your first entry.</p>';
+}
+
+
 $data['log_data'] = $logdata;
