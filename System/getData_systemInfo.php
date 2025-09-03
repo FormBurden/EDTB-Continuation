@@ -355,6 +355,8 @@ $cRaresData = '<div class="raresinfo" id="rares">';
 /**
  * display rares nearby
  */
+$actualNumRes = 0;
+
 if ($raresCloseby > 0) {
     $actualNumRes = 0;
 
@@ -416,6 +418,7 @@ try {
     $numVisits = 0;
 }
 
+$rareText = '';
 
 if ($actualNumRes > 0 && validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     $rareText = '&nbsp;&nbsp;<span onclick="$(\'#rares\').fadeToggle(\'fast\')">';
@@ -425,8 +428,16 @@ if ($actualNumRes > 0 && validCoordinates($curSys['x'], $curSys['y'], $curSys['z
 
 $data['si_name'] .= $siSystemDisplayName . $siCrosslinks;
 $data['si_name'] .= '&nbsp;&nbsp;<span style="font-size: 11px;  text-transform: uppercase; vertical-align: middle">';
-$data['si_name'] .= '[ State: ' . $siSystemState . ' - Security: ' . $siSystemSecurity . ' - Visits: ' . $numVisits . ' ]';
+
+$__parts = [];
+if (!empty($siSystemState)    && $siSystemState    !== 'None') { $__parts[] = 'State: '    . $siSystemState; }
+if (!empty($siSystemSecurity) && $siSystemSecurity !== 'None') { $__parts[] = 'Security: ' . $siSystemSecurity; }
+if ((int)$numVisits > 0)                                      { $__parts[] = 'Visits: '   . (int)$numVisits; }
+
+$data['si_name'] .= (count($__parts) ? '[ ' . implode(' - ', $__parts) . ' ]' : '');
 $data['si_name'] .= $rareText . $userDists . '</span>';
+
+
 
 /**
  * station info for System.php
@@ -452,7 +463,15 @@ if ($stationExists == 0) {
 } else {
     while ($stationObj = $stationResult->fetch_object()) {
         $sName = $stationObj->name;
-        $sExplode = explode(' ', $sName);
+        $fullTitle = trim((string)$stationObj->name);
+        $stationId = $stationObj->id;
+        $wikiQuery = $fullTitle;
+
+        $sName = '<span class="wp" onclick="get_wikipedia(\'' . urlencode($wikiQuery) . '\', \'' . $stationId . '\')">';
+        $sName .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . htmlspecialchars($wikiQuery, ENT_QUOTES) . '" style="font-weight: inherit">'
+            . htmlspecialchars($fullTitle, ENT_QUOTES)
+            . '</a></span>';
+
 
         $count = count($sExplode);
 
@@ -462,7 +481,7 @@ if ($stationExists == 0) {
             $lastn = $count - 1;
             $last = $sExplode[$lastn];
 
-            $first = str_replace($last, '', $sName);
+            $first = str_replace($last, '', (string)$sName);
         } else {
             $first = $sName;
             $last = '';
@@ -480,25 +499,25 @@ if ($stationExists == 0) {
         $lsFromStar = $stationObj->ls_from_star;
         $maxLandingPadSize = $stationObj->max_landing_pad_size;
 
-        $sFaction = $stationObj->faction === '' ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
+        $sFaction = empty($stationObj->faction) ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
         $sDistanceFromStar = $lsFromStar == 0 ? '' : '' . number_format($lsFromStar) . ' ls - ';
         $sInformation = '<span style="float: right;  margin-right: 8px">&boxur; &nbsp;' . $sDistanceFromStar . 'Landing pad: ' . $maxLandingPadSize . '</span><br>';
-        $sGovernment = $stationObj->government === '' ? 'Government unknown' : $stationObj->government;
-        $sAllegiance = $stationObj->allegiance === '' ? 'Allegiance unknown' : $stationObj->allegiance;
+        $sGovernment = empty($stationObj->government) ? 'Government unknown' : $stationObj->government;
+        $sAllegiance = empty($stationObj->allegiance) ? 'Allegiance unknown' : $stationObj->allegiance;
 
-        $sState = $stationObj->state === '' ? '' : '<strong>State:</strong> ' . $stationObj->state . '<br>';
-        $type = $stationObj->type === '' ? 'Type unknown' : $stationObj->type;
-        $economies = $stationObj->economies === '' ? 'Economies unknown' : $stationObj->economies;
-        $economies = $economies === '' ? 'Economies unknown' : $economies;
+        $sState = empty($stationObj->state) ? '' : '<strong>State:</strong> ' . $stationObj->state . '<br>';
+        $type = empty($stationObj->type) ? 'Type unknown' : $stationObj->type;
+        $economies = empty($stationObj->economies) ? 'Economies unknown' : $stationObj->economies;
+        $economies = empty($economies) ? 'Economies unknown' : $economies;
 
         $importCommodities = $stationObj->import_commodities === '' ? '' : '<br><strong>Import commodities:</strong> ' . $stationObj->import_commodities . '<br>';
-        $exportCommodities = $stationObj->export_commodities === '' ? '' : '<strong>Export commodities:</strong> ' . $stationObj->export_commodities . '<br>';
-        $prohibitedCommodities = $stationObj->prohibited_commodities === '' ? '' : '<strong>Prohibited commodities:</strong> ' . $stationObj->prohibited_commodities . '<br>';
-
+        $exportCommodities = empty($stationObj->export_commodities) ? '' : '<strong>Export commodities:</strong> ' . $stationObj->export_commodities . '<br>';
+        $prohibitedCommodities = empty($stationObj->prohibited_commodities) ? '' : '<strong>Prohibited commodities:</strong> ' . $stationObj->prohibited_commodities . '<br>';
+        $sFaction = empty($stationObj->faction) ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
         $outfittingUpdatedAgo = !empty($stationObj->outfitting_updated_at) ? 'Outfitting last updated: ' . get_timeago($stationObj->outfitting_updated_at, true, true) : '';
         $shipyardUpdatedAgo = !empty($stationObj->shipyard_updated_at) ? ' (updated ' . get_timeago($stationObj->shipyard_updated_at, true, true) . ')' : '';
 
-        $sellingShips = $stationObj->selling_ships === '' ? '' : '<br><br><strong>Selling ships:</strong> ' . str_replace("'", '', $stationObj->selling_ships) . $shipyardUpdatedAgo;
+        $sellingShips = empty($stationObj->selling_ships) ? '' : str_replace("'", '', (string)$stationObj->selling_ships) . $shipyardUpdatedAgo;
 
         $sellingModules = '';
 
@@ -642,23 +661,11 @@ if ($stationExists == 0) {
         }
 
         $info = $sFaction . $sInformation . $importCommodities . $exportCommodities . $prohibitedCommodities;
-        $info = str_replace("['", '', $info);
-        $info = str_replace([
-            "']",
-            "', '"
-        ], [
-            '',
-            ', '
-        ], $info);
+        $info = str_replace("['", '', (string)$info);
+        $info = str_replace(["']", "', '"], ['', ', '], (string)$info);
 
-        $economies = str_replace("['", '', $economies);
-        $economies = str_replace([
-            "']",
-            "', '"
-        ], [
-            '',
-            ', '
-        ], $economies);
+        $economies = str_replace("['", '', (string)$economies);
+        $economies = str_replace(["']", "', '"], ['', ', '], (string)$economies);
 
         // get allegiance icon
         $allegianceIcon = getAllegianceIcon($sAllegiance);
@@ -673,7 +680,7 @@ if ($stationExists == 0) {
         $data['si_stations'] .= '</span>';
 
         $data['si_stations'] .= '<span class="right">';
-        $data['si_stations'] .= '<a href="http://eddb.io/station/' . $stationId . '" title="View station on eddb.io" target="_blank">';
+        $data['si_stations'] .= '<a href="https://inara.cz/galaxy-station/?search=' . rawurlencode($stationObj->name . ' [' . $siSystemName . ']') . '" title="View station on INARA.cz" target="_blank">';
         $data['si_stations'] .= '<img src="/style/img/eddb.png" alt="EDDB" style="width: 10px; height: 12px">';
         $data['si_stations'] .= '</a>';
         $data['si_stations'] .= '</span>';
@@ -752,7 +759,10 @@ $stationResult->close();
 /**
  * detailed system info
  */
-if ($exists == 0 && $_GET['system_id'] === 'undefined' && $_GET['system_name'] === 'undefined') {
+$getSystemId   = $_GET['system_id']   ?? 'undefined';
+$getSystemName = $_GET['system_name'] ?? 'undefined';
+
+if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'undefined') {
     $data['si_detailed'] = 'No data available for this system';
 } else {
     if ($siSystemPower !== 'None' && $siSystemPowerState !== 'None') {
@@ -781,13 +791,18 @@ if ($exists == 0 && $_GET['system_id'] === 'undefined' && $_GET['system_name'] =
 
     $data['si_detailed'] .= '<img src="/style/img/powers/' . str_replace(' ', '_', $siSystemPower) . '.jpg" class="powerpic" alt="' . $siSystemPower . '"><br>';
     $data['si_detailed'] .= '<span style="font-size: 13px; font-weight: 700">' . $siSystemData . '</span><br><br>';
-    $data['si_detailed'] .= '<span>
-                                <strong>Allegiance:</strong> ' . $siSystemAllegiance . '<br>
-                                <strong>Government:</strong> ' . $siSystemGovernment . '<br>
-                                <strong>Population:</strong> ' . $dispPopulation . '<br>
-                                <strong>Economy:</strong> ' . $siSystemEconomy . '<br>
-                                <strong>Faction:</strong> ' . $siSystemRulingFaction . '
-                            </span>';
+    $__rows = [];
+    if (!empty($siSystemAllegiance)    && $siSystemAllegiance    !== 'None') { $__rows[] = '<strong>Allegiance:</strong> ' . $siSystemAllegiance; }
+    if (!empty($siSystemGovernment)    && $siSystemGovernment    !== 'None') { $__rows[] = '<strong>Government:</strong> ' . $siSystemGovernment; }
+    if (is_numeric($siSystemPopulation) && (int)$siSystemPopulation > 0)      { $__rows[] = '<strong>Population:</strong> ' . number_format((int)$siSystemPopulation); }
+    if (!empty($siSystemEconomy)       && $siSystemEconomy       !== 'None') { $__rows[] = '<strong>Economy:</strong> '    . $siSystemEconomy; }
+    if (!empty($siSystemRulingFaction) && $siSystemRulingFaction !== 'None') { $__rows[] = '<strong>Faction:</strong> '    . $siSystemRulingFaction; }
+
+    if (!empty($__rows)) {
+        $data['si_detailed'] .= '<span>' . implode('<br>', $__rows) . '</span>';
+    }
+
+
 }
 
 if (function_exists('ob_get_length') && ob_get_length()) { ob_clean(); }

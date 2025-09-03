@@ -65,6 +65,7 @@
 │       ├── 20250901_0006_user_log.sql
 │       ├── 20250901_0010_windows_parity_system_columns.sql
 │       ├── 2025-09-01_create_user_log.sql
+│       ├── 20250903_0006_settings.sql
 │       ├── 20250903_0007_create_user_systems_own.sql
 │       ├── 20250903_0007_user_systems_own.sql
 │       ├── 20250903_0008_create_edtb_ships.sql
@@ -82,7 +83,6 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_issue_bookmarks_pass3.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery

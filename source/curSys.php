@@ -42,21 +42,61 @@ if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
     /**
      * select the newest file
      */
-    if (!$files = scandir($settings['log_dir'], SCANDIR_SORT_DESCENDING)) {
-        $error = error_get_last();
-        write_log('Error: ' . $error['message'], __FILE__, __LINE__);
-    }
-    $newestFile = $files[0];
+    // Resolve Elite Dangerous logs in a path-safe way.
+    // Prefer modern Journal JSON; fall back to legacy netLog if no Journals are present.
+    $lines = [];
 
-    /**
-     * read file to an array
-     */
-    if (!$line = file($settings['log_dir'] . '/' . $newestFile)) {
-        $error = error_get_last();
-        write_log('Error: ' . $error['message'], __FILE__, __LINE__);
-    } else {
-        // reverse array
-        $lines = array_reverse($line);
+    $dir = rtrim($settings['log_dir'], DIRECTORY_SEPARATOR);
+    $pattern = $dir . DIRECTORY_SEPARATOR . 'Journal.*.log';
+
+    // 1) Modern Journal.*.log (JSON) — supports spaces in paths; no shell needed
+    $jfiles = glob($pattern, GLOB_NOSORT) ?: [];
+    if (!empty($jfiles)) {
+        // Newest by natural sort (filenames contain ISO timestamps)
+        natsort($jfiles);
+        $jfiles = array_values($jfiles);
+        $newestJournal = end($jfiles);
+
+        $raw = @file($newestJournal, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($raw !== false) {
+            // Walk newest → oldest
+            $raw = array_reverse($raw);
+            foreach ($raw as $row) {
+                $j = json_decode($row, true);
+                if (!is_array($j)) {
+                    continue;
+                }
+                // Use any event that has StarSystem + StarPos (e.g., Location, FSDJump, CarrierJump)
+                if (isset($j['StarSystem'], $j['StarPos']) && is_array($j['StarPos']) && count($j['StarPos']) === 3) {
+                    $sys = $j['StarSystem'];
+                    $pos = $j['StarPos'];
+                    $ts  = isset($j['timestamp']) ? strtotime($j['timestamp']) : time();
+                    $visitedTime = date('H:i:s', $ts);
+                    $lines = [
+                        '{' . $visitedTime . '} System:"' . $sys . '" StarPos:(' . $pos[0] . ',' . $pos[1] . ',' . $pos[2] . ')'
+                    ];
+                    break;
+                }
+            }
+        }
+    }
+
+    // 2) Legacy netLog (only if no Journal entry was synthesized)
+    if (empty($lines)) {
+        if (!$files = scandir($dir, SCANDIR_SORT_DESCENDING)) {
+            $error = error_get_last();
+            write_log('Error: ' . $error['message'], __FILE__, __LINE__);
+        }
+        $newestFile = $files[0];
+        if (!$line = file($dir . '/' . $newestFile)) {
+            $error = error_get_last();
+            write_log('Error: ' . $error['message'], __FILE__, __LINE__);
+        } else {
+            // reverse array
+            $lines = array_reverse($line);
+        }
+    }
+
 
         foreach ($lines as $lineNum => $line) {
             $pos = strpos($line, 'System:');
@@ -289,8 +329,7 @@ if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
 
                 break;
             }
-        }
-    }
+        }    
     // Fallback: if no system could be resolved from logs, use last known or 'Sol'
     if (empty($curSys) || empty($curSys['name'])) {
         $fallbackName = edtbCommon('last_system', 'value');

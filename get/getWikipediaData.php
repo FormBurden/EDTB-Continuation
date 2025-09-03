@@ -36,6 +36,19 @@ require_once __DIR__ . '/../source/functions.php';
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $search = urlencode($_GET['search']);
     $text = '';
+    // Initialize state and HTTP context for Wikipedia calls
+    $also = '';
+    $titleRest = '';
+    $i = 0;
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'GET',
+            // Wikipedia requires a UA; use something descriptive for your app
+            'header'  => "User-Agent: EDTB-Continuation/1.0\r\n",
+            'timeout' => 10
+        ]
+    ]);
 
     /**
      * first try the dismbiguation
@@ -43,7 +56,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&redirects=&exsectionformat=plain&titles=' .
         strtolower($search) . '_(disambiguation)';
 
-    if ($result = file_get_contents($url)) {
+    if ($result = file_get_contents($url, false, $ctx)) {
         $jsonData = json_decode($result);
         /** @var array $titles */
         $titles = $jsonData->{'query'}->{'pages'};
@@ -145,7 +158,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
         $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsectionformat=plain&titles=' .
             strtolower($search);
 
-        if ($result = file_get_contents($url)) {
+        if ($result = file_get_contents($url, false, $ctx)) {
             $jsonData = json_decode($result);
             $titles = $jsonData->{'query'}->{'pages'};
 
