@@ -305,7 +305,7 @@ function get_data(override) {
 
 
 $(function() {
-    get_data();
+    get_data(true);
 });
 
 /**

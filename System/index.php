@@ -60,6 +60,33 @@ $header->displayHeader();
         </div>
     </div>
 </div>
+<div class="entries">
+    <div class="entries_inner" id="scrollable"></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (typeof get_data === 'function') {
+            // Use the existing global fetcher (same code path as the front page)
+            get_data(true);
+        } else {
+            // Fallback (in case get_data() isn’t defined on this template)
+            fetch('/get/getData.php?request=0', { credentials: 'same-origin' })
+                .then(r => r.json())
+                .then(j => {
+                    if (j && j.log_data !== undefined) {
+                        var el = document.getElementById('scrollable');
+                        if (el) el.innerHTML = j.log_data || '';
+                    }
+                })
+                .catch(console.error);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+});
+</script>
+
 <?php
 /**
  * initiate page footer
