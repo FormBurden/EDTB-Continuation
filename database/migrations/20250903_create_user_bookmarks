@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS user_bookmarks (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  system_name VARCHAR(128) NOT NULL,
+  note        TEXT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_user_bookmarks_system_name (system_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

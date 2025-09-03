@@ -30,8 +30,9 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-/** @require Theme class */
-require_once __DIR__ . '/../style/Theme.php';
+$ROOT = realpath(__DIR__ . '/..');
+require_once $ROOT . '/style/Header.php';
+
 
 /**
  * initiate page header
@@ -46,7 +47,7 @@ $header->pageTitle = 'Points of Interest&nbsp;&nbsp;&&nbsp;&nbsp;Bookmarks';
  */
 $header->displayHeader();
 
-require_once __DIR__ . '/add_poi.php';
+require_once $ROOT . '/Bookmarks/PoiBm.php';
 ?>
     <div class="entries">
         <!-- points of interest and bookmarks are rendered here -->

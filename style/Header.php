@@ -27,6 +27,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
+// Resolve repo root once and load core functions/$mysqli
+if (!isset($ROOT)) {
+    $ROOT = realpath(__DIR__ . '/..');
+}
+require_once $ROOT . '/source/functions.php';
 
 /** @require config */
 require_once __DIR__ . '/../source/config.inc.php';
