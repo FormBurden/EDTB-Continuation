@@ -51,6 +51,7 @@ class NearestSystems
 
     /** @var string $text the info text */
     private $text = 'Nearest';
+    private $is_unknown = '';
 
     /** @var string $addToQuery */
     private $addToQuery = '';
@@ -641,6 +642,11 @@ class NearestSystems
      */
     private function filters()
     {
+    // Defaults for first-load / empty querystring
+    $_GET['facility']      = $_GET['facility']      ?? '0';
+    $_GET['pad']           = $_GET['pad']           ?? '';
+    $_GET['station_type']  = $_GET['station_type']  ?? 'all';
+
     $hasModules = $this->tableExists('edtb_modules');
 
         ?>
@@ -1131,7 +1137,7 @@ class NearestSystems
         $stationState = $obj->station_state === '' ? '' : '<strong>State:</strong> ' . $obj->station_state . '<br>';
         $stationTypeD = $obj->type === '' ? '' : '<strong>Type:</strong> ' . $obj->type . '<br>';
         $stationEconomies =
-            $obj->station_economies === '' ? '' : '<strong>Economies:</strong> ' . $obj->station_economies . '<br>';
+            $obj->economies === '' ? '' : '<strong>Economies:</strong> ' . $obj->economies . '<br>';
 
         $stationImportCommodities = $obj->import_commodities === '' ? '' :
             '<br><strong>Import commodities:</strong> ' . $obj->import_commodities . '<br>';

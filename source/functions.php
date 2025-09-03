@@ -120,7 +120,7 @@ function dataIsOld($time)
 {
     global $settings;
 
-    $old = $settings['data_notify_age'] * 24 * 60 * 60;
+    $old = (isset($settings['data_notify_age']) ? (int)$settings['data_notify_age'] : 30) * 24 * 60 * 60;
     $since = time()-$old;
 
     if (empty($time)) {
