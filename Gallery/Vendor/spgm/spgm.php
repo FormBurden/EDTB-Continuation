@@ -33,7 +33,8 @@
 */
 
 /** @require functions */
-require_once __DIR__ . '/../source/functions.php';
+require_once dirname(__DIR__, 3) . '/source/functions.php';
+
 
 use \EDTB\source\System;
 

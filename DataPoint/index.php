@@ -97,32 +97,16 @@ while ($columnObj = $result->fetch_object()) {
 
 $result->close();
 
-/** @var array links_to_db */
-$tabledit->links_to_db = $settings['data_view_table'] ?? [$dataTable => $dataTable];
+$tabledit->linksToDb        = $settings['data_view_table'] ?? [$dataTable => $dataTable];
+$tabledit->skip             = $settings['data_view_ignore'][$dataTable] ?? [];
+$tabledit->primaryKey       = 'id';
+$tabledit->fieldsInListView = $output;
+$tabledit->numRowsListView  = 10;
+//$tabledit->fieldsRequired = array('name');
+$tabledit->urlBase          = 'Vendor/MySQL_table_edit/';
+$tabledit->urlScript        = '/DataPoint';
+$tabledit->showText         = $showt;
 
-/** @var array skip */
-$tabledit->skip = $settings['data_view_ignore'][$dataTable] ?? [];
-
-/** @var string primary_key the primary key of the table (must be AUTO_INCREMENT) */
-$tabledit->primary_key = 'id';
-
-/** @var array fields_in_list_view the fields you want to see in "list view" */
-$tabledit->fields_in_list_view = $output;
-
-/** @var int num_rows_list_view numbers of rows/records in "list view" */
-$tabledit->num_rows_list_view = 10;
-
-/** @var array fields_required required fields in edit or add record */
-//$tabledit->fields_required = array('name');
-
-/** @var string url_base */
-$tabledit->url_base = 'Vendor/MySQL_table_edit/';
-
-/** @var string url_script */
-$tabledit->url_script = '/DataPoint';
-
-/** @var array show_text */
-$tabledit->show_text = $showt;
 ?>
     <div class="entries">
     <div class="entries_inner">

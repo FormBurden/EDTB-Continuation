@@ -163,7 +163,7 @@ if (isset($_GET['maxdistance']) && is_numeric($_GET['maxdistance'])) {
                         // echo "<option ...>{$dist}</option>";
                     }
 
-                    sort($dropdowns);
+                    sort($dropdown);
 
                     foreach ($dropdowns as $value) {
                         $selected = $settings['maxdistance'] == $value ? 'selected="selected"' : '';

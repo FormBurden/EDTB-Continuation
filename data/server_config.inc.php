@@ -23,7 +23,9 @@ return [
     'edtb_stations' => [],
     'user_log'      => [],
   ],
-  
+  // Galnet filters: drop items with these substrings in the title
+  'galnet_excludes' => [],
+
 
   // Elite Dangerous paths (Proton)
   'netlog_dir'     => '/mnt/Unlimited-Gaming/SteamLibrary/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous',

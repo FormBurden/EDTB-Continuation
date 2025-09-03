@@ -120,7 +120,7 @@ class phpFastCache
     public static function getAutoClass($config)
     {
         $driver = "files";
-        $path = self::getPath(false, $config);
+        $path = self::getPath($config, false);
         if (is_writeable($path)) {
             $driver = "files";
         } elseif (extension_loaded('apc') && ini_get('apc.enabled') && strpos(PHP_SAPI, "CGI") === false) {
@@ -143,7 +143,7 @@ class phpFastCache
         return $driver;
     }
 
-    public static function getPath($skipCreatePath = false, $config)
+    public static function getPath($config, $skipCreatePath = false)
     {
         if (!isset($config['path']) || $config['path'] == '') {
 
