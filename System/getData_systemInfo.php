@@ -487,10 +487,9 @@ if ($stationExists == 0) {
             $last = '';
         }
 
-        $firsts = explode("'s", $first);
-        $firstUrl = $firsts[0];
-
-        $stationId = $stationObj->id;
+        $fullTitle = trim((string)$stationObj->name);
+        $stationId = (string)$stationObj->id;
+        $wikiQuery = $fullTitle;
 
         $sName = '<span class="wp" onclick="get_wikipedia(\'' . urlencode($firstUrl) . '\', \'' . $stationId . '\')">';
         $sName .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . $firstUrl . '" style="font-weight: inherit">';
