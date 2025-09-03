@@ -15,6 +15,11 @@ if (strtolower(basename($_SERVER['PHP_SELF'])) == strtolower(basename(__FILE__))
  */
 class MySQLtabledit
 {
+    /* Defaults required by EDTB usage */
+    public $width_editor    = '100%';
+    public $debug_html      = false;
+    public $content_deleted = '';
+
     /** guard properties for PHP 8+ */
     public $where_search = '';
     public $order_by = '';
@@ -378,6 +383,20 @@ class MySQLtabledit
 
         $this->content_saved = $_SESSION['content_saved'];
         $_SESSION['content_saved'] = '';
+        /* EDTB-Continuation: initialize template variables to avoid notices */
+        $background    = '';
+        $head          = '';
+        $navigation    = '';
+        $lastPageHtml  = '';
+        $rows          = '';
+        $inSearchField = '';
+        $options       = [];
+
+        /* Determine the label column for the current table */
+        $thisLabelCol = (isset($_GET['label_col']) && $_GET['label_col'] !== '')
+            ? $_GET['label_col']
+            : ($this->table === 'edtb_stations' ? 'station_name'
+               : ($this->table === 'user_log' ? 'title' : 'name'));
 
         // default sort (a = ascending)
         $sort = $_GET['sort'] ?? null;
@@ -408,6 +427,11 @@ class MySQLtabledit
         $s = $_GET['s'] ?? '';
         $f = $_GET['f'] ?? '';
         $queryString .= '&s=' . $s . '&f=' . $f;
+        /* Ensure $_GET keys exist for legacy checks below */
+        if (!isset($_GET['sort'])) { $_GET['sort'] = $sort ?? ''; }
+        if (!isset($_GET['ad']))   { $_GET['ad']   = $ad   ?? 'a'; }
+        if (!isset($_GET['s']))    { $_GET['s']    = $s; }
+
 
         // table
         $tblParam = $_GET['table'] ?? ($this->table ?? '');
@@ -466,7 +490,7 @@ class MySQLtabledit
                 $dY = '';
                 $dZ = '';
 
-                $escSysName = $this->mysqli->real_escape_string($data->system_name);
+                $escSysName = $this->mysqli->real_escape_string(isset($data->{$thisLabelCol}) ? $data->{$thisLabelCol} : '');
 
                 if (property_exists($data, 'x') && property_exists($data, 'y') && property_exists($data, 'z') || property_exists($data, 'system_name') || property_exists($data, 'system_id')) {
                     $dist = true;
@@ -493,7 +517,7 @@ class MySQLtabledit
                             $dZ = $obj->z;
                         }
                         $coordResult->close();
-                    } elseif (isset($data->system_name) || $found == 0) {
+                    } elseif (isset($data->{$thisLabelCol}) || $found == 0) {
                         if (validCoordinates($data->ritem_coordx, $data->ritem_coordy, $data->ritem_coordz)) {
                             $dX = $data->ritem_coordx;
                             $dY = $data->ritem_coordy;

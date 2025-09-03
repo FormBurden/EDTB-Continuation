@@ -62,24 +62,58 @@ if ($html === null) {
             <h2><img class="icon24" src="/style/img/galnet.png" alt="GalNet" style="margin-right: 6px"/>Latest Galnet News</h2>
             <hr>
             <?php
-            $rss = new DOMDocument();
             $galnetUrl = defined('GALNET_FEED')
-                ? GALNET_FEED
-                : 'https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&page[offset]=0&page[limit]=12';
-                $rss->load($galnetUrl);
+            ? GALNET_FEED
+            : 'https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&page[offset]=0&page[limit]=12';
+
+            /** Fetch JSON from Frontier CMS (JSON:API) */
+            $ch = curl_init($galnetUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'EDTB-Continuation/1.0');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/vnd.api+json']);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
             $feed = [];
 
-            /** @var DOMDocument $node */
-            foreach ($rss->getElementsByTagName('item') as $node) {
-                $item = [
-                    'title' => $node->getElementsByTagName('title')->item(0)->nodeValue,
-                    'link' => $node->getElementsByTagName('link')->item(0)->nodeValue,
-                    'pubDate' => $node->getElementsByTagName('pubDate')->item(0)->nodeValue,
-                    'content' => $node->getElementsByTagName('encoded')->item(0)->nodeValue
+            if ($response !== false && $httpCode >= 200 && $httpCode < 300) {
+            $json = json_decode($response, true);
+            if (isset($json['data']) && is_array($json['data'])) {
+                foreach ($json['data'] as $entry) {
+                    $attr = isset($entry['attributes']) && is_array($entry['attributes']) ? $entry['attributes'] : [];
 
-                ];
-                $feed[] = $item;
+                    $title = isset($attr['title']) ? $attr['title'] : '';
+                    $pub   = isset($attr['published_at']) ? $attr['published_at'] : '';
+
+                    // Body is a Drupal field; prefer 'processed' (HTML), else 'value'
+                    $body  = '';
+                    if (isset($attr['body']) && is_array($attr['body'])) {
+                        $body = isset($attr['body']['processed'])
+                            ? $attr['body']['processed']
+                            : (isset($attr['body']['value']) ? $attr['body']['value'] : '');
+                    } elseif (isset($attr['body'])) {
+                        $body = $attr['body'];
+                    }
+
+                    // Link: use path.alias if provided; otherwise the Galnet hub
+                    $link = 'https://www.elitedangerous.com/news/galnet';
+                    if (isset($attr['path']) && is_array($attr['path']) && !empty($attr['path']['alias'])) {
+                        $link = 'https://www.elitedangerous.com' . $attr['path']['alias'];
+                    }
+
+                    $feed[] = [
+                        'title'   => $title,
+                        'link'    => $link,
+                        'pubDate' => $pub,
+                        'content' => $body,
+                    ];
+                }
             }
+            }
+
+            
 
             $i = 0;
             foreach ($feed as $data) {

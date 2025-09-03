@@ -6,6 +6,7 @@
 /.vscode
 /edtb_debug*
 /.edtb-files.txt
+/logs
 
 # --- EDSM / ED data (downloads, extracts, caches, dumps) ---
 /data/dumps/

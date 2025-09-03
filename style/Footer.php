@@ -29,7 +29,7 @@
  */
 
  // Linux build: no legacy installer; keep variable benign
-$installer = null;
+ $installer = '';
 if (is_file($installer)) {
     require_once $installer;
 }

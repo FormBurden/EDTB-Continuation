@@ -50,6 +50,17 @@ $header->pageTitle = 'Data Point';
  * display the header
  */
 $header->displayHeader();
+/** DataPoint bootstrap: session flag + DB globals for MySQLtabledit */
+if (!isset($_SESSION['content_saved'])) {
+    $_SESSION['content_saved'] = '';
+}
+
+/** Map $settings DB config to globals for the vendor class */
+$server = $settings['db_host'];
+$user   = $settings['db_user'];
+$pwd    = $settings['db_pass'];
+$db     = $settings['db_name'];
+
 
 /** @require functions file */
 require_once __DIR__ . '/functions.php';
@@ -114,9 +125,36 @@ $tabledit->url_script = '/DataPoint';
 $tabledit->show_text = $showt;
 ?>
     <div class="entries">
-        <div class="entries_inner">
-            <?php $tabledit->do_it(); ?>
+    <div class="entries_inner">
+<?php
+    /* DataPoint: seed params + label column before invoking editor */
+    $tbl = (isset($_GET['table']) && $_GET['table'] !== '')
+        ? $_GET['table']
+        : ($settings['data_view_default_table'] ?? 'edtb_systems');
+
+    /* Choose the human-readable label column per table */
+    $labelCol = 'name';
+    if ($tbl === 'edtb_stations') { $labelCol = 'station_name'; }
+    elseif ($tbl === 'user_log')  { $labelCol = 'title'; }
+
+    /* Expose to the vendor class via query params (it reads $_GET directly) */
+    if (empty($_GET['label_col'])) { $_GET['label_col'] = $labelCol; }
+
+    /* Quiet legacy code that reads $_GET directly later */
+    if (!isset($_GET['sort'])) { $_GET['sort'] = ''; }
+    if (!isset($_GET['ad']))   { $_GET['ad']   = 'a'; }
+    if (!isset($_GET['s']))    { $_GET['s']    = ''; }
+
+    /* Satisfy vendor object property expectations */
+    if (!isset($tabledit->width_editor))    { $tabledit->width_editor    = '100%'; }
+    if (!isset($tabledit->debug_html))      { $tabledit->debug_html      = false; }
+    if (!isset($tabledit->content_deleted)) { $tabledit->content_deleted = ''; }
+
+    /* Render the editor */
+    $tabledit->do_it();
+?>
         </div>
+
     </div>
 <?php
 

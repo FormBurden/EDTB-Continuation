@@ -1,12 +1,239 @@
-a:4:{s:5:"value";s:965:"    <div class="entries">
+a:4:{s:5:"value";s:27580:"    <div class="entries">
         <div class="entries_inner">
             <h2><img class="icon24" src="/style/img/galnet.png" alt="GalNet" style="margin-right: 6px"/>Latest Galnet News</h2>
             <hr>
-            <br />
-<b>Warning</b>:  DOMDocument::load(https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&amp;page[offset]=0&amp;page[limit]=12): Failed to open stream: HTTP request failed! HTTP/1.1 403 Forbidden
- in <b>/mnt/Unlimited-Gaming/Modding/Elite Dangerous/MyProject/EDTB-Continuation-Clean/GalNet/index.php</b> on line <b>69</b><br />
-<br />
-<b>Warning</b>:  DOMDocument::load(): I/O warning : failed to load &quot;https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&amp;page[offset]=0&amp;page[limit]=12&quot;: No such file or directory in <b>/mnt/Unlimited-Gaming/Modding/Elite Dangerous/MyProject/EDTB-Continuation-Clean/GalNet/index.php</b> on line <b>69</b><br />
-        </div>
+                                <h3>
+                        <a href="javascript:void(0)" onclick="$('#0').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Mystery Of Missing Exobiology Protégé Deepens                        </a>
+                    </h3>
+                    <div id="0" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>A recent hunt for maverick exobiology scientist Terri Tora has only deepened the mystery surrounding her disappearance.<br />
+The search began after Professor Frank Raddix issued an appeal to locate his missing colleague, who was last reported pursuing “something big” for the science community. An encrypted trail of messages led search pilots across multiple systems, piecing together encrypted comms data. Thousands participated, ultimately confirming Tora’s final location at HIP 87621, a permit locked system.<br />
+Speculation about the system is rife as no third party or superpower has claimed ownership of the permit lock, leading to rumours about its true significance and why access has been restricted for so long.<br />
+Professor Raddix issued the following statement after the discovery of Tora’s last known location: “My thanks go to the many pilots who answered my call. Terri’s trail has led us somewhere we have never been able to access before. Why is access to this system restricted? Who operates the permit? And what discovery did Terri make that beyond this cloak of secrecy?”<br />
+A spokesperson for the October Consortium responded to calls regarding the presence of two of its megaships, stating that a routine survey expedition was occurring in the region. It denied knowing anything regarding Tora’s current whereabouts.<br />
+As one mystery has been answered more questions are raised, with ICE-casters and opinion piece authors demanding to know what lies within HIP 87621 and where Terri Tora is now.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#1').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Record-Breaking Success for Brewer’s Resupply Initiative                        </a>
+                    </h3>
+                    <div id="1" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Brewer Corporation has confirmed the overwhelming success of its latest initiative to restock Trailblazer megaships, citing it as the largest single delivery effort in its history with independent pilots transporting more than 1,200,000,000 tonnes of materials.<br />
+The campaign followed closely on the heels of two community-led operations that saw the Panther Clipper Mk II heavy freighter enter full-scale production.<br />
+Brewer’s logistical network, already stretched by unprecedented colonisation projects, received a major boost from the resupply drive, whilst pilots also ensured the resupply routes remained safe from pirate interference across Minerva.<br />
+Brewer COO Mark Rennik stated “Never before have we seen such a scale of commitment from the pilot community. This historic achievement not only met our needs, but it also far surpassed them.”<br />
+The Trailblazer colonisation supply ships, which had suffered significant stock shortages, have now been replenished and are once again ready to supply humanity’s continued expansion outwards. Brewer Corporation has confirmed that ships will remain in their original strategic positions, as follows:<br />
+Trailblazer Dream - HIP 90578<br />
+Trailblazer Song - Orgen<br />
+Trailblazer Wish - Bletii<br />
+Trailblazer Star - 34 Omicron Cephei<br />
+Trailblazer Promise - Klikis<br />
+Trailblazer Faith - Ngobe</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#2').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Powerplay Standings: August 3311                        </a>
+                    </h3>
+                    <div id="2" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>This month’s analysis of the influence held by key figures in the core systems has arrived, courtesy of Conrad Sterling of Vox Galactica.<br />
+His latest survey of system populations suggests the following five powers enjoy the largest sphere of influence:<br />
+Rank 1: Aisling Duval – 1,936 systems<br />
+Rank 2: Edmund Mahon - 1,674 systems<br />
+Rank 3: Arissa Lavigny-Duval – 1,616 systems<br />
+Rank 4: Yuri Grom – 1,201 systems<br />
+Rank 5: Li Yong-Rui – 1,183 systems<br />
+The largest increase in system influence belonged to Aisling Duval who can claim an additional 275 systems as supporters.<br />
+Vox Galactica will provide another update on the state of the powers next month.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#3').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Pirate Raids Threaten Colonisation Convoys                        </a>
+                    </h3>
+                    <div id="3" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Brewer Corporation has issued an urgent call for assistance following a wave of pirate attacks targeting the Minerva based resupply efforts for the Trailblazer fleet.<br />
+The convoys, which are transporting historically large volumes of aluminium, steel, titanium and CMM composites, have become high-priority targets for opportunistic raids. Security analysts have noted the coordinated nature of the attacks, prompting speculation that elements within a superpower may be providing clandestine support for the attacks.<br />
+A Brewer Corporation spokesperson commented: “The Trailblazer fleet remains a key element in supplying humanity’s expansion into the stars and exploiting the opportunities this affords. It’s disappointing, if not surprising, that some forces would prefer to see that vision of independence fail.”<br />
+Pilots are asked to defend shipping lanes by registering for the initiative at Starlace Station in Minerva and destroying hostile pirate forces found throughout the Minerva system.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#4').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Panther Clipper Enters Service, Trailblazer Resupply Calls                        </a>
+                    </h3>
+                    <div id="4" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Zorgon Peterson has confirmed that the Panther Clipper heavy freighter has entered full-scale production following two successful community-led support initiatives.<br />
+Independent pilots played a vital role in stabilising final-phase manufacturing, with critical commodities delivered to production facilities at Vespucci City. Security operations were also pivotal, with coordinated action clearing pirate threats and safeguarding high-priority convoys across the Aiaba system.<br />
+A spokesperson for Zorgon Peterson stated:<br />
+“We’re proud to see the Panther Clipper launched on schedule. The response from the pilot community has been overwhelming, and instrumental, in making this happen. Early sales have been promising, and we’re looking forward to seeing the Panther’s impact on interstellar trade.”<br />
+Pilots are now being asked to deliver aluminium, steel, titanium, and CMM composites to replenish Trailblazer megaship stock reserves as they supply humanity’s newest frontier regions. The considerable success of independent colonisation efforts has placed pressure on Brewer Corporation’s stocks of these materials.<br />
+Brewer Corporation’s primary distribution silo at Starlace Station in Minerva is hosting shipments, with a modified cargo rack listed among the rewards.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#5').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Zorgon Peterson Launches the Panther Clipper                        </a>
+                    </h3>
+                    <div id="5" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Zorgon Peterson has officially announced the release of the long-awaited Panther Clipper, with an initial run deployed for purchase amidst ongoing production issues.<br />
+The Panther Clipper is described as the largest and most advanced heavy freighter currently licensed for civilian use. With a focus on maximum cargo capacity and long-range endurance, it is expected to redefine logistics operations for independent pilots, corporations, and faction-aligned haulers alike.<br />
+Final specifications include a maximum cargo capacity of over 1200 tonnes, giving it the same capacity as a fully laden Type-8 and Imperial Cutter combined. It is also the first ship that can be equipped with the MkII cargo rack.<br />
+A spokesperson for Zorgon Peterson offered the following statement:<br />
+“This is a proud moment for our entire team. The Panther Clipper relaunches following decades of development and adaption to the growing needs of the pilot community. The new wave of system colonisation offers a perfect time to present the Panther Clipper.”<br />
+The ship’s launch schedule has been recently threatened by renewed pirate activity, with key supply chains disrupted in the Aiaba system. Zorgon Peterson has issued an urgent call for independent pilots to secure shipping lanes and deliver vital components necessary for production.<br />
+The Panther Clipper is available for exclusive purchase initially and will transition to standard shipyard inventories at a later date.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#6').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Zorgon Peterson Seeks Support for Panther Clipper Mk II Launch                        </a>
+                    </h3>
+                    <div id="6" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Zorgon Peterson has issued a public call for support in the final production phase of the long-anticipated Panther Clipper Mk II.<br />
+The heavy freighter, hailed as the largest solo-pilot cargo vessel ever produced for civilian use, has encountered logistical setbacks. Whilst the perpetrator has not been explicitly named, analysts have pointed towards retributive pirate operations following the Kumo Crew’s recent defeat in Beta-3 Tucani.<br />
+A spokesperson for Zorgon Peterson said:<br />
+“We remain fully committed to launching the Panther Clipper Mk II on schedule. With the help of the independent pilot community, we aim to stabilise supply chains and defend our shipping lanes.”<br />
+Pilots are invited to support the initiative from Vespucci City in the Aiaba system. Assistance is requested in two forms: deliveries of Superconductors, Polymers and Gallium to the station, and anti-piracy operations to protect transport convoys en route.<br />
+As an additional incentive, Zorgon Peterson will grant an exclusive Panther Clipper Mk II ZPG Gold paintjob and a special decal to Pilots supporting either initiative. A specially engineered Point Defence module is also being made available by the corporation.<br />
+The ship itself is expected to be available for exclusive purchase initially before transitioning to standard shipyard inventories later in the year.<br />
+“Zorgon Peterson appreciates any support Pilots can provide in making this a successful launch.”, the spokesperson added.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#7').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Recent Power Conflict Ends with Mixed Outcomes                        </a>
+                    </h3>
+                    <div id="7" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>The recent three-way conflict between Princess Aisling Duval, Jerome Archer, and Li Yong-Rui has drawn to a close, with all parties claiming success.<br />
+The campaign began with Federal and Sirius-aligned forces launching operations into Princess Aisling’s territory around the Daikulcandi system, citing concerns over instability following her prolonged absence from domestic affairs. Imperial loyalists responded in high numbers, rallying behind Princess Aisling’s call to arms and defending her influence over several key systems.<br />
+Aisling’s forces retained control in Daikulcandi and neighbouring strongholds but were forced to concede territory in Gondul and Santy where both Archer’s Federal supporters and the Sirius Corporation’s auxiliary fleets concentrated their efforts.<br />
+Senator Zemina Torval, who had questioned Aisling’s ability to defend her territory, issued a frank statement acknowledging the result: “The outcome speaks for itself.”<br />
+Princess Aisling addressed her supporters from Maughmer Ring:<br />
+“Thanks to the valiant efforts of my loyal supporters we won the day despite a temporary setback. This is a reminder that strength is earned. I will not falter. We shall adapt accordingly.” Celebrations have been reported at Maughmer Ring in Maityan but were somewhat muted in comparison to previous victories.<br />
+Jerome Archer’s office released a brief statement calling the outcome “a validation of Federal presence in high-risk border zones.” Li Yong-Rui, meanwhile, praised his operatives for “establishing a viable foothold for corporate oversight in the region.”<br />
+Observers note that while Princess Aisling maintains the greater share of influence in the region, the campaign has revealed security vulnerabilities and heightened local tensions. Attention now turns to whether this confrontation marks a turning point, or a prelude to broader conflict.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#8').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Powerplay Standings: July 3311                        </a>
+                    </h3>
+                    <div id="8" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>This month’s analysis of the influence held by key figures in the core systems has arrived, courtesy of Conrad Sterling of Vox Galactica.<br />
+His latest survey of system populations suggests the following five powers enjoy the largest sphere of influence:<br />
+Rank 1: Aisling Duval – 1,661 systems<br />
+Rank 2: Edmund Mahon - 1,581 systems<br />
+Rank 3: Arissa Lavigny-Duval – 1,480 systems<br />
+Rank 4: Yuri Grom – 1,114 systems<br />
+Rank 5: Li Yong-Rui – 1,018 systems<br />
+The largest increase in system influence belonged to Aisling Duval who can claim an additional 104 systems as supporters.<br />
+Vox Galactica will provide another update on the state of the powers next month.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#9').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Power Struggle Erupts in Aisling Held Territory                        </a>
+                    </h3>
+                    <div id="9" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Tensions have erupted between Imperial, Federal, and corporate interests in a contested region of space currently controlled by Princess Aisling Duval.<br />
+Following her recent departure from Aegis, Princess Aisling has faced quiet criticism within Imperial circles for allowing her domestic influence to weaken. Analysts suggest her extended focus on humanitarian and scientific pursuits left key territories vulnerable to influence by rival powers.<br />
+Shadow President Jerome Archer, fresh from a decisive security victory in Chi Eridani, has announced Federal operations within the region, overriding Duval’s objections and citing long-term stability goals. Despite remarks of disapproval, President Felicia Winters has not moved to halt Archer’s advance.<br />
+Simultaneously, the Sirius Corporation has entered the fray, offering itself as a neutral authority. CEO Li Yong-Rui claimed that “based on our simulated forecasts, a corporate-administered model devised by Sirius Gov would better serve the people in this region.”<br />
+Both attackers have embraced a new form of warfare, with the deployment of black operations megaships at the frontlines and the initiation of conflict zones directly at enemy outposts.<br />
+With Duval’s forces on the defensive in early skirmishes, Senator Zemina Torval publicly criticised what she called “a predictable failure of the media darling’s strategic naivety.” However, the Princess has since issued a broad call to arms, appealing directly to her base of loyal supporters.<br />
+“My opponents may be opportunistic, but they lack Imperial conviction,” said Princess Aisling in a broadcast. “I ask every supporter who believes in a compassionate Empire to stand with me.”<br />
+Three separate initiatives have now begun, with independent pilots being asked for direct support from all sides as the struggle unfolds between the Imperial defenders, Federal aggressors, and corporate opportunists.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#10').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Battle at Beta-3 Tucani Ends, Empire Declares Victory                        </a>
+                    </h3>
+                    <div id="10" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>The conflict between Imperial forces and Archon Delaine in the Beta-3 Tucani system has concluded, with analysts confirming a clear victory for the Empire.<br />
+The system became a flashpoint after Imperial Intelligence launched an operation aimed at weakening Delaine’s influence and driving the Mictlan megaship from the region. Both sides called upon independent pilots to support their efforts, resulting in widespread clashes across the system.<br />
+Supporters of the Empire successfully repelled Delaine’s forces and dealt a severe blow to pirate operations in the system. Imperial Intelligence claimed success in its objective to force the Mictlan into retreat, though Delaine appears to have survived the assault.<br />
+A spokesperson for Emperor Arissa Lavigny-Duvall praised the outcome:<br />
+“Every Commander who fought under an Imperial banner has helped deliver a sharp message to any would-be aggressor against the Empire. Emperor Arissa’s will has been realised in this system.”<br />
+To add further insult, it was revealed that an Imperial agent had managed to infiltrate the Mictlan and hack the internal holoscreens to display Imperial propaganda prior to departure.</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                                        <h3>
+                        <a href="javascript:void(0)" onclick="$('#11').fadeToggle()">
+                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/>Rebuilding and Renewal After the Thargoid War                        </a>
+                    </h3>
+                    <div id="11" style="display: none; padding-left:22px;max-width: 800px">
+                        <p>Six months have passed since the Battle for Sol culminated in the destruction of Titan Cocijo. With the alien threat repelled, communities across the core systems are beginning to rebuild economies, infrastructure - and hope.<br />
+Stations which suffered caustic devastation have long since restored full services. Local economies have bounced back and, in some cases, flourished thanks to the recent wave of new colonisation efforts.<br />
+Across the bubble both small ceremonies and large public events have taken place. Memorials for the dead, celebrations of brave pilots who engaged the alien threat, and spiritual guidance in the aftermath are common occasions. A memorial beacon deployed near the remains of the Titan wreckage in Sol draws visitors from across the bubble, the site representing both a crucial victory and a tragic loss of life.<br />
+Sociologists note a wave of emigration from systems heavily affected by the war. Many displaced by the loss of homes and industries have chosen to begin anew, joining colonisation efforts in uninhabited systems. &quot;There’s pain in starting over,&quot; said one settler interviewed at the Senenmut, an Orbis station recently commissioned by CMDR StellarCartographer in the HIP 18085 system. “But there&#039;s pride too. We’ve survived. We’re building something better.&quot;<br />
+While Aegis and the superpowers continue to monitor for new Thargoid signals, humanity’s victory in the Second War showed a rare sense of unity against a common enemy. Commodore Morayo Orina of the Federal Navy summed up the mood at a Sol memorial service:<br />
+&quot;The fight for survival revealed our flaws, but also our strength. We honour those we lost by choosing to live boldly.”</p>
+                        <br><br>
+                        <span style="margin-bottom: 15px">
+                            <a href="https://www.elitedangerous.com/news/galnet" target="_blank">
+                                Read on news.galnet.fr
+                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
+                        </span>
+                    </div>
+                            </div>
     </div>
-    ";s:10:"write_time";i:1756920179;s:10:"expired_in";i:1800;s:12:"expired_time";i:1756921979;}
+    ";s:10:"write_time";i:1756925197;s:10:"expired_in";i:1800;s:12:"expired_time";i:1756926997;}
