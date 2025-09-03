@@ -145,6 +145,8 @@ class phpFastCache
 
     public static function getPath($config, $skipCreatePath = false)
     {
+        $config = is_array($config) ? $config : self::$config;
+
         if (!isset($config['path']) || $config['path'] == '') {
 
             // revision 618

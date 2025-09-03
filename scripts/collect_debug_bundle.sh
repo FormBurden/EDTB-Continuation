@@ -231,6 +231,31 @@ if [[ $DRY_RUN -eq 1 ]]; then
   exit 0
 fi
 
+# Include only recent log folders (within ±2 minutes of now)
+logs_root="$ROOT/logs"
+if [[ -d "$logs_root" ]]; then
+  now_epoch="$(date +%s)"
+  # Scan only first-level directories that look like YYYYMMDD-HHMMSS
+  while IFS= read -r -d '' dir; do
+    base="$(basename "$dir")"
+    if [[ "$base" =~ ^[0-9]{8}-[0-9]{6}$ ]]; then
+      y=${base:0:4}; mo=${base:4:2}; da=${base:6:2}
+      hh=${base:9:2}; mm=${base:11:2}; ss=${base:13:2}
+      # Convert folder timestamp to epoch
+      dir_epoch="$(date -d "${y}-${mo}-${da} ${hh}:${mm}:${ss}" +%s 2>/dev/null || echo 0)"
+      diff=$(( now_epoch - dir_epoch ))
+      # absolute value
+      if (( diff < 0 )); then diff=$(( -diff )); fi
+      # Only include if within 120 seconds
+      if (( diff <= 120 )); then
+        mkdir -p "$TMPDIR/logs/$base"
+        cp -a "$dir/." "$TMPDIR/logs/$base/"
+      fi
+    fi
+  done < <(find "$logs_root" -mindepth 1 -maxdepth 1 -type d -print0)
+fi
+
+
 TARBALL="$ROOT/${BUNDLE_NAME}.tar.gz"
 tar -C "$TMPDIR" -czf "$TARBALL" .
 rm -rf "$TMPDIR"

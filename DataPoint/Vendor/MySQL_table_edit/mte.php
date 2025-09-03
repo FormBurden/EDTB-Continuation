@@ -19,6 +19,9 @@ class MySQLtabledit
     public $width_editor    = '100%';
     public $debug_html      = false;
     public $content_deleted = '';
+    public $nav_top        = '';
+    public $content_saved  = '';
+
 
     /** guard properties for PHP 8+ */
     public $where_search = '';

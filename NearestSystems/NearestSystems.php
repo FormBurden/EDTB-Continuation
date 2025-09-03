@@ -64,6 +64,8 @@ class NearestSystems
 
     /** @var string $mainQuery */
     private $mainQuery;
+    private $mysqli;
+
 
     /**
      * NearestSystems constructor.
@@ -1146,8 +1148,9 @@ class NearestSystems
         $stationProhibitedCommodities = $obj->prohibited_commodities === '' ? '' :
             '<strong>Prohibited commodities:</strong> ' . $obj->prohibited_commodities . '<br>';
 
-        $stationSellingShips = $obj->selling_ships === '' ? '' :
-            '<br><strong>Selling ships:</strong> ' . str_replace("'", '', $obj->selling_ships) . '<br>';
+        $stationSellingShips = empty($obj->selling_ships) ? '' :
+            '<br><strong>Selling ships:</strong> ' . str_replace("'", '', (string)$obj->selling_ships) . '<br>';
+    
 
         $stationShipyard = $obj->shipyard;
         $stationOutfitting = $obj->outfitting;

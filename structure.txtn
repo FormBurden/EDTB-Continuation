@@ -69,7 +69,8 @@
 │       ├── 20250903_0007_user_systems_own.sql
 │       ├── 20250903_0008_create_edtb_ships.sql
 │       ├── 20250903_0010_create_user_systems_own.sql
-│       └── 20250903_0011_create_edtb_ships.sql
+│       ├── 20250903_0011_create_edtb_ships.sql
+│       └── 20250903_create_user_poi_categories.sql
 ├── DataPoint
 │   ├── functions.php
 │   ├── index.php
@@ -79,7 +80,6 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_issue_php_server_124615.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery

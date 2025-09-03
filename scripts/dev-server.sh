@@ -8,15 +8,28 @@ LOG_DIR="logs"
 mkdir -p "$LOG_DIR"
 
 TS="$(date +"%Y%m%d-%H%M%S")"
+RUN_DIR="$LOG_DIR/$TS"
+mkdir -p "$RUN_DIR"
 
-ACCESS_LOG="$LOG_DIR/access-$TS.log"
-SERVER_LOG="$LOG_DIR/server-$TS.log"
-PHP_ERR_LOG="$LOG_DIR/php-$TS.log"
+ACCESS_LOG="$RUN_DIR/access.log"
+SERVER_LOG="$RUN_DIR/server.log"
+PHP_ERR_LOG="$RUN_DIR/php.log"
 
-echo "[*] Logs:"
+echo "[*] Logs directory: $RUN_DIR"
+printf "             Access : %s\n" "$ACCESS_LOG"
+printf "             Server : %s\n" "$SERVER_LOG"
+printf "             PHP    : %s\n" "$PHP_ERR_LOG"
 echo "    Access : $ACCESS_LOG"
 echo "    Server : $SERVER_LOG"
 echo "    PHP    : $PHP_ERR_LOG"
+# Rename the run log folder to the stop timestamp when the script exits
+on_exit() {
+  STOP_TS="$(date +"%Y%m%d-%H%M%S")"
+  NEW_RUN_DIR="$LOG_DIR/$STOP_TS"
+  mv "$RUN_DIR" "$NEW_RUN_DIR"
+}
+trap on_exit EXIT
+
 echo
 
 # We give PHP a PTY via `script` so colors are allowed.
