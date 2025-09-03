@@ -472,29 +472,6 @@ if ($stationExists == 0) {
             . htmlspecialchars($fullTitle, ENT_QUOTES)
             . '</a></span>';
 
-
-        $count = count($sExplode);
-
-        $first = '';
-        $last = '';
-        if ($count > 1) {
-            $lastn = $count - 1;
-            $last = $sExplode[$lastn];
-
-            $first = str_replace($last, '', (string)$sName);
-        } else {
-            $first = $sName;
-            $last = '';
-        }
-
-        $fullTitle = trim((string)$stationObj->name);
-        $stationId = (string)$stationObj->id;
-        $wikiQuery = $fullTitle;
-
-        $sName = '<span class="wp" onclick="get_wikipedia(\'' . urlencode($firstUrl) . '\', \'' . $stationId . '\')">';
-        $sName .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . $firstUrl . '" style="font-weight: inherit">';
-        $sName .= trim($first) . '</a></span> ' . $last;
-
         $lsFromStar = $stationObj->ls_from_star;
         $maxLandingPadSize = $stationObj->max_landing_pad_size;
 
