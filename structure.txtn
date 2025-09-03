@@ -51,6 +51,9 @@
 │       ├── 0002_indexes.sql
 │       ├── 0003_add_missing_systems_columns.sql
 │       ├── 0004_user_tables.sql
+│       ├── 0005_catalog_ships_user_systems_own.sql
+│       ├── 0006_facilities_catalog.sql
+│       ├── 0007_facilities_add_code.sql
 │       ├── 20250831_0001_core.sql
 │       ├── 20250831_0002_poi.sql
 │       ├── 20250831_0003_core_missing.sql
@@ -60,7 +63,13 @@
 │       ├── 20250831_0004_seed_demo.sql
 │       ├── 20250831_0005_powers.sql
 │       ├── 20250901_0006_user_log.sql
-│       └── 20250901_0010_windows_parity_system_columns.sql
+│       ├── 20250901_0010_windows_parity_system_columns.sql
+│       ├── 2025-09-01_create_user_log.sql
+│       ├── 20250903_0007_create_user_systems_own.sql
+│       ├── 20250903_0007_user_systems_own.sql
+│       ├── 20250903_0008_create_edtb_ships.sql
+│       ├── 20250903_0010_create_user_systems_own.sql
+│       └── 20250903_0011_create_edtb_ships.sql
 ├── DataPoint
 │   ├── functions.php
 │   ├── index.php
@@ -70,7 +79,6 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_issue_pick_test.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -399,4 +407,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-58 directories, 342 files
+58 directories, 350 files

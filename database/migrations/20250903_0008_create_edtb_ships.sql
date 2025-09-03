@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS edtb_ships (
+  id   INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(128) NOT NULL,
+  UNIQUE KEY uq_edtb_ships_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO edtb_ships (name) VALUES
+('Sidewinder MkI'),
+('Eagle MkII'),
+('Cobra MkIII'),
+('Asp Explorer'),
+('Python'),
+('Anaconda');
