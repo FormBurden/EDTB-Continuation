@@ -110,6 +110,31 @@ function buildFacilitiesHtml(array $facilities, int $stationId): string
     }
     return $html;
 }
+/**
+ * Map system allegiance to an icon asset path under /style/img/.
+ * Returns a plain image path; the caller can wrap it with CSS url().
+ */
+function getAllegianceIcon(string $allegiance): string
+{
+    $a = strtolower(trim($allegiance));
+
+    switch ($a) {
+        case 'federation':
+            return '/style/img/federation.png';
+        case 'empire':
+            return '/style/img/empire.png';
+        case 'alliance':
+            return '/style/img/alliance.png';
+        case 'independent':
+            // No dedicated independent.png in the repo; use the general emblem.
+            return '/style/img/elite.png';
+        case 'none':
+        case '':
+        default:
+            return '/style/img/elite.png';
+    }
+}
+
 
 
 $data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
