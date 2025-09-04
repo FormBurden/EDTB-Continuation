@@ -89,5 +89,33 @@ final class SystemRepository
         // No match in either table
         return null;
     }
+    /**
+     * Find the system id by exact name from edtb_systems.
+     * Returns the id as int, or null if not found.
+     * Mirrors the previous inline behavior and logging.
+     */
+    public static function findIdByName(\mysqli $mysqli, string $name): ?int
+    {
+        $esc = $mysqli->real_escape_string($name);
+
+        $sql = "SELECT id
+                FROM edtb_systems
+                WHERE name = '$esc'
+                LIMIT 1";
+
+        $res = $mysqli->query($sql) or write_log($mysqli->error, __FILE__, __LINE__);
+        if ($res && $res->num_rows > 0) {
+            $obj = $res->fetch_object();
+            $id  = isset($obj->id) ? (int)$obj->id : null;
+            $res->close();
+            return $id;
+        }
+
+        if ($res) {
+            $res->close();
+        }
+        return null;
+    }
+
 
 }

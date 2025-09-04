@@ -83,6 +83,33 @@ require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
 require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
 
+/**
+ * Return the facilities icon strip HTML for a station.
+ * Mirrors the original inline builder without changing behavior.
+ */
+function buildFacilitiesHtml(array $facilities, int $stationId): string
+{
+    $html = '';
+    foreach ($facilities as $name => $included) {
+        $dname = str_replace('_', ' ', (string)$name);
+        if ((int)$included === 1) {
+            $img = '/style/img/facilities/' . $name . '.png';
+            $id  = $name . '_' . $stationId;
+            $html .= '<img src="' . $img . '" alt="' . $dname . '" class="icon" ' .
+                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
+                     'onmouseout="$(\'#' . $id . '\').toggle()">';
+            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station has ' . $dname . '</div>';
+        } else {
+            $img = '/style/img/facilities/' . $name . '_not.png';
+            $id  = $name . '_not_' . $stationId;
+            $html .= '<img src="' . $img . '" alt="' . $dname . ' not" class="icon" ' .
+                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
+                     'onmouseout="$(\'#' . $id . '\').toggle()">';
+            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station doesn\'t have ' . $dname . '</div>';
+        }
+    }
+    return $html;
+}
 
 
 $data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
@@ -120,13 +147,7 @@ if ($hasSystemId || $hasSystemName) {
 
     // If we only have a name, look up the id
     if ($systemId === -1 && $escSysName !== '') {
-        $nameQuery = "SELECT id FROM edtb_systems WHERE name = '$escSysName' LIMIT 1";
-        $result = $mysqli->query($nameQuery) or write_log($mysqli->error, __FILE__, __LINE__);
-        if ($result && $result->num_rows > 0) {
-            $obj = $result->fetch_object();
-            $systemId = (int)$obj->id;
-        }
-        if ($result) { $result->close(); }
+        $systemId = \EDTB\Domain\System\SystemRepository::findIdByName($mysqli, $escSysName) ?? -1;
     }
     $systemObj = \EDTB\Domain\System\SystemRepository::findById($mysqli, $systemId);
 
@@ -536,18 +557,7 @@ if ($stationExists == 0) {
             'restock' => $rearm
         ];
 
-        $i = 0;
-        $services = '';
-        foreach ($facilities as $name => $included) {
-            $dname = str_replace('_', ' ', $name);
-            if ($included == 1) {
-                $services .= '<img src="/style/img/facilities/' . $name . '.png" class="icon24" alt="' . $name . '" style="margin-right: 10px" onmouseover="$(\'#' . $name . '_' . $stationId . '\').fadeToggle(\'fast\')" onmouseout="$(\'#' . $name . '_' . $stationId . '\').toggle()">';
-                $services .= '<div class="facilityinfo" style="display: none" id="' . $name . '_' . $stationId . '">Station has ' . $dname . '</div>';
-            } else {
-                $services .= '<img src="/style/img/facilities/' . $name . '_not.png" class="icon24" alt="' . $name . ' not included" style="margin-right: 10px" onmouseover="$(\'#' . $name . '_not_' . $stationId . '\').fadeToggle(\'fast\')" onmouseout="$(\'#' . $name . '_not_' . $stationId . '\').toggle()">';
-                $services .= '<div class="facilityinfo" style="display: none" id="' . $name . '_not_' . $stationId . '">Station doesn\'t have ' . $dname . '</div>';
-            }
-        }
+        $services = buildFacilitiesHtml($facilities, (int)$stationId);
 
         $info = $sFaction . $sInformation . $importCommodities . $exportCommodities . $prohibitedCommodities;
         $info = str_replace("['", '', (string)$info);
