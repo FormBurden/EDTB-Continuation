@@ -84,6 +84,7 @@
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
+├── edtb_facility_icon_map_extract.tar.gz
 ├── .edtb-files.txt
 ├── .env
 ├── .env.example
@@ -99,7 +100,12 @@
 │   └── Vendor
 │       └── ED3D-Galaxy-Map
 ├── GalNet
-│   └── index.php
+│   ├── GalnetCache.php
+│   ├── GalnetProvider.php
+│   ├── index.php
+│   └── partials
+│       ├── header.php
+│       └── list.php
 ├── get
 │   ├── getData_checkForUpdates.php
 │   ├── getData_leftColumn.php
@@ -139,7 +145,12 @@
 │   └── SystemData.php
 ├── NearestSystems
 │   ├── index.php
-│   └── NearestSystems.php
+│   ├── NearestSystems.php
+│   └── partials
+│       ├── AllegianceIcons.php
+│       ├── Filters.php
+│       ├── Powers.php
+│       └── Search.php
 ├── public
 │   └── index.php
 ├── README.md
@@ -313,8 +324,14 @@
 │   ├── style_narrow.css
 │   └── Theme.php
 ├── System
+│   ├── Formatters
+│   │   └── SystemInfoFormatters.php
 │   ├── getData_systemInfo.php
-│   └── index.php
+│   ├── index.php
+│   └── Lookups
+│       ├── AllegianceIconMap.php
+│       ├── FacilitiesIconMap.php
+│       └── StationTypeIconMap.php
 ├── systemd-user
 │   ├── edtb-edsm-import.service
 │   └── edtb-edsm-import.timer
@@ -419,4 +436,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-63 directories, 357 files
+67 directories, 370 files

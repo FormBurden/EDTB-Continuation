@@ -37,6 +37,7 @@ require_once __DIR__ . '/partials/Search.php';
 
 
 
+
 use \EDTB\source\System;
 
 /**
@@ -708,11 +709,15 @@ class NearestSystems
                     <br/><br/>
                 </td>
                 <!-- powers -->
-                <td class="transparent" style="vertical-align: top; width:20%; white-space: nowrap">
-                    <?php render_powers_links($this->mysqli, $this->powerParams, ($_GET['power'] ?? ''), $this->tableExists('edtb_powers')); ?>
+                <form method="get" action="/NearestSystems/" name="go" id="powers">
+                    <?php render_powers_links(
+                        $this->mysqli,
+                        $this->powerParams,
+                        ($_GET['power'] ?? ''),
+                        $this->tableExists('edtb_powers')
+                    ); ?>
+                </form>
 
-
-                </td>
                 <!-- modules -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
                 <?php if (!$hasModules): ?>
@@ -795,31 +800,10 @@ class NearestSystems
                     <?php render_ships_filter($this->mysqli, $this->hiddenInputs); ?>
 
                     <!-- facilities -->
-                    <form method="get" action="/NearestSystems/" name="go" id="facilities"
-                          data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
-                          data-optimize-url-params="false">
-                        <?php
-                        echo $this->hiddenInputs;
-                        ?>
-                        <select title="Facility" class="selectbox" name="facility" style="width: 180px"
-                                onchange="$('.se-pre-con').show();this.form.submit()">
-                            <option value="0">Has Facilities</option>
-                            <?php
-                            $query = 'SELECT name, code FROM edtb_facilities ORDER BY name';
-                            $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
-
-                            while ($facilityObj = $result->fetch_object()) {
-                                $selected = $_GET['facility'] == $facilityObj->code ? " selected='selected'" : '';
-                                echo '<option value="' . $facilityObj->code . '"' . $selected . '>' . $facilityObj->name .
-                                    '</option>';
-                            }
-
-                            $result->close();
-                            ?>
-                        </select><br/>
-                    </form>
-                    <!-- landing pads -->
                     <?php render_facilities_filter($this->mysqli, $this->hiddenInputs); ?>
+
+                    <!-- landing pads -->
+                    <?php render_landing_pads_filter($this->hiddenInputs); ?>
 
                     <!-- station type -->
                     <?php render_station_type_filter($this->hiddenInputs); ?>

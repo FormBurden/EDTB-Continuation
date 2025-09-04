@@ -209,4 +209,4 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->free();
 
-echo json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+echo json_encode(['systems' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

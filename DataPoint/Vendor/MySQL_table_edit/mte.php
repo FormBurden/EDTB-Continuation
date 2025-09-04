@@ -101,6 +101,44 @@ class MySQLtabledit
             echo 'Failed to connect to MySQL: ' . $this->mysqli->connect_error;
         }
     }
+    /**
+     * Build a display label for a column key.
+     * Prefers $this->showText/$this->show_text mapping; otherwise formats snake_case to Title Case
+     * and applies acronym/override fixes to match Windows look.
+     *
+     * @param string $key
+     * @return string
+     */
+    private function labelFor($key)
+    {
+        // Prefer explicit labels if present
+        if (isset($this->showText[$key]) && $this->showText[$key] !== '') {
+            return $this->showText[$key];
+        }
+        if (isset($this->show_text[$key]) && $this->show_text[$key] !== '') {
+            return $this->show_text[$key];
+        }
+
+        // Fallback: snake_case -> Title Case
+        $label = str_replace('_', ' ', $key);
+        $label = ucwords($label);
+
+        // Acronym touch-ups
+        $label = preg_replace('/\bId\b/u', 'ID', $label);
+        $label = preg_replace('/\bEddb\b/iu', 'EDDB', $label);
+        $label = preg_replace('/\bSimbad\b/iu', 'SIMBAD', $label);
+
+        // Specific overrides for parity with Windows build
+        switch ($key) {
+            case 'power_state':    return 'Power State';
+            case 'ruling_faction': return 'Ruling Faction';
+            case 'needs_permit':   return 'Needs Permit';
+            case 'updated_at':     return 'Updated At';
+            case 'simbad_ref':     return 'SIMBAD Ref';
+        }
+
+        return $label;
+    }
 
     /**
      * Put it all together
@@ -572,10 +610,8 @@ class MySQLtabledit
                             }
                             $coordResult->close();
                         }
-                    } else {
-                        $dX = '';
-                        $dY = '';
-                        $dZ = '';
+                    } $showOption = $this->labelFor($option);
+
                     }
                 }
 
@@ -596,11 +632,8 @@ class MySQLtabledit
                     if (in_array($key, $this->fieldsInListView)) {
                         if ($count == 1) {
                             // show nice text of a value
-                            if ($this->showText[$key]) {
-                                $showKey = $this->showText[$key];
-                            } else {
-                                $showKey = $key;
-                            }
+                            $showKey = $this->labelFor($key);
+
 
                             // sorting
                             if ($_GET['sort'] == $key && $_GET['ad'] == 'a') {
