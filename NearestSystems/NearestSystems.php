@@ -709,29 +709,8 @@ class NearestSystems
                 </td>
                 <!-- powers -->
                 <td class="transparent" style="vertical-align: top; width:20%; white-space: nowrap">
-                    <?php
-                    $query = 'SELECT name FROM edtb_powers ORDER BY name';
-                    if ($this->tableExists('edtb_powers')) {
-                        $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+                    <?php render_powers_links($this->mysqli, $this->powerParams, ($_GET['power'] ?? ''), $this->tableExists('edtb_powers')); ?>
 
-                        while ($powerObj = $result->fetch_object()) {
-                            $powerName = $powerObj->name;
-
-                            if (isset($power)) {
-                                $this->powerParams = str_replace('&power=', '', $this->powerParams);
-                                $this->powerParams = str_replace('?power=', '', $this->powerParams);
-                                $this->powerParams = str_replace(urlencode($power), '', $this->powerParams);
-                            }
-                            echo '<a data-replace="true" data-target="#nscontent" href="/NearestSystems/?power=' .
-                                urlencode($powerName) . $this->powerParams . '" title="' . $powerName . '">' . $powerName .
-                                '</a><br>';
-                        }
-
-                        $result->close();
-                    } else {
-                        echo '<em style="opacity:.7">Powers list unavailable</em>';
-                    }
-                    ?>
 
                 </td>
                 <!-- modules -->

@@ -16,16 +16,16 @@ class GalnetCache
      */
     public static function remember(string $key, int $ttlSeconds, callable $producer): array
     {
-        $cache = __c('files');                 // existing cache accessor in project
-        $item  = $cache->getItem($key);
+        $cache = __c('files');
 
-        if (!$item->isHit()) {
+        $cached = $cache->get($key);
+        if ($cached === null) {
             $value = $producer();
-            $item->set($value)->expiresAfter($ttlSeconds);
-            $cache->save($item);
+            $cache->set($key, $value, $ttlSeconds);
             return $value;
         }
 
-        return $item->get();
+        return $cached;
+
     }
 }

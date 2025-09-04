@@ -222,28 +222,25 @@ function randomInsult($whoToInsult)
  */
 function getStationIcon($type, $planetary = '0', $style = '')
 {
-    switch ($type) {
-        case 'Coriolis Starport':
-            $stationIcon = '<img src="/style/img/spaceports/coriolis.png" class="icon" alt="' . $type . '" style="' . $style . '">';
-            break;
-        case 'Orbis Starport':
-            $stationIcon = '<img src="/style/img/spaceports/orbis.png" class="icon" alt="' . $type . '" style="' . $style . '">';
-            break;
-        case 'Ocellus Starport':
-            $stationIcon = '<img src="/style/img/spaceports/ocellus.png" class="icon" alt="' . $type . '" style="' . $style . '">';
-            break;
-        case ($planetary == '0'):
-            $stationIcon = '<img src="/style/img/spaceports/spaceport.png" class="icon" alt="Starport" style="' . $style . '">';
-            break;
-        case ($planetary == '1'):
-            $stationIcon = '<img src="/style/img/spaceports/planetary.png" class="icon" alt="Planetary" style="' . $style . '">';
-            break;
-        default:
-            $stationIcon = '<img src="/style/img/spaceports/unknown.png" class="icon" alt="Unknown" style="' . $style . '">';
+    $map = require __DIR__ . '/../System/Lookups/StationTypeIconMap.php';
+
+    if (isset($map[$type])) {
+        $file = $map[$type];
+        $alt  = $type;
+    } elseif ($planetary === '0') {
+        $file = 'spaceport.png';
+        $alt  = 'Starport';
+    } elseif ($planetary === '1') {
+        $file = 'planetary.png';
+        $alt  = 'Planetary';
+    } else {
+        $file = 'unknown.png';
+        $alt  = 'Unknown';
     }
 
-    return $stationIcon;
+    return '<img src="/style/img/spaceports/' . $file . '" class="icon" alt="' . $alt . '" style="' . $style . '">';
 }
+
 
 /**
  * Return the correct allegiance icon

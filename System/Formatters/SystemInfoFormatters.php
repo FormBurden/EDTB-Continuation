@@ -25,29 +25,24 @@ function facilitiesFromStation(object $stationObj): array
 /**
  * Return the facilities icon strip HTML for a station.
  */
-function buildFacilitiesHtml(array $facilities, int $stationId): string
+function buildFacilitiesHtml(array $facilities): string
 {
-    $html = '';
-    foreach ($facilities as $name => $included) {
-        $dname = str_replace('_', ' ', (string)$name);
-        if ((int)$included === 1) {
-            $img = '/style/img/facilities/' . $name . '.png';
-            $id  = $name . '_' . $stationId;
-            $html .= '<img src="' . $img . '" alt="' . $dname . '" class="icon" ' .
-                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
-                     'onmouseout="$(\'#' . $id . '\').toggle()">';
-            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station has ' . $dname . '</div>';
-        } else {
-            $img = '/style/img/facilities/' . $name . '_not.png';
-            $id  = $name . '_not_' . $stationId;
-            $html .= '<img src="' . $img . '" alt="' . $dname . ' not" class="icon" ' .
-                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
-                     'onmouseout="$(\'#' . $id . '\').toggle()">';
-            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station doesn\'t have ' . $dname . '</div>';
+    // Load icon map (filenames only) and build the row of icons for “true” facilities.
+    $iconMap = require __DIR__ . '/../Lookups/FacilitiesIconMap.php';
+
+    $html = [];
+    foreach ($facilities as $key => $enabled) {
+        if (!$enabled) {
+            continue;
         }
+        $file = $iconMap[$key]; // no guards — mapping must be complete
+        $alt  = ucfirst(str_replace('_', ' ', $key));
+        $html[] = '<img src="/style/img/facilities/' . $file . '" class="icon" alt="' . $alt . '">';
     }
-    return $html;
+
+    return implode("\n", $html);
 }
+
 
 /**
  * Build the bracketed "State / Security / Visits" segment for the header.
