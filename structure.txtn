@@ -85,7 +85,6 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_issue_pick_test.tar.gz
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -196,7 +195,12 @@
 │       └── wiselinks-1.2.2.min.js
 ├── src
 │   ├── Config.php
-│   └── DB.php
+│   ├── DB.php
+│   └── Domain
+│       ├── Powers
+│       ├── Rares
+│       ├── Stations
+│       └── System
 ├── structure.txtn
 ├── style
 │   ├── fonts
@@ -415,4 +419,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-58 directories, 358 files
+63 directories, 357 files

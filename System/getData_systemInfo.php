@@ -82,58 +82,8 @@ require_once $ROOT . '/source/curSys.php';
 require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
 require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
+require_once $ROOT . '/System/Formatters/SystemInfoFormatters.php';
 
-/**
- * Return the facilities icon strip HTML for a station.
- * Mirrors the original inline builder without changing behavior.
- */
-function buildFacilitiesHtml(array $facilities, int $stationId): string
-{
-    $html = '';
-    foreach ($facilities as $name => $included) {
-        $dname = str_replace('_', ' ', (string)$name);
-        if ((int)$included === 1) {
-            $img = '/style/img/facilities/' . $name . '.png';
-            $id  = $name . '_' . $stationId;
-            $html .= '<img src="' . $img . '" alt="' . $dname . '" class="icon" ' .
-                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
-                     'onmouseout="$(\'#' . $id . '\').toggle()">';
-            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station has ' . $dname . '</div>';
-        } else {
-            $img = '/style/img/facilities/' . $name . '_not.png';
-            $id  = $name . '_not_' . $stationId;
-            $html .= '<img src="' . $img . '" alt="' . $dname . ' not" class="icon" ' .
-                     'onmouseover="$(\'#' . $id . '\').toggle()" ' .
-                     'onmouseout="$(\'#' . $id . '\').toggle()">';
-            $html .= '<div class="facilityinfo" style="display: none" id="' . $id . '">Station doesn\'t have ' . $dname . '</div>';
-        }
-    }
-    return $html;
-}
-/**
- * Map system allegiance to an icon asset path under /style/img/.
- * Returns a plain image path; the caller can wrap it with CSS url().
- */
-function getAllegianceIcon(string $allegiance): string
-{
-    $a = strtolower(trim($allegiance));
-
-    switch ($a) {
-        case 'federation':
-            return '/style/img/federation.png';
-        case 'empire':
-            return '/style/img/empire.png';
-        case 'alliance':
-            return '/style/img/alliance.png';
-        case 'independent':
-            // No dedicated independent.png in the repo; use the general emblem.
-            return '/style/img/elite.png';
-        case 'none':
-        case '':
-        default:
-            return '/style/img/elite.png';
-    }
-}
 
 
 
@@ -392,13 +342,7 @@ $cRaresData .= '</div>';
 /**
  * provide crosslinks to screenshot gallery, log page, etc
  */
-$siCrosslinks = System::crosslinks($siSystemName);
-
-if (!System::isMapped($siSystemName)) {
-    $siCrosslinks .= '<a href="/SystemMap/?system=' . urlencode($siSystemName) . '" style="color: inherit" title="Map this system">';
-    $siCrosslinks .= '<img src="/style/img/grid_g.png" class="icon" style="margin-left: 5px; margin-right: 0">';
-    $siCrosslinks .= '</a>';
-}
+$siCrosslinks = buildSystemCrosslinks($siSystemName);
 
 $numVisits = 0;
 try {
@@ -412,23 +356,12 @@ try {
     $numVisits = 0;
 }
 
-$rareText = '';
-
-if ($actualNumRes > 0 && validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
-    $rareText = '&nbsp;&nbsp;<span onclick="$(\'#rares\').fadeToggle(\'fast\')">';
-    $rareText .= '<a href="javascript:void(0)" title="Click for more info">[ Rares within ' . $settings['rare_range'] . ' ly: ' . $actualNumRes . ' ]</a>';
-    $rareText .= $cRaresData . '</span>';
-}
+$rareText = buildRaresMiniLabel((int)$actualNumRes, $settings['rare_range'] ?? 50.0, $cRaresData, $curSys['x'] ?? null, $curSys['y'] ?? null, $curSys['z'] ?? null);
 
 $data['si_name'] .= $siSystemDisplayName . $siCrosslinks;
 $data['si_name'] .= '&nbsp;&nbsp;<span style="font-size: 11px;  text-transform: uppercase; vertical-align: middle">';
 
-$__parts = [];
-if (!empty($siSystemState)    && $siSystemState    !== 'None') { $__parts[] = 'State: '    . $siSystemState; }
-if (!empty($siSystemSecurity) && $siSystemSecurity !== 'None') { $__parts[] = 'Security: ' . $siSystemSecurity; }
-if ((int)$numVisits > 0)                                      { $__parts[] = 'Visits: '   . (int)$numVisits; }
-
-$data['si_name'] .= (count($__parts) ? '[ ' . implode(' - ', $__parts) . ' ]' : '');
+$data['si_name'] .= formatSiHeaderMeta($siSystemState, $siSystemSecurity, (int)$numVisits);
 $data['si_name'] .= $rareText . $userDists . '</span>';
 
 
@@ -452,12 +385,7 @@ if ($stationExists == 0) {
         $sName = $stationObj->name;
         $fullTitle = trim((string)$stationObj->name);
         $stationId = $stationObj->id;
-        $wikiQuery = $fullTitle;
-
-        $sName = '<span class="wp" onclick="get_wikipedia(\'' . addslashes($wikiQuery) . '\', \'' . $stationId . '\')">';
-        $sName .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . htmlspecialchars($wikiQuery, ENT_QUOTES) . '" style="font-weight: inherit">'
-            . htmlspecialchars($fullTitle, ENT_QUOTES)
-            . '</a></span>';
+        $sName = buildStationTitleWithWiki((int)$stationId, $fullTitle);
 
         $lsFromStar = $stationObj->ls_from_star;
         $maxLandingPadSize = $stationObj->max_landing_pad_size;
@@ -473,9 +401,7 @@ if ($stationExists == 0) {
         $economies = empty($stationObj->economies) ? 'Economies unknown' : $stationObj->economies;
         $economies = empty($economies) ? 'Economies unknown' : $economies;
 
-        $importCommodities = $stationObj->import_commodities === '' ? '' : '<br><strong>Import commodities:</strong> ' . $stationObj->import_commodities . '<br>';
-        $exportCommodities = empty($stationObj->export_commodities) ? '' : '<strong>Export commodities:</strong> ' . $stationObj->export_commodities . '<br>';
-        $prohibitedCommodities = empty($stationObj->prohibited_commodities) ? '' : '<strong>Prohibited commodities:</strong> ' . $stationObj->prohibited_commodities . '<br>';
+        $commodityLines = buildCommodityLines($stationObj);
         $sFaction = empty($stationObj->faction) ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
         $outfittingUpdatedAgo = !empty($stationObj->outfitting_updated_at) ? 'Outfitting last updated: ' . get_timeago($stationObj->outfitting_updated_at, true, true) : '';
         $shipyardUpdatedAgo = !empty($stationObj->shipyard_updated_at) ? ' (updated ' . get_timeago($stationObj->shipyard_updated_at, true, true) . ')' : '';
@@ -584,7 +510,7 @@ if ($stationExists == 0) {
 
         $services = buildFacilitiesHtml($facilities, (int)$stationId);
 
-        $info = $sFaction . $sInformation . $importCommodities . $exportCommodities . $prohibitedCommodities;
+        $info = $sFaction . $sInformation . $commodityLines;
         $info = str_replace("['", '', (string)$info);
         $info = str_replace(["']", "', '"], ['', ', '], (string)$info);
 

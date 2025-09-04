@@ -35,8 +35,9 @@
 
 /** @require NearestSystems class */
 require_once __DIR__ . '/NearestSystems.php';
-/** @require Theme class */
-require_once __DIR__ . '/../style/Theme.php';
+require_once __DIR__ . '/../style/Header.php';
+require_once __DIR__ . '/../style/Footer.php';
+
 
 /**
  * initiate page header
@@ -55,7 +56,7 @@ $header->displayHeader();
     <div class="entries_inner">
         <?php
         $nearestSystems = new NearestSystems();
-        echo $nearestSystems->nearest();
+        $nearestSystems->nearest();
         ?>
     </div>
 </div>

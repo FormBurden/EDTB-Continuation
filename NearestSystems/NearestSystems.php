@@ -27,6 +27,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
+require_once __DIR__ . '/partials/AllegianceIcons.php';
+require_once __DIR__ . '/partials/Filters.php';
+
+
+
 
 use \EDTB\source\System;
 
@@ -97,7 +102,7 @@ class NearestSystems
         $this->ensureDbSelected();
 
         // determine what coordinates to use
-        $this->system = isset($_GET['system']) ? ($_GET['system'] + 0) : '';
+        $this->system = isset($_GET['system']) ? (int)$_GET['system'] : 0;
 
         if (!empty($this->system)) {
             $query  = "SELECT name, id, x, y, z FROM edtb_systems WHERE id = '$this->system' LIMIT 1";
@@ -668,24 +673,12 @@ class NearestSystems
             <tr>
                 <!-- station allegiances -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
-                    <a data-replace="true" data-target="#nscontent"
-                       href="/NearestSystems/?allegiance=Empire<?= $this->allegianceParams ?>" title="Empire">
-                        <img src="/style/img/empire.png" class="allegiance_icon" alt="Empire"/>
-                    </a>&nbsp;
-                    <a data-replace="true" data-target="#nscontent"
-                       href="/NearestSystems/?allegiance=Alliance<?= $this->allegianceParams ?>" title="Alliance">
-                        <img src="/style/img/alliance.png" class="allegiance_icon" alt="Alliance"/>
-                    </a>&nbsp;
-                    <a data-replace="true" data-target="#nscontent"
-                       href="/NearestSystems/?allegiance=Federation<?= $this->allegianceParams ?>"
-                       title="Federation">
-                        <img src="/style/img/federation.png" class="allegiance_icon" alt="Federation"/>
-                    </a>&nbsp;
-                    <a data-replace="true" data-target="#nscontent"
-                       href="/NearestSystems/?allegiance=Independent<?= $this->allegianceParams ?>"
-                       title="Independent">
-                        <img src="/style/img/system.png" class="allegiance_icon" alt="Independent"/>
-                    </a>
+                    <?php render_allegiance_icons($this->allegianceParams); ?>
+
+                    <!-- search systems and stations-->
+                    <div style="text-align: left">
+                        <div style="width
+
                     <!-- search systems and stations-->
                     <div style="text-align: left">
                         <div style="width: 180px; margin-top: 35px">
@@ -756,7 +749,7 @@ class NearestSystems
                 <!-- modules -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
                 <?php if (!$hasModules): ?>
-    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go">
+    <form method="get" action="/NearestSystems/" name="go">
         <?php echo $this->hiddenInputs; ?>
         <select title="Module" class="selectbox" name="group_id" style="width: 222px"
                 onchange="getCR($('select[name=group_id]').val(), '')">
@@ -770,7 +763,7 @@ class NearestSystems
         <input class="button" type="submit" value="Search" style="width: 222px; margin-top: 5px"/>
     </form>
 <?php else: ?>
-                    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go">
+                    <form method="get" action="/NearestSystems/" name="go">
                         <?php
                         echo $this->hiddenInputs;
                         if (isset($groupId) && $groupId != '0') {
@@ -832,7 +825,7 @@ class NearestSystems
                 <!-- ships & facilities -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
                     <!-- ships -->
-                    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go" id="ships"
+                    <form method="get" action="/NearestSystems/" name="go" id="ships"
                           data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
                           data-optimize-url-params="false">
                         <?php
@@ -855,7 +848,7 @@ class NearestSystems
                         </select><br/>
                     </form>
                     <!-- facilities -->
-                    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go" id="facilities"
+                    <form method="get" action="/NearestSystems/" name="go" id="facilities"
                           data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
                           data-optimize-url-params="false">
                         <?php
@@ -879,44 +872,11 @@ class NearestSystems
                         </select><br/>
                     </form>
                     <!-- landing pads -->
-                    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go" id="landingpads"
-                          data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
-                          data-optimize-url-params="false">
-                        <?php
-                        echo $this->hiddenInputs;
-                        ?>
-                        <select title="Landing pad" class="selectbox" name="pad" style="width: 180px"
-                                onchange="$('.se-pre-con').show();this.form.submit()">
-                            <?php
-                            $selectedL = $_GET['pad'] === 'L' ? ' selected="selected"' : '';
-                            $selectedM = $_GET['pad'] === 'M' ? ' selected="selected"' : '';
-                            ?>
-                            <option value="">Landing Pad Size</option>
-                            <option value="L"<?= $selectedL ?>>Large</option>
-                            <option value="M"<?= $selectedM ?>>Medium</option>
-                            <option value="">All</option>
-                        </select><br/>
-                    </form>
+                    <?php render_facilities_filter($this->mysqli, $this->hiddenInputs); ?>
+
                     <!-- station type -->
-                    <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>" name="go" id="stationtype"
-                          data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
-                          data-optimize-url-params="false">
-                        <?php
-                        echo $this->hiddenInputs;
-                        ?>
-                        <select title="Station type" class="selectbox" name="station_type" style="width: 180px"
-                                onchange="$('.se-pre-con').show();this.form.submit()">
-                            <?php
-                            $selectedP = $_GET['station_type'] === 'planetary' ? ' selected="selected"' : '';
-                            $selectedS = $_GET['station_type'] === 'space' ? ' selected="selected"' : '';
-                            $selectedA = $_GET['station_type'] === 'all' ? ' selected="selected"' : '';
-                            ?>
-                            <option value="all">Station Type</option>
-                            <option value="planetary"<?= $selectedP ?>>Planetary</option>
-                            <option value="space"<?= $selectedS ?>>Space</option>
-                            <option value="all"<?= $selectedA ?>>All</option>
-                        </select><br/>
-                    </form>
+                    <?php render_station_type_filter($this->hiddenInputs); ?>
+
                 </td>
             </tr>
         </table>

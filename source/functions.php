@@ -254,21 +254,7 @@ function getStationIcon($type, $planetary = '0', $style = '')
  */
 function getAllegianceIcon($allegiance)
 {
-    switch ($allegiance) {
-        case 'Empire':
-            $allegianceIcon = 'empire.png';
-            break;
-        case 'Alliance':
-            $allegianceIcon = 'alliance.png';
-            break;
-        case 'Federation':
-            $allegianceIcon = 'federation.png';
-            break;
-        default:
-            $allegianceIcon = 'system.png';
-    }
-
-    return $allegianceIcon;
+    return (require __DIR__ . '/../System/Lookups/AllegianceIconMap.php')[$allegiance] ?? 'system.png';
 }
 
 /**
