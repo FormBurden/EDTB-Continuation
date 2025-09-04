@@ -52,34 +52,52 @@ if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
     // 1) Modern Journal.*.log (JSON) — supports spaces in paths; no shell needed
     $jfiles = glob($pattern, GLOB_NOSORT) ?: [];
     if (!empty($jfiles)) {
-        // Newest by natural sort (filenames contain ISO timestamps)
+        // Newest → older by filename (journals have ISO-like timestamps)
         natsort($jfiles);
         $jfiles = array_values($jfiles);
-        $newestJournal = end($jfiles);
+        $jfiles = array_reverse($jfiles); // newest first
 
-        $raw = @file($newestJournal, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($raw !== false) {
-            // Walk newest → oldest
+        // Scan up to this many recent journal files until we find a StarSystem+StarPos event
+        $maxScan = 20;
+        $scanned = 0;
+
+        foreach ($jfiles as $jf) {
+            if ($scanned++ >= $maxScan) {
+                break;
+            }
+
+            $raw = @file($jf, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($raw === false) {
+                continue;
+            }
+
+            // Walk newest → oldest (last lines first) within the file
             $raw = array_reverse($raw);
             foreach ($raw as $row) {
                 $j = json_decode($row, true);
                 if (!is_array($j)) {
                     continue;
                 }
-                // Use any event that has StarSystem + StarPos (e.g., Location, FSDJump, CarrierJump)
+
+                // Any event that has StarSystem + StarPos (e.g., Location, FSDJump, CarrierJump)
                 if (isset($j['StarSystem'], $j['StarPos']) && is_array($j['StarPos']) && count($j['StarPos']) === 3) {
-                    $sys = $j['StarSystem'];
+                    $sys = (string)$j['StarSystem'];
                     $pos = $j['StarPos'];
                     $ts  = isset($j['timestamp']) ? strtotime($j['timestamp']) : time();
                     $visitedTime = date('H:i:s', $ts);
-                    $lines = [
+
+                    // Synthesize one netLog-style line for the legacy parser below
+                    $lines = array(
                         '{' . $visitedTime . '} System:"' . $sys . '" StarPos:(' . $pos[0] . ',' . $pos[1] . ',' . $pos[2] . ')'
-                    ];
-                    break;
+                    );
+
+                    break 2; // stop scanning lines and files
                 }
             }
         }
     }
+
+
 
     // 2) Legacy netLog (only if no Journal entry was synthesized)
     if (empty($lines)) {

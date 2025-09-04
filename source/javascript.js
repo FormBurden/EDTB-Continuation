@@ -211,7 +211,7 @@ function get_data(override) {
         cache: false,
         success: function (onlysystem) {
             override = true;
-            if (onlysystem !== page_sys || override === true || !page_sys) {
+            {
                 requestno = 0;
 
                 var qs = [];

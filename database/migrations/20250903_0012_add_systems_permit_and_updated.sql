@@ -1,0 +1,4 @@
+-- Add columns used by source/curSys.php SELECT
+ALTER TABLE edtb_systems
+  ADD COLUMN IF NOT EXISTS needs_permit TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS updated_at DATETIME NULL DEFAULT NULL;

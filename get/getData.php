@@ -105,10 +105,7 @@ $escCursysName = $mysqli->real_escape_string($curSys['name'] ?? '');
 
 $data = [];
 
-/**
- * Now Playing
- */
-$data['now_playing'] = '';
+
 
 if ((isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])) ||
     (isset($settings['nowplaying_vlc_password']) && !empty($settings['nowplaying_vlc_password']))
@@ -257,5 +254,8 @@ if ($newSystem !== false || $request == 0) {
 }
 
 if (function_exists('ob_get_length') && ob_get_length()) { ob_clean(); }
+
+header('Content-Type: application/json; charset=utf-8');
+
 
 echo json_encode($data);
