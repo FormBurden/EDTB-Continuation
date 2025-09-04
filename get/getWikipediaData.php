@@ -53,8 +53,8 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     /**
      * first try the dismbiguation
      */
-    $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&redirects=&exsectionformat=plain&titles=' .
-        strtolower($search) . '_(disambiguation)';
+    $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&redirects=1&exsectionformat=plain&titles=' .
+        $search . urlencode(' (disambiguation)');
 
     if ($result = file_get_contents($url, false, $ctx)) {
         $jsonData = json_decode($result);
@@ -63,7 +63,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
 
         $count = 0;
         foreach ($titles as $title) {
-            $titleExtract = $title->{'extract'};
+            $titleExtract = (string)($title->{'extract'} ?? '');
 
             preg_match_all("/\<p>.*?\<\/p>/", $titleExtract, $matches);
 
@@ -155,15 +155,15 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
      * if that yields no results, try the direct approach
      */
     if ($i === 0) {
-        $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsectionformat=plain&titles=' .
-            strtolower($search);
+        $url = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&redirects=1&exsectionformat=plain&titles=' .
+            $search;
 
         if ($result = file_get_contents($url, false, $ctx)) {
             $jsonData = json_decode($result);
             $titles = $jsonData->{'query'}->{'pages'};
 
             foreach ($titles as $title) {
-                $titleExtract = $title->{'extract'};
+                $titleExtract = (string)($title->{'extract'} ?? '');
 
                 preg_match_all("/\<li>.*?\<\/li>/", $titleExtract, $matches);
 

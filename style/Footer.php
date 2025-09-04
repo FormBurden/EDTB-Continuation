@@ -205,6 +205,8 @@ class Footer extends Theme
                 });
             });
         </script>
+        <script>get_data(true);</script>
+        <script>make_gallery(true);</script>
 
         <!-- update data every x ms -->
         <script>

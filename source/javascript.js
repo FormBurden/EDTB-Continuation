@@ -210,6 +210,7 @@ function get_data(override) {
         url: "/get/getData.php?action=onlysystem",
         cache: false,
         success: function (onlysystem) {
+            override = true;
             if (onlysystem !== page_sys || override === true || !page_sys) {
                 requestno = 0;
 
@@ -1152,7 +1153,7 @@ function get_wikipedia(search, id) {
         wpsearch.html('<strong>Querying Wikipedia</strong><br><img src="/style/img/loading.gif" alt="Loading...">');
 
         $.ajax({
-            url: "/get/getWikipediaData.php?search=" + search,
+            url: "/get/getWikipediaData.php?search=" + encodeURIComponent(search),
             cache: false,
             dataType: "html",
             success: function(result) {

@@ -467,7 +467,7 @@ if ($stationExists == 0) {
         $stationId = $stationObj->id;
         $wikiQuery = $fullTitle;
 
-        $sName = '<span class="wp" onclick="get_wikipedia(\'' . urlencode($wikiQuery) . '\', \'' . $stationId . '\')">';
+        $sName = '<span class="wp" onclick="get_wikipedia(\'' . addslashes($wikiQuery) . '\', \'' . $stationId . '\')">';
         $sName .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . htmlspecialchars($wikiQuery, ENT_QUOTES) . '" style="font-weight: inherit">'
             . htmlspecialchars($fullTitle, ENT_QUOTES)
             . '</a></span>';

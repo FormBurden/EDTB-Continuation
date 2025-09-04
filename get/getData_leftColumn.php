@@ -74,16 +74,13 @@ if (!isset($_COOKIE['style']) || $_COOKIE['style'] !== 'narrow') {
     if ($res) { $res->close(); }
 
     if ($hasUserBookmarks) {
-        if ($curId !== '' && $curId !== '-1') {
-            $bQuery = "SELECT id FROM user_bookmarks WHERE system_id = '" . $mysqli->real_escape_string($curId) . "' AND system_id != '' LIMIT 1";
-        } else {
-            $bQuery = "SELECT id FROM user_bookmarks WHERE system_name = '" . $escName . "' LIMIT 1";
-        }
+        $bQuery = "SELECT id FROM user_bookmarks WHERE system_name = '" . $escName . "' LIMIT 1";
         if ($res = $mysqli->query($bQuery)) {
             $bookmarked = $res->num_rows;
             $res->close();
         }
     }
+    
 
     if ($hasUserPoi) {
         $pQuery = "SELECT id FROM user_poi WHERE system_name = '" . $escName . "' AND system_name != '' LIMIT 1";
