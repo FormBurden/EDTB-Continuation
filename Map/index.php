@@ -52,8 +52,9 @@ if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
 
 }
 ?>
-<script src="Vendor/Highcharts/js/highcharts.js"></script>
-<script src="Vendor/Highcharts/js/highcharts-3d.js"></script>
+<script src="source/Vendor/Highcharts/js/highcharts.js"></script>
+<script src="source/Vendor/Highcharts/js/highcharts-3d.js"></script>
+<script src="getMapPoints.js.php<?php echo (isset($_GET['mode']) && $_GET['mode'] === '2d') ? '?mode=2d&' : '?'; ?>maxdistance=<?php echo (int)($settings['maxdistance'] ?? 50); ?>"></script>
 <div class="entries">
     <table class="edmap_table">
         <tbody>
@@ -68,7 +69,7 @@ if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
         </tbody>
     </table>
     <div class="entries_inner" style="overflow:hidden !important">
-        <div id="container"></div>
+        <div id="container" style="height:560px;min-height:560px;"></div>
         <div id="report" onclick="$('#report').fadeToggle('fast')"></div>
         <div id="disclaimer" onclick="$('#disclaimer').fadeToggle('fast')"></div>
         <div id="map_legend">Legend</div>
