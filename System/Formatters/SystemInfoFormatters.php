@@ -5,6 +5,22 @@ declare(strict_types=1);
  * System Information page formatters extracted from System/getData_systemInfo.php
  * Keep these helpers presentation-only; no DB or global side effects here.
  */
+/**
+ * Build the facilities array from a station object.
+ * Keys match icon filenames in /style/img/facilities/.
+ */
+function facilitiesFromStation(object $stationObj): array
+{
+    return [
+        'shipyard'     => (int)$stationObj->shipyard,
+        'outfitting'   => (int)$stationObj->outfitting,
+        'market'       => (int)$stationObj->commodities_market,
+        'black_market' => (int)$stationObj->black_market,
+        'refuel'       => (int)$stationObj->refuel,
+        'repair'       => (int)$stationObj->repair,
+        'restock'      => (int)$stationObj->rearm,
+    ];
+}
 
 /**
  * Return the facilities icon strip HTML for a station.

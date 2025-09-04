@@ -59,105 +59,19 @@ if ($html === null) {
     ?>
     <div class="entries">
         <div class="entries_inner">
-            <h2><img class="icon24" src="/style/img/galnet.png" alt="GalNet" style="margin-right: 6px"/>Latest Galnet News</h2>
-            <hr>
+            <?php include __DIR__ . '/partials/header.php'; ?>
+
             <?php
-            $galnetUrl = defined('GALNET_FEED')
-            ? GALNET_FEED
-            : 'https://cms.zaonce.net/en-GB/jsonapi/node/galnet_article?sort=-published_at&page[offset]=0&page[limit]=12';
+            require_once __DIR__ . '/GalnetProvider.php';
+            require_once __DIR__ . '/GalnetCache.php';
 
-            /** Fetch JSON from Frontier CMS (JSON:API) */
-            $ch = curl_init($galnetUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'EDTB-Continuation/1.0');
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/vnd.api+json']);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
 
-            $feed = [];
+            $provider = new GalnetProvider();
+            $feed = GalnetCache::remember('galnet_latest_12', 600, function() use ($provider) { return $provider->fetchLatest(12); });
 
-            if ($response !== false && $httpCode >= 200 && $httpCode < 300) {
-            $json = json_decode($response, true);
-            if (isset($json['data']) && is_array($json['data'])) {
-                foreach ($json['data'] as $entry) {
-                    $attr = isset($entry['attributes']) && is_array($entry['attributes']) ? $entry['attributes'] : [];
-
-                    $title = isset($attr['title']) ? $attr['title'] : '';
-                    $pub   = isset($attr['published_at']) ? $attr['published_at'] : '';
-
-                    // Body is a Drupal field; prefer 'processed' (HTML), else 'value'
-                    $body  = '';
-                    if (isset($attr['body']) && is_array($attr['body'])) {
-                        $body = isset($attr['body']['processed'])
-                            ? $attr['body']['processed']
-                            : (isset($attr['body']['value']) ? $attr['body']['value'] : '');
-                    } elseif (isset($attr['body'])) {
-                        $body = $attr['body'];
-                    }
-
-                    // Link: use path.alias if provided; otherwise the Galnet hub
-                    $link = 'https://www.elitedangerous.com/news/galnet';
-                    if (isset($attr['path']) && is_array($attr['path']) && !empty($attr['path']['alias'])) {
-                        $link = 'https://www.elitedangerous.com' . $attr['path']['alias'];
-                    }
-
-                    $feed[] = [
-                        'title'   => $title,
-                        'link'    => $link,
-                        'pubDate' => $pub,
-                        'content' => $body,
-                    ];
-                }
-            }
-            }
-
+            // Render the list items (uses $feed and $settings['galnet_excludes'])
+            include __DIR__ . '/partials/list.php';
             
-
-            $i = 0;
-            foreach ($feed as $data) {
-                $title = $data['title'];
-                $link = $data['link'];
-                $text = $data['content'];
-
-                // exclude stuff
-                $continue = true;
-
-                foreach ($settings['galnet_excludes'] as $exclude) {
-                    $find = $exclude;
-                    $pos = strpos($title, $find);
-
-                    if ($pos !== false) {
-                        $continue = false;
-                        break 1;
-                    }
-                }
-
-                if ($continue !== false) {
-                    ?>
-                    <h3>
-                        <a href="javascript:void(0)" onclick="$('#<?= $i ?>').fadeToggle()">
-                            <img class="icon" src="/style/img/plus.png" alt="expand" style="padding-bottom: 3px"/><?= $title ?>
-                        </a>
-                    </h3>
-                    <div id="<?= $i ?>" style="display: none; padding-left:22px;max-width: 800px">
-                        <?= $text ?>
-                        <br><br>
-                        <span style="margin-bottom: 15px">
-                            <a href="<?= $link ?>" target="_blank">
-                                Read on news.galnet.fr
-                            </a><img class="ext_icon" src="/style/img/external_link.png" style="margin-bottom: 3px" alt="ext"/>
-                        </span>
-                    </div>
-                    <?php
-                    $i++;
-                }
-            }
-            ?>
-        </div>
-    </div>
-    <?php
     $html = ob_get_contents();
     // Save to Cache for 30 minutes
     __c('files')->set('galnet', $html, 1800);

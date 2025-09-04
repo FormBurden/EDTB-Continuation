@@ -29,6 +29,10 @@
  */
 require_once __DIR__ . '/partials/AllegianceIcons.php';
 require_once __DIR__ . '/partials/Filters.php';
+require_once __DIR__ . '/partials/Powers.php';
+require_once __DIR__ . '/partials/Search.php';
+
+
 
 
 
@@ -676,24 +680,8 @@ class NearestSystems
                     <?php render_allegiance_icons($this->allegianceParams); ?>
 
                     <!-- search systems and stations-->
-                    <div style="text-align: left">
-                        <div style="width
+                    <?php render_nearestsystems_search($this->hiddenInputs); ?>
 
-                    <!-- search systems and stations-->
-                    <div style="text-align: left">
-                        <div style="width: 180px; margin-top: 35px">
-                            <input class="textbox" type="text" name="system_name" placeholder="System (optional)"
-                                   id="system_21" style="width: 180px"
-                                   oninput="showResult(this.value, '11', 'no', 'no', 'yes')"/><br/>
-                            <input class="textbox" type="text" name="station_name" placeholder="Station (optional)"
-                                   id="station_21" style="width: 180px"
-                                   oninput="showResult(this.value, '12', 'no', 'yes', 'yes')"/>
-                            <div class="suggestions" id="suggestions_11"
-                                 style="margin-left: 0; margin-top:-36px; min-width: 168px"></div>
-                            <div class="suggestions" id="suggestions_12"
-                                 style="margin-left: 0; min-width: 168px"></div>
-                        </div>
-                    </div>
                 </td>
                 <!-- allegiances -->
                 <td class="transparent" style="vertical-align: top; width:20%; white-space: nowrap">
@@ -825,28 +813,8 @@ class NearestSystems
                 <!-- ships & facilities -->
                 <td class="transparent" style="vertical-align: top; width:20%;white-space: nowrap">
                     <!-- ships -->
-                    <form method="get" action="/NearestSystems/" name="go" id="ships"
-                          data-push="true" data-target="#nscontent" data-include-blank-url-params="true"
-                          data-optimize-url-params="false">
-                        <?php
-                        echo $this->hiddenInputs;
-                        ?>
-                        <select title="Ship" class="selectbox" name="ship_name" style="width: 180px"
-                                onchange="$('.se-pre-con').show();this.form.submit()">
-                            <option value="0">Sells Ships</option>
-                            <?php
-                            $query = 'SELECT name FROM edtb_ships ORDER BY name';
-                            $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+                    <?php render_ships_filter($this->mysqli, $this->hiddenInputs); ?>
 
-                            while ($shipObj = $result->fetch_object()) {
-                                $selected = $_GET['ship_name'] === $shipObj->name ? " selected='selected'" : '';
-                                echo '<option value="' . $shipObj->name . '"' . $selected . '>' . $shipObj->name . '</option>';
-                            }
-
-                            $result->close();
-                            ?>
-                        </select><br/>
-                    </form>
                     <!-- facilities -->
                     <form method="get" action="/NearestSystems/" name="go" id="facilities"
                           data-push="true" data-target="#nscontent" data-include-blank-url-params="true"

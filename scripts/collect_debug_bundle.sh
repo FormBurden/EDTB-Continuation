@@ -12,6 +12,7 @@ NO_DEFAULTS=0
 DRY_RUN=0
 INCLUDE_FROM=""
 READ_STDIN=0
+EXCLUDE_LOGS=0
 
 # Hostname redaction for outputs
 HOST_RAW="$(hostname 2>/dev/null || uname -n || echo 'UNKNOWN_HOST')"
@@ -44,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --from) shift; [[ $# -gt 0 ]] || die "--from requires a file"; INCLUDE_FROM="$1";;
     --stdin) READ_STDIN=1;;
     --dry-run) DRY_RUN=1;;
+    --no-logs) EXCLUDE_LOGS=1;;
     --help) usage; exit 0;;
     --) shift; break;;
     -*) die "Unknown option: $1";;
@@ -232,6 +234,7 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 # Include only recent log folders (within ±2 minutes of now)
+if (( EXCLUDE_LOGS == 0 )); then
 logs_root="$ROOT/logs"
 if [[ -d "$logs_root" ]]; then
   now_epoch="$(date +%s)"
@@ -256,6 +259,7 @@ if [[ -d "$logs_root" ]]; then
 fi
 
 
+fi
 TARBALL="$ROOT/${BUNDLE_NAME}.tar.gz"
 tar -C "$TMPDIR" -czf "$TARBALL" .
 rm -rf "$TMPDIR"

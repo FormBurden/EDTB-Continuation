@@ -498,15 +498,7 @@ if ($stationExists == 0) {
 
         $icon = getStationIcon($type, $isPlanetary);
 
-        $facilities = [
-            'shipyard' => $shipyard,
-            'outfitting' => $outfitting,
-            'market' => $commoditiesMarket,
-            'black_market' => $blackMarket,
-            'refuel' => $refuel,
-            'repair' => $repair,
-            'restock' => $rearm
-        ];
+        $facilities = facilitiesFromStation($stationObj);
 
         $services = buildFacilitiesHtml($facilities, (int)$stationId);
 
