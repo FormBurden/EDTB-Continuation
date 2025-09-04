@@ -81,6 +81,8 @@ require_once $ROOT . '/source/System.php';
 require_once $ROOT . '/source/curSys.php';
 require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
+require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
+
 
 
 $data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
@@ -241,40 +243,9 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
         $minY = $ry - $range; $maxY = $ry + $range;
         $minZ = $rz - $range; $maxZ = $rz + $range;
 
-        $query = '  SELECT SQL_CACHE
-                    sqrt(
-                        pow((edtb_systems.x-(' . (float)($curSys['x'] ?? 0) . ')),2)
-                      + pow((edtb_systems.y-(' . (float)($curSys['y'] ?? 0) . ')),2)
-                      + pow((edtb_systems.z-(' . (float)($curSys['z'] ?? 0) . ')),2)
-                    ) AS distance,
-                    edtb_rares.item, edtb_rares.system_name, edtb_rares.station, edtb_rares.price,
-                    edtb_rares.sc_est_mins, edtb_rares.ls_to_star,
-                    edtb_rares.needs_permit, edtb_rares.max_landing_pad_size,
-                    edtb_systems.x, edtb_systems.y, edtb_systems.z
-                    FROM edtb_rares
-                    LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name
-                    WHERE
-                    edtb_systems.x BETWEEN ' . ((float)($curSys['x'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['x'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
-                    AND edtb_systems.y BETWEEN ' . ((float)($curSys['y'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['y'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
-                    AND edtb_systems.z BETWEEN ' . ((float)($curSys['z'] ?? 0) - (float)($settings['rare_range'] ?? 50.0)) . ' AND ' . ((float)($curSys['z'] ?? 0) + (float)($settings['rare_range'] ?? 50.0)) . '
-                    ORDER BY
-                    edtb_rares.system_name = \'' . $escSiSysName . '\' DESC,
-                    distance ASC
-                    LIMIT 10';
+        $rareResult   = \EDTB\Domain\Rares\RaresRepository::selectNearbyRaresResult($mysqli, $siSystemName, (float)($curSys['x'] ?? 0), (float)($curSys['y'] ?? 0), (float)($curSys['z'] ?? 0), (float)($settings['rare_range'] ?? 50.0));
+        $raresCloseby = $rareResult ? $rareResult->num_rows : 0;
 
-        // Only run the rares query if the table exists (fresh DBs won’t have it yet)
-        $hasRares = false;
-        $chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_rares'");
-        if ($chk) {
-            $hasRares = ($chk->num_rows > 0);
-            $chk->close();
-        }
-        if ($hasRares) {
-            $rareResult = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-            $raresCloseby = $rareResult->num_rows;
-        } else {
-            $raresCloseby = 0;
-        }
 
 
     }
@@ -308,32 +279,12 @@ if (isset($settings['dist_systems'])) {
     foreach ($settings['dist_systems'] as $distSys => $distSysDisplayName) {
         $escDistSys = $mysqli->real_escape_string($distSys);
 
-        $query = "  SELECT id, x, y, z
-                    FROM edtb_systems
-                    WHERE name = '$escDistSys'
-                    LIMIT 1";
+        $userDistObj    = \EDTB\Domain\System\SystemRepository::findCoordsByNameOrUserOwn($mysqli, $escDistSys);
+        $distSysId      = $userDistObj->id;
+        $distSysCoordx  = $userDistObj->x;
+        $distSysCoordy  = $userDistObj->y;
+        $distSysCoordz  = $userDistObj->z;
 
-        $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-        $found = $result->num_rows;
-
-        if ($found === 0) {
-            $query = "  SELECT x, y, z
-                        FROM user_systems_own
-                        WHERE name = '$escDistSys'
-                        LIMIT 1";
-
-            $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-        }
-
-        $userDistObj = $result->fetch_object();
-        $distSysId = $userDistObj->id;
-
-        $distSysCoordx = $userDistObj->x;
-        $distSysCoordy = $userDistObj->y;
-        $distSysCoordz = $userDistObj->z;
-
-        $result->close();
 
         $userDist = sqrt((($udCoordx - $distSysCoordx) ** 2) + (($udCoordy - $distSysCoordy) ** 2) + (($udCoordz - $distSysCoordz) ** 2));
         $userDists .= '<a href="/System?system_id=' . $distSysId . '">' . $distSysDisplayName . '</a>: ' . number_format($userDist, 1) . ' ly' . $add3;
@@ -437,6 +388,9 @@ $data['si_name'] .= $rareText . $userDists . '</span>';
 
 
 /* station info for System.php */
+$__chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_stations'");
+$hasStationsTable = ($__chk && $__chk->num_rows > 0); if ($__chk) { $__chk->close(); }
+$stationExists = 0;
 
 $stations = \EDTB\Domain\Stations\StationsRepository::findBySystemId($mysqli, (int)$systemId);
 
@@ -497,8 +451,7 @@ if ($stationExists == 0) {
             $lastModuleName = '';
             $lastCategoryName = '';
 
-            $modCat = [];
-            $i = 0;
+            
             $modCat = \EDTB\Domain\Stations\StationsRepository::modulesByIds($mysqli, $modulesS);
 
 
@@ -704,17 +657,8 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
     if ($siSystemPower !== 'None' && $siSystemPowerState !== 'None') {
         $escSystemPower = $mysqli->real_escape_string($siSystemPower);
 
-        $query = "  SELECT system_name
-                    FROM edtb_powers
-                    WHERE name = '$escSystemPower'
-                    LIMIT 1";
+        $hq = \EDTB\Domain\Powers\PowersRepository::getHQSystemName($mysqli, $siSystemPower);
 
-        $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-        $hqObj = $result->fetch_object();
-        $hq = $hqObj->system_name;
-
-        $result->close();
 
         $siSystemData = '<a href="#" title="Headquarters: ' . $hq . '">' . $siSystemPower . '</a> [' . $siSystemPowerState . ']';
     } elseif (empty($siSystemPower) && empty($siSystemPowerState)) {
