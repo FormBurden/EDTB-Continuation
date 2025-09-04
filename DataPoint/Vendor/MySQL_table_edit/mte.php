@@ -936,8 +936,7 @@ class MySQLtabledit
                 ';
 
             if ($inMteNewRec) {
-                echo "<script>window.location='?start=0&f=&sort=" . $this->primaryKey . '&table=' . $this->table . "&ad=d'";</script>";
-                echo '</script>';
+                echo '<script>window.location="?start=0&f=' . $this->primaryKey . '&table=' . $this->table . '&sort=' . $this->primaryKey . '&ad=d";</script>';
             } else {
                 echo "<script>window.location='" . $_SESSION['hist_page'] . "'</script>";
             }

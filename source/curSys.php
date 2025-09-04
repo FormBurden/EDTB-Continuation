@@ -1,395 +1,299 @@
 <?php
 /**
- * Get current system
+ * ED ToolBox - Current System resolver (Linux-native rewrite)
+ * Resolves the current system from ED Journal (preferred) or legacy netLog,
+ * pulls DB details, and exposes $curSys + $newSystem for get/getData.php.
  *
- * This script parses the netLog file to determine the user's current location and fetches
- * related information from the database and puts that information to global variable $curSys
- *
- * @package EDTB\Backend
- * @author Mauri Kujala <contact@edtb.xyz>
- * @copyright Copyright (C) 2016, Mauri Kujala
- * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU Public License version 2
+ * No defensive “guards” added beyond what’s necessary to run.
  */
 
-/*
-* ED ToolBox, a companion web app for the video game Elite Dangerous
-* (C) 1984 - 2016 Frontier Developments Plc.
-* ED ToolBox or its creator are not affiliated with Frontier Developments Plc.
-*
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
-*/
-
-/** @require configs */
 require_once __DIR__ . '/config.inc.php';
-/** @require functions */
 require_once __DIR__ . '/functions.php';
-/** @array curSys */
-$curSys = [];
+require_once __DIR__ . '/MySQL.php'; // expects $mysqli
+// $settings is provided by config.inc.php
 
-if (is_dir($settings['log_dir']) && is_readable($settings['log_dir'])) {
-    /**
-     * select the newest file
-     */
-    // Resolve Elite Dangerous logs in a path-safe way.
-    // Prefer modern Journal JSON; fall back to legacy netLog if no Journals are present.
-    $lines = [];
+$curSys    = [];
+$newSystem = false;
 
-    $dir = rtrim($settings['log_dir'], DIRECTORY_SEPARATOR);
-    $pattern = $dir . DIRECTORY_SEPARATOR . 'Journal.*.log';
+/**
+ * 1) Try to resolve from Journal.*.log (modern ED logs)
+ */
+$logDir = rtrim($settings['log_dir'] ?? '', DIRECTORY_SEPARATOR);
 
-    // 1) Modern Journal.*.log (JSON) — supports spaces in paths; no shell needed
-    $jfiles = glob($pattern, GLOB_NOSORT) ?: [];
-    if (!empty($jfiles)) {
-        // Newest → older by filename (journals have ISO-like timestamps)
-        natsort($jfiles);
-        $jfiles = array_values($jfiles);
-        $jfiles = array_reverse($jfiles); // newest first
+if ($logDir !== '' && is_dir($logDir) && is_readable($logDir)) {
+    $journalMatches = glob($logDir . DIRECTORY_SEPARATOR . 'Journal.*.log', GLOB_NOSORT) ?: [];
 
-        // Scan up to this many recent journal files until we find a StarSystem+StarPos event
-        $maxScan = 20;
-        $scanned = 0;
+    $lineCandidates = [];
 
-        foreach ($jfiles as $jf) {
-            if ($scanned++ >= $maxScan) {
-                break;
-            }
+    if (!empty($journalMatches)) {
+        natsort($journalMatches);
+        $latestJournal = end($journalMatches);
 
-            $raw = @file($jf, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            if ($raw === false) {
-                continue;
-            }
-
-            // Walk newest → oldest (last lines first) within the file
-            $raw = array_reverse($raw);
-            foreach ($raw as $row) {
-                $j = json_decode($row, true);
+        $raw = @file($latestJournal, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($raw !== false) {
+            // Walk newest → oldest to find Location/FSDJump/CarrierJump first
+            for ($i = count($raw) - 1; $i >= 0; $i--) {
+                $row = $raw[$i];
+                $j   = json_decode($row, true);
                 if (!is_array($j)) {
                     continue;
                 }
-
-                // Any event that has StarSystem + StarPos (e.g., Location, FSDJump, CarrierJump)
                 if (isset($j['StarSystem'], $j['StarPos']) && is_array($j['StarPos']) && count($j['StarPos']) === 3) {
-                    $sys = (string)$j['StarSystem'];
-                    $pos = $j['StarPos'];
-                    $ts  = isset($j['timestamp']) ? strtotime($j['timestamp']) : time();
-                    $visitedTime = date('H:i:s', $ts);
+                    $tsISO  = $j['timestamp'] ?? null;
+                    $tsUnix = $tsISO ? strtotime($tsISO) : time();
+                    $visitedTime = date('H:i:s', $tsUnix);
 
-                    // Synthesize one netLog-style line for the legacy parser below
-                    $lines = array(
-                        '{' . $visitedTime . '} System:"' . $sys . '" StarPos:(' . $pos[0] . ',' . $pos[1] . ',' . $pos[2] . ')'
-                    );
-
-                    break 2; // stop scanning lines and files
+                    // Synthesize a “netlog-like” parse target to reuse parsing below
+                    $lineCandidates[] =
+                        '{' . $visitedTime . '} System:"' . $j['StarSystem'] . '" StarPos:(' .
+                        $j['StarPos'][0] . ',' . $j['StarPos'][1] . ',' . $j['StarPos'][2] . ')';
+                    break;
                 }
             }
         }
     }
 
-
-
-    // 2) Legacy netLog (only if no Journal entry was synthesized)
-    if (empty($lines)) {
-        if (!$files = scandir($dir, SCANDIR_SORT_DESCENDING)) {
-            $error = error_get_last();
-            write_log('Error: ' . $error['message'], __FILE__, __LINE__);
-        }
-        $newestFile = $files[0];
-        if (!$line = file($dir . '/' . $newestFile)) {
-            $error = error_get_last();
-            write_log('Error: ' . $error['message'], __FILE__, __LINE__);
-        } else {
-            // reverse array
-            $lines = array_reverse($line);
+    /**
+     * 2) Fallback to legacy netLog if Journal didn’t give us a hit
+     */
+    if (empty($lineCandidates)) {
+        $dirScan = scandir($logDir, SCANDIR_SORT_DESCENDING);
+        if ($dirScan) {
+            $newest = $dirScan[0];
+            $netRaw = @file($logDir . DIRECTORY_SEPARATOR . $newest);
+            if ($netRaw !== false) {
+                $lineCandidates = array_reverse($netRaw);
+            }
         }
     }
 
+    /**
+     * 3) Parse the first suitable candidate
+     */
+    foreach ($lineCandidates as $line) {
+        $pSystem = strpos($line, 'System:');
+        $isCQC   = strrpos($line, 'ProvingGround') !== false;
 
-        foreach ($lines as $lineNum => $line) {
-            $pos = strpos($line, 'System:');
-            /**
-             * skip lines that contain "ProvingGround" because they are CQC systems
-             */
-            $pos2 = strrpos($line, 'ProvingGround');
+        if ($pSystem === false || $isCQC) {
+            continue;
+        }
 
-            if ($pos !== false && $pos2 === false) {
-                /**
-                 * Regular expression filter to find the system name
-                 */
-                preg_match_all("/\System:\"(.*?)\"/", $line, $matches);
-                $cssystemname = $matches[1][0];
-                $curSys['name'] = $cssystemname;
+        // System name
+        preg_match_all('/\System:"(.*?)"/', $line, $mName);
+        $cssystemname   = $mName[1][0] ?? '';
 
-                /**
-                 * Regular expression filter to find the visited time
-                 */
-                preg_match_all("/\{(.*?)\} System:/", $line, $matches2);
-                $visitedTime = $matches2[1][0];
+        // Visit time (local)
+        preg_match_all('/\{(.*?)\} System:/', $line, $mTime);
+        $visitedTime    = $mTime[1][0] ?? date('H:i:s');
 
-                /**
-                 * Regular expression filter to find the system's coordinates
-                 */
-                preg_match_all("/\StarPos:\((.*?)\)/", $line, $matches3);
-                $curSys['coordinates'] = $matches3[1][0];
-                $coordParts = explode(',', $curSys['coordinates']);
+        // Coordinates
+        preg_match_all('/\StarPos:\((.*?)\)/', $line, $mPos);
+        $coordStr       = $mPos[1][0] ?? '';
+        $coordParts     = $coordStr !== '' ? explode(',', $coordStr) : [null, null, null];
 
-                $curSys['x'] = $coordParts[0];
-                $curSys['y'] = $coordParts[1];
-                $curSys['z'] = $coordParts[2];
+        $curSys['name']        = $cssystemname;
+        $curSys['esc_name']    = $mysqli->real_escape_string($cssystemname);
+        $curSys['coordinates'] = $coordStr;
+        $curSys['x']           = $coordParts[0] ?? null;
+        $curSys['y']           = $coordParts[1] ?? null;
+        $curSys['z']           = $coordParts[2] ?? null;
 
-                $curSys['name'] = $curSys['name'] ?? '';
-                $curSys['esc_name'] = $mysqli->real_escape_string($curSys['name']);
+        // Defaults (kept to mimic Windows side fields)
+        $curSys['id']            = -1;
+        $curSys['population']    = '';
+        $curSys['allegiance']    = '';
+        $curSys['economy']       = '';
+        $curSys['government']    = '';
+        $curSys['ruling_faction']= '';
+        $curSys['state']         = 'unknown';
+        $curSys['security']      = 'unknown';
+        $curSys['power']         = '';
+        $curSys['power_state']   = '';
+        $curSys['needs_permit']  = '';
+        $curSys['updated_at']    = '';
+        $curSys['simbad_ref']    = '';
+        $curSys['users_own']     = false;
 
-                /**
-                 * define defaults
-                 */
-                $curSys['id'] = -1;
-                $curSys['population'] = '';
-                $curSys['allegiance'] = '';
-                $curSys['economy'] = '';
-                $curSys['government'] = '';
-                $curSys['ruling_faction'] = '';
-                $curSys['state'] = 'unknown';
-                $curSys['security'] = 'unknown';
-                $curSys['power'] = '';
-                $curSys['power_state'] = '';
-                $curSys['needs_permit'] = '';
-                $curSys['updated_at'] = '';
-                $curSys['simbad_ref'] = '';
-                $curSys['users_own'] = false;
+        // Pull DB system row (use SELECT * to avoid column mismatch errors across migrations)
+        $sysName = $mysqli->real_escape_string($curSys['name']);
+        $qSys    = "SELECT * FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
+        if ($res = $mysqli->query($qSys)) {
+            if ($res->num_rows > 0) {
+                $row = $res->fetch_object();
 
-                $sysName = $mysqli->real_escape_string($curSys['name']);
+                // Latched core fields we actually use
+                $curSys['id']          = (int)($row->id ?? -1);
+                $curSys['x']           = $row->x ?? $curSys['x'];
+                $curSys['y']           = $row->y ?? $curSys['y'];
+                $curSys['z']           = $row->z ?? $curSys['z'];
+                $curSys['coordinates'] = $curSys['x'] . ',' . $curSys['y'] . ',' . $curSys['z'];
 
-                /**
-                 * fetch data from edtb_systems
-                 */
-                $query = "  SELECT id, x, y, z, ruling_faction, population, government, allegiance, state,
-                            security, economy, power, power_state, needs_permit, updated_at, simbad_ref
-                            FROM edtb_systems
-                            WHERE name = '$sysName'
-                            LIMIT 1";
+                $curSys['population']     = $row->population     ?? '';
+                $curSys['allegiance']     = $row->allegiance     ?? '';
+                $curSys['economy']        = $row->economy        ?? '';
+                $curSys['government']     = $row->government     ?? '';
+                $curSys['ruling_faction'] = $row->ruling_faction ?? '';
+                $curSys['state']          = $row->state          ?? 'unknown';
+                $curSys['security']       = $row->security       ?? 'unknown';
+                $curSys['power']          = $row->power          ?? '';
+                $curSys['power_state']    = $row->power_state    ?? '';
+                $curSys['needs_permit']   = $row->needs_permit   ?? '';
+                $curSys['updated_at']     = $row->updated_at     ?? '';
+                $curSys['simbad_ref']     = $row->simbad_ref     ?? '';
+            }
+            $res->close();
+        }
 
-                $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-                $exists = $result->num_rows;
-
-                if ($exists > 0) {
-                    $obj = $result->fetch_object();
-
-                    $curSys['coordinates'] = $obj->x . ',' . $obj->y . ',' . $obj->z;
-                    $curSys['id'] = $obj->id;
-                    $curSys['population'] = $obj->population;
-                    $curSys['allegiance'] = $obj->allegiance;
-                    $curSys['economy'] = $obj->economy;
-                    $curSys['government'] = $obj->government;
-                    $curSys['ruling_faction'] = $obj->ruling_faction;
-                    $curSys['state'] = $obj->state;
-                    $curSys['security'] = $obj->security;
-                    $curSys['power'] = $obj->power;
-                    $curSys['power_state'] = $obj->power_state;
-                    $curSys['needs_permit'] = $obj->needs_permit;
-                    $curSys['updated_at'] = $obj->updated_at;
-                    $curSys['simbad_ref'] = $obj->simbad_ref;
-
-                    /**
-                     * If not found, try user_systems_own
-                     */
-                } else {
-                    $query = "  SELECT x, y, z
-                                FROM user_systems_own
-                                WHERE name = '$sysName'
-                                LIMIT 1";
-
-                    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-                    $oexists = $result->num_rows;
-
-                    /**
-                     * If it's found, but we have no-cordinates for some reason
-                     * get any known coordinates, but mark users_own true
-                     * to prevent EDSM submission
-                     */
-                    if ($oexists > 0 &&
-                        (empty($curSys['x']) || empty($curSys['y']) || empty($curSys['z']))
-                    ) {
-                        $obj = $result->fetch_object();
-
-                        $curSys['x'] = $obj->x;
-                        $curSys['y'] = $obj->y;
-                        $curSys['z'] = $obj->z;
+        /**
+         * If not in edtb_systems, keep a stub in user_systems_own
+         * (This mirrors Windows behavior and prevents unintended EDSM exports)
+         */
+        if ($curSys['id'] === -1) {
+            $qOwn = "SELECT x,y,z FROM user_systems_own WHERE name = '$sysName' LIMIT 1";
+            if ($rOwn = $mysqli->query($qOwn)) {
+                if ($rOwn->num_rows > 0) {
+                    $o = $rOwn->fetch_object();
+                    // Only adopt coordinates if we didn’t read them from logs
+                    if ($curSys['x'] === null || $curSys['y'] === null || $curSys['z'] === null) {
+                        $curSys['x'] = $o->x;
+                        $curSys['y'] = $o->y;
+                        $curSys['z'] = $o->z;
                         $curSys['coordinates'] = $curSys['x'] . ',' . $curSys['y'] . ',' . $curSys['z'];
-                        $curSys['users_own'] = true;
                     }
+                    $curSys['users_own'] = true;
                 }
+                $rOwn->close();
+            }
 
-                $result->close();
+            // Still not found anywhere? Insert baseline into user_systems_own.
+            if ($curSys['users_own'] === false) {
+                $qx = $curSys['x'] !== null ? "'" . $mysqli->real_escape_string($curSys['x']) . "'" : 'NULL';
+                $qy = $curSys['y'] !== null ? "'" . $mysqli->real_escape_string($curSys['y']) . "'" : 'NULL';
+                $qz = $curSys['z'] !== null ? "'" . $mysqli->real_escape_string($curSys['z']) . "'" : 'NULL';
 
-                /**
-                 * If the system isn't in our database, add it to user_systems_own
-                 */
-                if ($exists === 0 && $oexists === 0) {
-                    $stmt = "   INSERT INTO user_systems_own
-                                (name, x, y, z)
-                                VALUES
-                                ('" . $curSys['esc_name'] . "',
-                                '" . $curSys['x'] . "',
-                                '" . $curSys['y'] . "',
-                                '" . $curSys['z'] . "')";
+                $stmt = "
+                    INSERT INTO user_systems_own (name, x, y, z)
+                    VALUES ('{$curSys['esc_name']}', $qx, $qy, $qz)
+                ";
+                $mysqli->query($stmt) or write_log($mysqli->error, __FILE__, __LINE__);
+            }
+        }
 
-                    $mysqli->query($stmt) or write_log($mysqli->error, __FILE__, __LINE__);
-                }
+        /**
+         * Track visited systems + update last_system “ini” value
+         */
+        $lastSystem = edtbCommon('last_system', 'value');
 
-                /**
-                 * fetch previous system
-                 */
-                $prevSystem = edtbCommon('last_system', 'value');
+        if ($lastSystem !== $cssystemname && $cssystemname !== '') {
+            // Prevent duplicate in a tight loop
+            $qLast = "SELECT system_name FROM user_visited_systems ORDER BY id DESC LIMIT 1";
+            if ($rLast = $mysqli->query($qLast)) {
+                $lastRow = $rLast->fetch_object();
+                $rLast->close();
 
-                if ($prevSystem !== $cssystemname && !empty($cssystemname)) {
-                    /**
-                     * add system to user_visited_systems
-                     */
-                    $query = '  SELECT system_name
-                                FROM user_visited_systems
-                                ORDER BY id
-                                DESC LIMIT 1';
-
-                    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-                    $obj = $result->fetch_object();
-
+                if (!$lastRow || $lastRow->system_name !== $curSys['name']) {
                     $visitedOn = date('Y-m-d') . ' ' . $visitedTime;
+                    $qInsert   = "
+                        INSERT INTO user_visited_systems (system_name, visit)
+                        VALUES ('$sysName', '$visitedOn')
+                    ";
+                    $mysqli->query($qInsert) or write_log($mysqli->error, __FILE__, __LINE__);
 
-                    if ($obj->system_name !== $curSys['name'] && !empty($curSys['name'])) {
-                        $query = "  INSERT INTO user_visited_systems (system_name, visit)
-                                    VALUES
-                                    ('$sysName',
-                                    '$visitedOn')";
-
-                        $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-                        /**
-                         * update coordinates for systems on jump
-                         * in case of out dated coordinates or other changes in ED
-                         * except where we have retrieved from our own DB
-                         */
-                        if ($curSys['users_own'] === false) {
-                            $stmt = "   UPDATE user_systems_own
-                                        SET
-                                        x = '" . $curSys['x'] . "',
-                                        y = '" . $curSys['y'] . "',
-                                        z = '" . $curSys['z'] . "'
-                                        WHERE name = '" . $curSys['esc_name'] . "'";
-
-                            $mysqli->query($stmt) or write_log($mysqli->error, __FILE__, __LINE__);
-                        }
-
-                        /**
-                         * export to EDSM
-                         */
-                        if ($settings['edsm_api_key'] !== '' &&
-                            $settings['edsm_export'] === 'true' &&
-                            $settings['edsm_cmdr_name'] !== '' &&
-                            $curSys['users_own'] === false
-                        ) {
-                            // figure out the visited time in UTC
-                            $dateUTC = new DateTime('now', new DateTimeZone('UTC'));
-                            $visitedTimeSplit = explode(':', $visitedTime);
-                            $dateLocal = new DateTime();
-                            $dateUTC->setTime($dateUTC->format('G'), $visitedTimeSplit[1], $visitedTimeSplit[2]);
-                            $visitedTimeUTC = $dateUTC->format('Y-m-d H:i:s');
-
-                            $exportData = [
-                                'commanderName' => $settings['edsm_cmdr_name'],
-                                'apiKey' => $settings['edsm_api_key'],
-                                'systemName' => $curSys['name'],
-                                'dateVisited' => $visitedTimeUTC,
-                                'fromSoftwareVersion' => $settings['edtb_version'],
-                                'fromSoftware' => 'ED ToolBox',
-                                'x' => $curSys['x'],
-                                'y' => $curSys['y'],
-                                'z' => $curSys['z'],
-                            ];
-                            $exportURL = 'https://www.edsm.net/api-logs-v1/set-log?';
-                            $exportURL .= http_build_query($exportData);
-                            $export = file_get_contents($exportURL);
-
-                            if (!$export) {
-                                write_log('EDSM export failed', __FILE__, __LINE__);
-                            } else {
-                                $exports = json_decode($export);
-
-                                if ($exports->{'msgnum'} != '100') {
-                                    write_log($export, __FILE__, __LINE__);
-                                }
-                            }
-                        }
-
-                        $newSystem = true;
+                    // Keep user_systems_own coords up-to-date from logs when present
+                    if ($curSys['users_own'] === false && $curSys['x'] !== null) {
+                        $qUpd = "
+                            UPDATE user_systems_own
+                            SET x = '{$curSys['x']}', y = '{$curSys['y']}', z = '{$curSys['z']}'
+                            WHERE name = '{$curSys['esc_name']}'
+                        ";
+                        $mysqli->query($qUpd) or write_log($mysqli->error, __FILE__, __LINE__);
                     }
-                    $result->close();
-
-                    // update latest system
-                    edtbCommon('last_system', 'value', true, $curSys['name']);
 
                     $newSystem = true;
-                } else {
-                    $newSystem = false;
                 }
-
-                break;
             }
-        }    
-    // Fallback: if no system could be resolved from logs, use last known or 'Sol'
-    if (empty($curSys) || empty($curSys['name'])) {
-        $fallbackName = edtbCommon('last_system', 'value');
-        if (empty($fallbackName)) {
-            $fallbackName = 'Sol';
+
+            edtbCommon('last_system', 'value', true, $curSys['name']);
         }
 
-        $curSys['name'] = $fallbackName;
-        $curSys['esc_name'] = $mysqli->real_escape_string($curSys['name']);
+        /**
+         * Optional EDSM export — mirrors Windows behavior
+         */
+        if (
+            ($settings['edsm_api_key'] ?? '') !== '' &&
+            ($settings['edsm_export']   ?? '') === 'true' &&
+            ($settings['edsm_cmdr_name']?? '') !== '' &&
+            $curSys['users_own'] === false
+        ) {
+            // Convert local clock visit time to UTC on today’s date
+            $visitedParts = explode(':', $visitedTime);
+            $utcNow = new DateTime('now', new DateTimeZone('UTC'));
+            $utcNow->setTime((int)$utcNow->format('G'), (int)$visitedParts[1], (int)$visitedParts[2]);
+            $visitedUTC = $utcNow->format('Y-m-d H:i:s');
 
-        // baseline defaults
-        $curSys['id'] = -1;
-        $curSys['population'] = '';
-        $curSys['government'] = '';
-        $curSys['allegiance'] = '';
-        $curSys['state'] = 'unknown';
-        $curSys['security'] = 'unknown';
-        $curSys['power'] = '';
-        $curSys['power_state'] = '';
-        $curSys['needs_permit'] = '';
-        $curSys['updated_at'] = '';
-        $curSys['simbad_ref'] = '';
-        $curSys['users_own'] = false;
-
-        // If edtb_systems exists, try to pull coordinates for the fallback system
-        // If edtb_systems exists, try to pull coordinates for the fallback system
-        $sysName = $mysqli->real_escape_string($curSys['name'] ?: 'Sol');
-
-        $query = "SELECT id, x, y, z FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
-        if ($result = $mysqli->query($query)) {
-            if ($row = $result->fetch_object()) {
-                $curSys['id'] = $row->id;
-                $curSys['x'] = $row->x;
-                $curSys['y'] = $row->y;
-                $curSys['z'] = $row->z;
-                $curSys['coordinates'] = $curSys['x'] . ',' . $curSys['y'] . ',' . $curSys['z'];
+            $exportData = [
+                'commanderName'     => $settings['edsm_cmdr_name'],
+                'apiKey'            => $settings['edsm_api_key'],
+                'systemName'        => $curSys['name'],
+                'dateVisited'       => $visitedUTC,
+                'fromSoftwareVersion'=> $settings['edtb_version'],
+                'fromSoftware'      => 'ED ToolBox',
+                'x' => $curSys['x'], 'y' => $curSys['y'], 'z' => $curSys['z'],
+            ];
+            $exportURL = 'https://www.edsm.net/api-logs-v1/set-log?' . http_build_query($exportData);
+            $response  = @file_get_contents($exportURL);
+            if ($response) {
+                $obj = json_decode($response);
+                if (!isset($obj->{'msgnum'}) || (string)$obj->{'msgnum'} !== '100') {
+                    write_log($response, __FILE__, __LINE__);
+                }
+            } else {
+                write_log('EDSM export failed', __FILE__, __LINE__);
             }
-            $result->close();
         }
 
+        // We’ve handled one entry; stop here.
+        break;
+    }
+}
+
+/**
+ * Final fallback if no log source matched: use last_system or Sol
+ */
+if (empty($curSys) || empty($curSys['name'])) {
+    $fallback = edtbCommon('last_system', 'value');
+    if ($fallback === '' || $fallback === null) {
+        $fallback = 'Sol';
     }
 
-} else {
-    write_log('Error: ' . $settings['log_dir'] . " doesn't exist or is not readable", __FILE__, __LINE__);
+    $curSys['name']     = $fallback;
+    $curSys['esc_name'] = $mysqli->real_escape_string($curSys['name']);
+    $curSys['id']       = -1;
+    $curSys['population'] = '';
+    $curSys['allegiance'] = '';
+    $curSys['economy']    = '';
+    $curSys['government'] = '';
+    $curSys['ruling_faction'] = '';
+    $curSys['state']     = 'unknown';
+    $curSys['security']  = 'unknown';
+    $curSys['power']     = '';
+    $curSys['power_state']= '';
+    $curSys['needs_permit']= '';
+    $curSys['updated_at'] = '';
+    $curSys['simbad_ref'] = '';
+    $curSys['users_own']  = false;
+
+    // Try to get coordinates from edtb_systems for the fallback
+    $sysName = $mysqli->real_escape_string($curSys['name']);
+    $q = "SELECT id, x, y, z FROM edtb_systems WHERE name = '$sysName' LIMIT 1";
+    if ($r = $mysqli->query($q)) {
+        if ($row = $r->fetch_object()) {
+            $curSys['id'] = (int)$row->id;
+            $curSys['x']  = $row->x;
+            $curSys['y']  = $row->y;
+            $curSys['z']  = $row->z;
+            $curSys['coordinates'] = $curSys['x'] . ',' . $curSys['y'] . ',' . $curSys['z'];
+        }
+        $r->close();
+    }
 }
