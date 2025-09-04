@@ -52,7 +52,7 @@ if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
 
 }
 ?>
-<script src="source/Vendor/Highcharts/js/highcharts.js"></script>
+<script src="/source/Vendor/Highcharts/js/highcharts.js"></script>
 <script src="source/Vendor/Highcharts/js/highcharts-3d.js"></script>
 <script src="getMapPoints.js.php<?php echo (isset($_GET['mode']) && $_GET['mode'] === '2d') ? '?mode=2d&' : '?'; ?>maxdistance=<?php echo (int)($settings['maxdistance'] ?? 50); ?>"></script>
 <div class="entries">

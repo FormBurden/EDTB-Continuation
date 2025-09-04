@@ -79,6 +79,10 @@ require_once $ROOT . '/source/functions.php';
 require_once $ROOT . '/source/MySQL.php';
 require_once $ROOT . '/source/System.php';
 require_once $ROOT . '/source/curSys.php';
+require_once $ROOT . '/src/Domain/System/SystemRepository.php';
+require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
+
+
 $data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
 
 
@@ -101,6 +105,11 @@ $curSys['y'] = $curSys['y'] ?? null;
 $curSys['z'] = $curSys['z'] ?? null;
 $curSys['name'] = $curSys['name'] ?? '';
 
+$siSystemName = '';
+$siSystemDisplayName = '';
+$siSystemState = 'None';
+$siSystemSecurity = 'None';
+
 
 if ($hasSystemId || $hasSystemName) {
     /** @var int $systemId */
@@ -117,22 +126,8 @@ if ($hasSystemId || $hasSystemName) {
         }
         if ($result) { $result->close(); }
     }
+    $systemObj = \EDTB\Domain\System\SystemRepository::findById($mysqli, $systemId);
 
-    // Only include 'population' if the column exists
-    $hasPopulationCol = false;
-    if ($chk = $mysqli->query("SHOW COLUMNS FROM edtb_systems LIKE 'population'")) {
-        $hasPopulationCol = ($chk->num_rows > 0);
-        $chk->close();
-    }
-
-    $fields = "id, name, allegiance, economy, government, ruling_faction, state, security, power, power_state, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
-    if ($hasPopulationCol) {
-        $fields = "id, name, population, allegiance, economy, government, ruling_faction, state, security, power, power_state, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
-    }
-
-    $query = "SELECT SQL_CACHE $fields FROM edtb_systems WHERE id = '$systemId' LIMIT 1";
-    $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-    $systemObj = $result->fetch_object();
 
     $siSystemName         = !empty($systemObj->name) ? $systemObj->name : ($hasSystemName ? $escSysName : '');
     $siSystemDisplayName  = $siSystemName;
@@ -441,24 +436,14 @@ $data['si_name'] .= $rareText . $userDists . '</span>';
 
 
 
-/**
- * station info for System.php
- */
-$hasStationsTable = false;
-if ($__t = $mysqli->query("SHOW TABLES LIKE 'edtb_stations'")) {
-    $hasStationsTable = ($__t->num_rows > 0);
-    $__t->close();
-}
+/* station info for System.php */
+
+$stations = \EDTB\Domain\Stations\StationsRepository::findBySystemId($mysqli, (int)$systemId);
+
 if ($hasStationsTable) {
-
-$query = "  SELECT SQL_CACHE *
-            FROM edtb_stations
-            WHERE system_id = '$siSystemId'
-            ORDER BY -ls_from_star DESC, name";
-
-$stationResult = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-$stationExists = $stationResult->num_rows;
+    $stationResult = \EDTB\Domain\Stations\StationsRepository::selectResultBySystemId($mysqli, (int)$siSystemId);
+    $stationExists = $stationResult->num_rows;
+    
 
 if ($stationExists == 0) {
     $data['si_stations'] = 'No station data available';
@@ -514,35 +499,8 @@ if ($stationExists == 0) {
 
             $modCat = [];
             $i = 0;
-            foreach ($modulesS as $mods) {
-                $query = "  SELECT SQL_CACHE class, rating, price, group_name, category_name
-                            FROM edtb_modules
-                            WHERE id = '$mods'
-                            LIMIT 1";
+            $modCat = \EDTB\Domain\Stations\StationsRepository::modulesByIds($mysqli, $modulesS);
 
-                $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-                $modsNum = $result->num_rows;
-
-                if ($modsNum > 0) {
-                    $modulesObj = $result->fetch_object();
-
-                    $modsName = $modulesObj->group_name;
-                    $modsCategoryName = $modulesObj->category_name;
-                    $modsClass = $modulesObj->class;
-                    $modsRating = $modulesObj->rating;
-                    $modsPrice = $modulesObj->price;
-
-                    $modCat[$modsCategoryName][$i] = [];
-                    $modCat[$modsCategoryName][$i]['group_name'] = $modsName;
-                    $modCat[$modsCategoryName][$i]['class'] = $modsClass;
-                    $modCat[$modsCategoryName][$i]['price'] = $modsPrice;
-                    $modCat[$modsCategoryName][$i]['rating'] = $modsRating;
-                    $i++;
-                }
-
-                $result->close();
-            }
 
             arsort($modCat);
 
@@ -721,7 +679,7 @@ if ($stationExists == 0) {
                     $data["si_stations"] .= '<td class="dark">' . number_format($demand) . '</td>';
                 $data["si_stations"] .= '</tr>';
 
-                $curCat = $arr3["category_id"];
+                
             }
         $data["si_stations"] .= '</table></div>'; */
 
