@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../GalMap/lib/GalMapParams.php';
+use EDTB\GalMap\GalMapParams;
+$params = GalMapParams::fromRequest($_GET);
 /**
  * Ajax backend file to fetch map points for Neighborhood Map
  *
@@ -41,8 +44,8 @@ require_once __DIR__ . '/../source/curSys.php';
 
 header('content-type: application/x-javascript');
 
-if (isset($_GET['maxdistance']) && is_numeric($_GET['maxdistance'])) {
-    $settings['maxdistance'] = $_GET['maxdistance'];
+if (isset($params->maxDistance) && is_numeric($params->maxDistance)) {
+    $settings['maxdistance'] = $params->maxDistance;
 }
 
 /**
@@ -347,7 +350,7 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
 /**
  * change between 3D and 2D maps
  */
-if (isset($_GET['mode']) && $_GET['mode'] === '2d') {
+if (isset($params->mode) && $params->mode === '2d') {
     $threed = 'false';
     $zoomtype = "zoomType: 'xy',";
     $panning = 'true';
@@ -363,7 +366,7 @@ if (isset($_GET['mode']) && $_GET['mode'] === '2d') {
 function tooltipFormatter() {
     var value;
     <?php
-    if (isset($_GET['mode']) && $_GET['mode'] === '2d') {
+    if (isset($params->mode) && $params->mode === '2d') {
         ?>
         value = this.series.name.toUpperCase();
         <?php
