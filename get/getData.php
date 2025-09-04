@@ -252,10 +252,6 @@ if ($newSystem !== false || $request == 0) {
 } else {
     $data['renew'] = 'false';
 }
-
-if (function_exists('ob_get_length') && ob_get_length()) { ob_clean(); }
-
-header('Content-Type: application/json; charset=utf-8');
-
-
-echo json_encode($data);
+header('Content-Type: application/json; charset=UTF-8');
+echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+exit;

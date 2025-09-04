@@ -141,12 +141,38 @@ if ($gRes->num_rows > 0) {
 }
 $gRes->close();
 
-// Empty state (“No log entries yet…”) — formatted to match the Windows original
+// Empty state (“No log entries yet…”) — richer Toolbox panel
 if ($logdata === '') {
-    $logdata  = "\n";
-    $logdata .= "## Commander's Log\n\n";
-    $logdata .= "\n* * *\n\n";
-    $logdata .= "No log entries yet. Use the Log page to add your first entry.\n\n";
+    $logdata = <<<HTML
+<header><h2>Commander's Log</h2></header>
+
+<div class="toolbox-quicklinks" style="margin:8px 0 16px 0;font-size:12px;opacity:.9;">
+  <a href="/#smuggling" title="Smuggling tips &amp; tricks">Smuggling tips &amp; tricks</a>
+  &nbsp;&bull;&nbsp;
+  <a href="/#mining" title="Mining tips &amp; tricks">Mining tips &amp; tricks</a>
+  &nbsp;&bull;&nbsp;
+  <a href="/#discounts" title="Ship Discounts">Ship Discounts</a>
+  &nbsp;&bull;&nbsp;
+  <a href="/#loadouts" title="Ship Loadouts">Ship Loadouts</a>
+</div>
+
+<div class="toolbox-section" style="margin:10px 0 20px 0;">
+  <div class="toolbox-section-title" style="font-weight:600;letter-spacing:.5px;margin-bottom:6px;">Earth-like</div>
+  <div class="toolbox-strip" style="height:140px;border-radius:8px;background:#0a0a0a url('/style/img/toolbox/earthlike_strip.jpg') center/cover no-repeat;"></div>
+</div>
+
+<div class="toolbox-section" style="margin:10px 0 20px 0;">
+  <div class="toolbox-section-title" style="font-weight:600;letter-spacing:.5px;margin-bottom:6px;">Water</div>
+  <div class="toolbox-strip" style="height:140px;border-radius:8px;background:#0a0a0a url('/style/img/toolbox/water_strip.jpg') center/cover no-repeat;"></div>
+</div>
+
+<div style="margin-top:10px;font-size:12px;">
+  Nutter's explorers guide to the Galaxy <span style="opacity:.6">↗</span>
+  <br>
+  <div style="margin-top:6px;">Scoopable stars:<br> A, B, F, G, K, M, O</div>
+</div>
+HTML;
 }
+
 
 $data['log_data'] = $logdata;

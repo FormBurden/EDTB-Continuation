@@ -782,4 +782,3 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
 
 
 }
-header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);

@@ -48,6 +48,8 @@ $header->displayHeader();
 
 if (isset($_GET['maxdistance']) && is_numeric($_GET['maxdistance'])) {
     $settings['maxdistance'] = $_GET['maxdistance'];
+if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
+
 }
 ?>
 <script src="Vendor/Highcharts/js/highcharts.js"></script>
