@@ -79,6 +79,8 @@ require_once $ROOT . '/source/functions.php';
 require_once $ROOT . '/source/MySQL.php';
 require_once $ROOT . '/source/System.php';
 require_once $ROOT . '/source/curSys.php';
+$data = ['si_name' => '', 'si_stations' => '', 'si_detailed' => ''];
+
 
 use \EDTB\source\System;
 $siDistAdd = '';
@@ -780,3 +782,4 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
 
 
 }
+header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);

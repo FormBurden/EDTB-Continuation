@@ -75,6 +75,14 @@ class MySQLtabledit
     public $heightTextFields = '200px';
 
     public $urlBase;
+    /* PHP 8.2 compat: snake_case property aliases used by EDTB/DataPoint/index.php */
+    public $links_to_db = [];
+    public $primary_key;
+    public $fields_in_list_view = [];
+    public $num_rows_list_view = 15;
+    public $url_base = '';
+    public $url_script = '';
+    public $show_text = [];
 
     protected $mysqli;
 

@@ -66,6 +66,35 @@ while ($columnObj = $result->fetch_object()) {
     $output[] = $columnObj->COLUMN_NAME;
     $showt[$columnObj->COLUMN_NAME] = $columnObj->COLUMN_COMMENT;
 }
+/* Fallback labels for columns without comments: convert snake_case -> Title Case and fix acronyms */
+foreach ($output as $col) {
+    if (!isset($showt[$col]) || $showt[$col] === '' || $showt[$col] === null) {
+        $label = str_replace('_', ' ', $col);
+        $label = ucwords($label);
+
+        // Common acronym fixes
+        $label = preg_replace('/\bId\b/u', 'ID', $label);
+        $label = preg_replace('/\bEddb\b/iu', 'EDDB', $label);
+        $label = preg_replace('/\bSimbad\b/iu', 'SIMBAD', $label);
+
+        $showt[$col] = $label;
+    }
+}
+
+/* Specific overrides to match the Windows look */
+$overrides = [
+    'power_state'    => 'Power State',
+    'ruling_faction' => 'Ruling Faction',
+    'needs_permit'   => 'Needs Permit',
+    'updated_at'     => 'Updated At',
+    'simbad_ref'     => 'SIMBAD Ref',
+];
+
+foreach ($overrides as $k => $v) {
+    if (isset($showt[$k])) {
+        $showt[$k] = $v;
+    }
+}
 
 $result->close();
 

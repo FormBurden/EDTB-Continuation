@@ -95,6 +95,48 @@ class Header extends Theme
             <!-- own js -->
             <script src="/source/javascript.js"></script>
 
+            <script>
+            (function () {
+            // Load ED Toolbox content (homepage “ED TOOLBOX” tab)
+            function loadEDToolbox() {
+                // Only run on the root page
+                var p = location.pathname;
+                if (p !== '/' && p !== '/index.php') return;
+
+                fetch('/get/getData.php?request=0', { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    var box = document.getElementById('scrollable');
+                    if (box) {
+                    box.innerHTML = d && typeof d === 'object' && 'log_data' in d && d.log_data ? d.log_data : '<em>(empty)</em>';
+                    }
+                })
+                .catch(function () {
+                    var box = document.getElementById('scrollable');
+                    if (box) box.innerHTML = '<em>Failed to load ED Toolbox.</em>';
+                });
+            }
+
+            // Load once on DOM ready
+            document.addEventListener('DOMContentLoaded', loadEDToolbox);
+
+            // If the left “ED TOOLBOX” item is clicked and the page reloads, the DOMContentLoaded hook above will fire.
+            // This extra listener helps if your theme switches the center panel without a full reload.
+            document.addEventListener('click', function (ev) {
+                var t = ev.target;
+                for (var i = 0; i < 3 && t; i++, t = t.parentElement) {
+                if (!t) break;
+                var txt = (t.textContent || '').trim().toUpperCase();
+                if (txt === 'ED TOOLBOX') {
+                    setTimeout(loadEDToolbox, 0);
+                    break;
+                }
+                }
+            });
+            })();
+            </script>
+
+
             <!-- global variable for clock -->
             <script>
                 var gmt = "<?= $settings['game_time']?>";
