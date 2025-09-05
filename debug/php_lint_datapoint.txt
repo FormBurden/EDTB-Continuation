@@ -1,0 +1,4 @@
+PHP Parse error:  syntax error, unexpected token "else", expecting "function" in DataPoint/Vendor/MySQL_table_edit/mte.php on line 705
+Errors parsing DataPoint/Vendor/MySQL_table_edit/mte.php
+No syntax errors detected in DataPoint/index.php
+No syntax errors detected in DataPoint/functions.php

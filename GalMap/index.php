@@ -9,7 +9,7 @@ $header = new Header();
 $header->pageTitle = 'Galaxy Map';
 $header->displayHeader();
 ?>
-<link rel="stylesheet" href="GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" />
+<link rel="stylesheet" href="Vendor/ED3D-Galaxy-Map/css/styles.css" />
 
 <style>
   /* keep it simple: map fills the remaining viewport below the top panel */
@@ -31,6 +31,21 @@ $header->displayHeader();
 
     <label for="gm_limit">limit</label>
     <input id="gm_limit" type="number" min="1" max="50000" value="15000" style="width: 100px;">
+    <!-- Center by system name or coordinates + radius -->
+    <label for="gm_center_system" style="margin-left: 8px;">center system</label>
+    <input id="gm_center_system" type="text" placeholder="e.g., Sol" style="width: 160px;">
+
+    <span style="margin-left:8px;">or coords</span>
+    <label for="gm_cx">x</label>
+    <input id="gm_cx" type="number" step="0.0001" style="width: 90px;">
+    <label for="gm_cy">y</label>
+    <input id="gm_cy" type="number" step="0.0001" style="width: 90px;">
+    <label for="gm_cz">z</label>
+    <input id="gm_cz" type="number" step="0.0001" style="width: 90px;">
+
+    <label for="gm_radius" style="margin-left:8px;">maxdistance</label>
+    <input id="gm_radius" type="number" min="1" max="50000" step="1" value="200" style="width: 110px;">
+
 
     <button id="gm_apply" type="button">Apply</button>
     <span id="gm_status" class="gm-badge" style="display:none;"></span>
@@ -47,20 +62,39 @@ $header->displayHeader();
 </div>
 
 <!-- Dependencies: jQuery (site-wide), Three.js, ED3D map core -->
-<script src="/source/Vendor/jquery-2.2.0.min.js"></script>
-<script src="/source/Vendor/three.min.js"></script>
+<script src="../source/Vendor/jquery-2.2.0.min.js"></script>
+<script src="../source/Vendor/three.min.js"></script>
 <script src="GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 
 <script>
   (function () {
     // Base path for ED3D vendor (it lazy-loads its own components from this base)
-    var basePath = 'GalMap/Vendor/ED3D-Galaxy-Map/';
+    var basePath = 'Vendor/ED3D-Galaxy-Map/';
 
     // Build JSON URL from controls
     function jsonURL() {
-      var u = new URL('GalMap/getMapPoints.json.php', window.location.origin);
+      var u = new URL('./getMapPoints.json.php', window.location.origin);
       var limit = Math.max(1, Math.min(50000, parseInt(document.getElementById('gm_limit').value || '15000', 10)));
       u.searchParams.set('limit', String(limit));
+      // Optional center inputs
+      var cs = document.getElementById('gm_center_system').value.trim();
+      var cx = document.getElementById('gm_cx').value.trim();
+      var cy = document.getElementById('gm_cy').value.trim();
+      var cz = document.getElementById('gm_cz').value.trim();
+      var rad = document.getElementById('gm_radius').value.trim();
+
+      if (cs !== '') {
+        u.searchParams.set('center_system', cs);
+      }
+      if (cx !== '' && cy !== '' && cz !== '') {
+        u.searchParams.set('centerX', cx);
+        u.searchParams.set('centerY', cy);
+        u.searchParams.set('centerZ', cz);
+      }
+      if (rad !== '') {
+        u.searchParams.set('maxdistance', rad);
+      }
+
 
       if (document.getElementById('gm_visited').checked) {
         u.searchParams.set('visited_only', '1');
@@ -68,6 +102,21 @@ $header->displayHeader();
       if (document.getElementById('gm_bookmarked').checked) {
         u.searchParams.set('bookmarked_only', '1');
       }
+            // Optional center + radius
+            var cx = document.getElementById('gm_cx').value.trim();
+      var cy = document.getElementById('gm_cy').value.trim();
+      var cz = document.getElementById('gm_cz').value.trim();
+      var rad = document.getElementById('gm_radius').value.trim();
+
+      if (cx !== '' && cy !== '' && cz !== '') {
+        u.searchParams.set('centerX', cx);
+        u.searchParams.set('centerY', cy);
+        u.searchParams.set('centerZ', cz);
+      }
+      if (rad !== '') {
+        u.searchParams.set('maxdistance', rad);
+      }
+
       return u.pathname + u.search;
     }
 

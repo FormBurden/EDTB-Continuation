@@ -1047,4 +1047,4 @@ class MySQLtabledit
         </div>
         ";
     }
-}
+
