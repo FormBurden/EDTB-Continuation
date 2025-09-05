@@ -173,24 +173,21 @@ class ToolboxService
      * @return array
      */
     public static function leftColumn(array $settings, array $curSys): array
-{
-    // Match the include's expectations (same scope as original getData.php)
-    global $mysqli, $api;
+    {
+        // The include historically populates $data['system_title'], $data['system_info'], $data['station_data'] in its own scope.
+        // We mirror that contract and return just those three keys.
+        $data = [];
 
-    // The include writes into $data[...] — provide it in this scope
-    $data = [];
+        $base = dirname(__DIR__, 3);
+        include $base . '/get/getData_leftColumn.php';
 
-    // Run the original script 1:1
-    $base = dirname(__DIR__, 3);
-    require $base . '/get/getData_leftColumn.php';
+        return [
+            'system_title' => isset($data['system_title']) ? $data['system_title'] : '',
+            'system_info'  => isset($data['system_info'])  ? $data['system_info']  : '',
+            'station_data' => isset($data['station_data']) ? $data['station_data'] : '',
+        ];
+    }
 
-    // Normalize the three outputs we care about
-    return [
-        'system_title' => isset($data['system_title']) ? $data['system_title'] : '',
-        'system_info'  => isset($data['system_info'])  ? $data['system_info']  : '',
-        'station_data' => isset($data['station_data']) ? $data['station_data'] : '',
-    ];
-}
 
 
     /**
