@@ -1,11 +1,28 @@
 <?php
 /**
- * DataPoint per-table configuration
+ * DataPoint per-table configuration + tab titles
  * - 'list'     = which columns to show in the list view (order kept)
  * - 'labels'   = friendly header overrides for those columns
  * - 'order_by' = optional default ORDER BY clause
  * - 'format'   = column => type (currently supports: 'bool')
+ * - datapoint_table_title($table) returns friendly tab label
  */
+
+function datapoint_table_title(string $table): string
+{
+    // Human-friendly titles for known tables; fallback: strip edtb_ and titleize
+    switch ($table) {
+        case 'edtb_systems':   return 'Systems';
+        case 'edtb_stations':  return 'Stations';
+        case 'edtb_facilities':return 'Facilities';
+        default:
+            $t = preg_replace('/^edtb_/', '', $table);
+            $t = str_replace('_', ' ', $t);
+            $t = trim($t);
+            return $t === '' ? strtoupper($table) : ucwords($t);
+    }
+}
+
 function datapoint_config_for_table(string $table): array
 {
     switch ($table) {

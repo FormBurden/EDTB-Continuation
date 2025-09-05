@@ -64,6 +64,10 @@ $limit = (int)($_GET['limit'] ?? 15000);
 if ($limit <= 0) $limit = 15000;
 if ($limit > 50000) $limit = 50000;
 
+$visitedOnly    = isset($_GET['visited_only']) && (string)$_GET['visited_only'] === '1';
+$bookmarkedOnly = isset($_GET['bookmarked_only']) && (string)$_GET['bookmarked_only'] === '1';
+
+
 $resolvedCenter = null;
 // Resolve by name if coords missing
 if (($centerX === null || $centerY === null || $centerZ === null) && $centerSystem !== '') {
@@ -90,9 +94,12 @@ $key = edtb_cache_key('galmap:points', [
     'cy'    => $centerY,
     'cz'    => $centerZ,
     'cs'    => $centerSystem,
-    'r'     => $maxDistance,
-    'limit' => (int)$limit,
+    'r'         => $maxDistance,
+    'limit'     => (int)$limit,
+    'visited'   => (int)$visitedOnly,
+    'bookmarked'=> (int)$bookmarkedOnly,
 ]);
+
 
 if ($__cache = edtb_cache_instance()) {
     $cached = $__cache->get($key);
@@ -111,22 +118,53 @@ if ($centerX !== null && $centerY !== null && $centerZ !== null && $maxDistance 
     $where .= " AND {$distanceExpr} <= POW({$r},2)";
 }
 
+// Apply visited/bookmarked filters
+if (!empty($visitedOnly)) {
+    $where .= " AND EXISTS (SELECT 1 FROM `user_visited_systems` uvs WHERE uvs.system_name = s.name)";
+}
+if (!empty($bookmarkedOnly)) {
+    $where .= " AND EXISTS (SELECT 1 FROM `user_bookmarks` ub WHERE ub.system_name = s.name)";
+}
+
+
 $order = $distanceExpr ? "ORDER BY {$distanceExpr} ASC" : "ORDER BY s.name ASC";
 $limitSql = $limit > 0 ? "LIMIT {$limit}" : "";
 
-$sql = "SELECT s.name, s.x, s.y, s.z
+$sql = "SELECT
+        s.name, s.x, s.y, s.z,
+        EXISTS (SELECT 1 FROM `user_visited_systems` uvs WHERE uvs.system_name = s.name) AS visited,
+        EXISTS (SELECT 1 FROM `user_bookmarks` ub WHERE ub.system_name = s.name) AS bookmarked
         FROM `{$source}` AS s
         {$where}
         {$order}
         {$limitSql}";
+
 
 $out = [];
 if ($res = $mysqli->query($sql)) {
     while ($row = $res->fetch_assoc()) {
         $name = (string)$row['name'];
         $x = (float)$row['x']; $y = (float)$row['y']; $z = (float)$row['z'];
-        $out[] = ['name' => $name, 'coords' => [ $x, $y, $z ], 'cat' => ['Systems']];
+
+        $visited = isset($row['visited']) ? (int)$row['visited'] : 0;
+        $bookmarked = isset($row['bookmarked']) ? (int)$row['bookmarked'] : 0;
+
+        $item = [
+            'name' => $name,
+            'coords' => [ $x, $y, $z ],
+            'cat' => ['Systems'],
+            'visited' => $visited,
+            'bookmarked' => $bookmarked
+        ];
+
+        if ($centerX !== null && $centerY !== null && $centerZ !== null) {
+            $dx = $x - (float)$centerX; $dy = $y - (float)$centerY; $dz = $z - (float)$centerZ;
+            $item['dist'] = sqrt($dx*$dx + $dy*$dy + $dz*$dz);
+        }
+
+        $out[] = $item;
     }
+
     $res->free();
 } else {
     echo json_encode([

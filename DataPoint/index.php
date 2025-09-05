@@ -1,12 +1,13 @@
 <?php
 /**
- * Data Point — classic look/behavior, closer to original repo
+ * Data Point — closer to original repo (tabs, distance sort, memory)
  * - Ensures DB globals for vendor
  * - Uses original helpers when present (Formatter.php, functions.php)
  * - Default table edtb_systems; per-table curation via Tables.php
- * - Rows-per-page selector (10/25/50/100) persisted in session
- * - One-click CSV export (server-side export.php)
- * - Scoped CSS + boolean cell rendering (Yes/No) for configured columns
+ * - Rows-per-page persisted (10/25/50/100)
+ * - One-click CSV export (export.php)
+ * - Tabs across ALL allowed tables (vendor renders them via linksToDb)
+ * - Distance sort toggle (adds ?sort=distance&ad=...)
  */
 
 session_start();
@@ -70,7 +71,13 @@ usort($allowedTables, function($a, $b) {
     return strcmp($a, $b);
 });
 
-$requested        = isset($_GET['table']) ? (string)$_GET['table'] : '';
+/* Remember last table */
+if (isset($_GET['table'])) {
+    $_SESSION['dp_last_table'] = (string)$_GET['table'];
+}
+$last = isset($_SESSION['dp_last_table']) ? (string)$_SESSION['dp_last_table'] : '';
+
+$requested        = isset($_GET['table']) ? (string)$_GET['table'] : ($last ?: '');
 $preferredDefault = in_array('edtb_systems', $allowedTables, true) ? 'edtb_systems' : ($allowedTables[0] ?? '');
 $dataTable        = in_array($requested, $allowedTables, true) ? $requested : $preferredDefault;
 
@@ -104,13 +111,22 @@ if (!empty($config['labels'])) {
 $colIndex = [];
 foreach ($fieldsInListView as $i => $f) { $colIndex[$f] = $i; }
 
+/* ---- Build full tab list (linksToDb) ---- */
+$linksMap = [];
+foreach ($allowedTables as $t) {
+    if (function_exists('datapoint_table_title')) {
+        $linksMap[$t] = datapoint_table_title($t);
+    } else {
+        $linksMap[$t] = strtoupper($t);
+    }
+}
+
 /* ---- Configure vendor instance ---- */
 $tabledit = new MySQLtabledit();
-$tableMap = [$dataTable => $dataTable];
 
 $tabledit->table               = $dataTable;
-$tabledit->links_to_db         = $tableMap;
-$tabledit->linksToDb           = $tableMap;
+$tabledit->links_to_db         = $linksMap;
+$tabledit->linksToDb           = $linksMap;
 $tabledit->primary_key         = 'id';
 $tabledit->primaryKey          = 'id';
 $tabledit->fields_in_list_view = $fieldsInListView;
@@ -125,6 +141,22 @@ $tabledit->url_script          = '/DataPoint';
 $tabledit->urlScript           = '/DataPoint';
 
 if (!empty($config['order_by'])) { $tabledit->order_by = $config['order_by']; }
+
+/* ---- Distance sort availability ---- */
+$canDistance = false;
+if ($dataTable === 'edtb_systems' || $dataTable === 'edtb_stations') {
+    $canDistance = true;
+} else {
+    $hasXYZ = in_array('x', $allFields, true) && in_array('y', $allFields, true) && in_array('z', $allFields, true);
+    $hasSys = in_array('system_name', $allFields, true) || in_array('system_id', $allFields, true);
+    $canDistance = $hasXYZ || $hasSys;
+}
+
+$ad  = isset($_GET['ad']) ? (string)$_GET['ad'] : 'a';
+$sort = isset($_GET['sort']) ? (string)$_GET['sort'] : '';
+$isDist = ($sort === 'distance');
+$nextAd = ($ad === 'a') ? 'd' : 'a';
+$distLabel = 'Distance ' . ($ad === 'a' ? '▼' : '▲');
 
 /* ---- Render ---- */
 $header = new Header();
@@ -225,7 +257,7 @@ $UPPER  = strtoupper($dataTable);
     }
     .dp-mte .mte_navigation a, .dp-mte .mte_pages a, .dp-mte .pages a{
       display:inline-block; padding:4px 9px; border-radius:5px;
-      background:#0f1419; color:var(--dp-ink-dim); text-decoration:none;
+      background:#0f1419; color:#9fb8c3; text-decoration:none;
       border:1px solid var(--dp-border);
     }
     .dp-mte .mte_navigation a:hover, .dp-mte .mte_pages a:hover, .dp-mte .pages a:hover{
@@ -233,7 +265,7 @@ $UPPER  = strtoupper($dataTable);
     }
     .dp-mte .mte_navigation strong, .dp-mte .mte_pages strong, .dp-mte .pages strong{
       display:inline-block; padding:4px 9px; border-radius:5px;
-      background:var(--dp-accent); color:#fff; border:1px solid transparent;
+      background:#2ca0c9; color:#fff; border:1px solid transparent;
     }
 
     /* ul.pagination + .mte_nav/mtelink + prev/next */
@@ -245,7 +277,7 @@ $UPPER  = strtoupper($dataTable);
     .dp-mte .mte_nav a.mtelink,
     .dp-mte .mte_nav_prev_next{
       display:inline-block; padding:4px 9px; border-radius:5px;
-      background:#0f1419; color:var(--dp-ink-dim); text-decoration:none;
+      background:#0f1419; color:#9fb8c3; text-decoration:none;
       border:1px solid var(--dp-border);
     }
 
@@ -255,7 +287,7 @@ $UPPER  = strtoupper($dataTable);
     .dp-bool.no  { background:#6f1b1b; color:#fff; }
     </style>
     <script>
-    // Client-side boolean renderer based on PHP config
+    // Client-side state for boolean formatting
     window.DP_STATE = {
       table: <?php echo json_encode($dataTable); ?>,
       fields: <?php echo json_encode(array_values($fieldsInListView)); ?>,
@@ -293,10 +325,8 @@ $UPPER  = strtoupper($dataTable);
             if (!c) return;
             var raw = (c.textContent || '').trim();
             if (raw === '') return;
-            var v = raw;
-            // Accept 1/0, true/false, yes/no (any case)
-            var yes = /^(1|true|yes)$/i.test(v);
-            var no  = /^(0|false|no)$/i.test(v);
+            var yes = /^(1|true|yes)$/i.test(raw);
+            var no  = /^(0|false|no)$/i.test(raw);
             if (yes || no) {
               c.innerHTML = '<span class="dp-bool '+(yes?'yes':'no')+'">'+(yes?'Yes':'No')+'</span>';
             }
@@ -322,14 +352,14 @@ $UPPER  = strtoupper($dataTable);
         <select name="table" id="table" onchange="this.form.submit()">
             <?php foreach ($allowedTables as $t): ?>
                 <option value="<?php echo htmlspecialchars($t); ?>"<?php if ($t === $dataTable) echo ' selected'; ?>>
-                    <?php echo htmlspecialchars($t); ?>
+                    <?php echo function_exists('datapoint_table_title') ? htmlspecialchars(datapoint_table_title($t)) : htmlspecialchars($t); ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <noscript><button type="submit">Open</button></noscript>
+        <noscript><button type="submit" class="dp-button">Open</button></noscript>
     </form>
 
-    <!-- Top controls: Rows-per-page + Export -->
+    <!-- Top controls: Rows-per-page + Export + Distance sort -->
     <div class="dp-controls">
         <div class="left">
             <form method="get" action="/DataPoint/">
@@ -344,6 +374,11 @@ $UPPER  = strtoupper($dataTable);
                 </select>
                 <noscript><button class="dp-button" type="submit">Apply</button></noscript>
             </form>
+            <?php if ($canDistance): ?>
+                <a class="dp-button" href="/DataPoint/?table=<?php echo urlencode($dataTable); ?>&rows=<?php echo (int)$rows; ?>&sort=distance&ad=<?php echo htmlspecialchars($nextAd); ?>">
+                    <?php echo htmlspecialchars($distLabel); ?>
+                </a>
+            <?php endif; ?>
         </div>
         <div class="right">
             <a class="dp-button" href="/DataPoint/export.php?table=<?php echo urlencode($dataTable); ?>">Export CSV</a>

@@ -40,16 +40,22 @@
 		}
 		const haveCenter = isFiniteNum(cx) && isFiniteNum(cy) && isFiniteNum(cz);
 
-		const html = sys.slice(0, 25).map(s => {
+		const html = sys.slice(0, 25).map((s, idx) => {
 			const c = Array.isArray(s.coords) ? s.coords : [];
+			const bm = s.bookmarked ? ' ★' : '';
+			const vi = s.visited ? ' ✓' : '';
 			let distTxt = '';
 			if (haveCenter && c.length === 3 && c.every(isFiniteNum)) {
 				const dx = c[0] - cx, dy = c[1] - cy, dz = c[2] - cz;
 				const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
 				if (isFiniteNum(d)) distTxt = ` — ${d.toFixed(1)} ly`;
+			} else if (isFiniteNum(s.dist)) {
+				distTxt = ` — ${Number(s.dist).toFixed(1)} ly`;
 			}
-			return `<div>${s.name}${distTxt}</div>`;
+			const dxAttr = c.length === 3 ? ` data-x="${c[0]}" data-y="${c[1]}" data-z="${c[2]}"` : '';
+			return `<div class="result-item" data-name="${s.name}"${dxAttr}>${s.name}${bm}${vi}${distTxt}</div>`;
 		}).join('');
+		  
 
 		listEl.innerHTML = html;
 	}
@@ -58,6 +64,16 @@
 	document.addEventListener('DOMContentLoaded', () => {
 		const csInput = $id('center_system') || $('input[name="center_system"]');
 		const form = $id('galmap-form') || (csInput && csInput.closest('form')) || document.forms[0];
+		// Auto-submit on filter changes
+		const visitedBox = $id('visited_only');
+		const bookmarkedBox = $id('bookmarked_only');
+		visitedBox?.addEventListener('change', () => {
+			form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+		});
+		bookmarkedBox?.addEventListener('change', () => {
+			form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+		});
+
 		// Center on current system (via PHP/curSys.php)
 		const btnCur = $id('center_current');
 		if (btnCur) {
@@ -98,6 +114,27 @@
 		for (let i = 1; i < existing.length; i++) existing[i].remove();
 		let dl = existing[0];
 		if (!dl) {
+			// Click a result to re-center and resubmit
+			const resultsBox = $id('results-list');
+			if (resultsBox) {
+				resultsBox.addEventListener('click', (e) => {
+					const el = e.target.closest('.result-item');
+					if (!el) return;
+					const n = el.getAttribute('data-name') || '';
+					const x = Number(el.getAttribute('data-x'));
+					const y = Number(el.getAttribute('data-y'));
+					const z = Number(el.getAttribute('data-z'));
+
+					if (csInput) csInput.value = n;
+					if (cx) cx.value = Number.isFinite(x) ? x : '';
+					if (cy) cy.value = Number.isFinite(y) ? y : '';
+					if (cz) cz.value = Number.isFinite(z) ? z : '';
+
+					(window.__galmapSuggestCache ||= new Map()).set(n.toLowerCase(), { name: n, x, y, z });
+					form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+				});
+			}
+
 			dl = document.createElement('datalist');
 			dl.id = 'system-suggest';
 			(csInput || document.body).insertAdjacentElement('afterend', dl);
