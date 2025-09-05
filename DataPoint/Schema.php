@@ -1,69 +1,123 @@
 <?php
 /**
  * DataPoint Schema helpers
- * - Builds ordered column list ($output)
- * - Builds label map ($labels) using DB comments, with sane fallbacks and overrides
+ *
+ * - Table whitelist (keeps Data Point pointed at known/allowed tables)
+ * - Friendly column labels (uses column comments when available, otherwise Title Case)
+ *
+ * No dependencies beyond mysqli ($mysqli).
  */
 
-if (!function_exists('datapoint_get_column_labels')) {
-    /**
-     * @param mysqli $mysqli
-     * @param string $table
-     * @return array{0: array<int,string>, 1: array<string,string>} [$output, $labels]
-     */
-    function datapoint_get_column_labels($mysqli, $table)
-    {
-        $output = [];
-        $labels = [];
+/**
+ * Return an array of allowed tables.
+ * If you prefer to lock it down, list them explicitly.
+ * Otherwise we auto-discover tables starting with "edtb_".
+ *
+ * @param mysqli $mysqli
+ * @return string[] table names
+ */
+function datapoint_table_whitelist(mysqli $mysqli): array
+{
+    $allowed = [];
 
-        $tableEsc = $mysqli->real_escape_string($table);
-        $query = "SELECT COLUMN_NAME, COLUMN_COMMENT
-                  FROM INFORMATION_SCHEMA.COLUMNS
-                  WHERE table_name = '$tableEsc'";
-
-        $result = $mysqli->query($query);
-        if ($result === false) {
-            // keep behavior consistent with existing code path
-            write_log($mysqli->error, __FILE__, __LINE__);
-            return [$output, $labels];
-        }
-
-        while ($columnObj = $result->fetch_object()) {
-            $colName = $columnObj->COLUMN_NAME;
-            $output[] = $colName;
-            $labels[$colName] = $columnObj->COLUMN_COMMENT;
-        }
-        $result->close();
-
-        // Fallback labels: snake_case -> Title Case, with acronym touch-ups
-        foreach ($output as $col) {
-            if (!isset($labels[$col]) || $labels[$col] === '' || $labels[$col] === null) {
-                $label = str_replace('_', ' ', $col);
-                $label = ucwords($label);
-
-                // Common acronym fixes
-                $label = preg_replace('/\bId\b/u', 'ID', $label);
-                $label = preg_replace('/\bEddb\b/iu', 'EDDB', $label);
-                $label = preg_replace('/\bSimbad\b/iu', 'SIMBAD', $label);
-
-                $labels[$col] = $label;
+    // Try to auto-discover EDTB tables. Falls back to a small common set.
+    if ($res = $mysqli->query("SHOW TABLES")) {
+        while ($row = $res->fetch_row()) {
+            $t = (string)($row[0] ?? '');
+            if ($t !== '' && strpos($t, 'edtb_') === 0) {
+                $allowed[] = $t;
             }
         }
-
-        // Specific overrides to match the Windows look
-        $overrides = [
-            'power_state'    => 'Power State',
-            'ruling_faction' => 'Ruling Faction',
-            'needs_permit'   => 'Needs Permit',
-            'updated_at'     => 'Updated At',
-            'simbad_ref'     => 'SIMBAD Ref',
-        ];
-        foreach ($overrides as $k => $v) {
-            if (isset($labels[$k])) {
-                $labels[$k] = $v;
-            }
-        }
-
-        return [$output, $labels];
+        $res->free();
     }
+
+    if (!$allowed) {
+        // Fallback: adjust to your install if needed
+        $allowed = [
+            'edtb_systems',
+            'edtb_stations',
+            'edtb_factions',
+            'edtb_conflicts',
+            'edtb_distances',
+        ];
+    }
+
+    sort($allowed);
+    return $allowed;
+}
+
+/**
+ * Build list-view fields and friendly labels for MySQLtabledit
+ * Returns: [$fieldsInListView, $showTextAssoc]
+ *
+ * @param mysqli $mysqli
+ * @param string $table
+ * @return array{0: string[], 1: array<string,string>}
+ */
+function datapoint_get_column_labels(mysqli $mysqli, string $table): array
+{
+    $fields = [];
+    $labels = [];
+
+    // Try to use column comments to generate human labels
+    $sql = sprintf('SHOW FULL COLUMNS FROM `%s`', $mysqli->real_escape_string($table));
+    if ($res = $mysqli->query($sql)) {
+        while ($col = $res->fetch_assoc()) {
+            $name    = (string)($col['Field'] ?? '');
+            $comment = trim((string)($col['Comment'] ?? ''));
+
+            if ($name === '') {
+                continue;
+            }
+
+            $fields[] = $name;
+
+            // Prefer explicit comment; otherwise build Title Case from snake_case
+            if ($comment !== '') {
+                $labels[$name] = $comment;
+            } else {
+                $labels[$name] = datapoint_titleize($name);
+            }
+        }
+        $res->free();
+    }
+
+    // If SHOW FULL COLUMNS failed or returned nothing, try DESCRIBE
+    if (!$fields) {
+        $sql2 = sprintf('DESCRIBE `%s`', $mysqli->real_escape_string($table));
+        if ($res2 = $mysqli->query($sql2)) {
+            while ($col = $res2->fetch_assoc()) {
+                $name = (string)($col['Field'] ?? '');
+                if ($name === '') {
+                    continue;
+                }
+                $fields[]       = $name;
+                $labels[$name]  = datapoint_titleize($name);
+            }
+            $res2->free();
+        }
+    }
+
+    // Last resort: at least avoid empty arrays (MySQLtabledit expects content)
+    if (!$fields) {
+        $fields = ['id'];
+        $labels = ['id' => 'ID'];
+    }
+
+    return [$fields, $labels];
+}
+
+/**
+ * Convert snake_case / lowercase to Title Case (e.g., "needs_permit" -> "Needs Permit")
+ */
+function datapoint_titleize(string $name): string
+{
+    // Replace underscores/dashes with spaces, collapse multiple spaces, ucwords
+    $pretty = preg_replace('/[_\-]+/', ' ', $name);
+    $pretty = preg_replace('/\s+/', ' ', $pretty ?? '');
+    $pretty = trim((string)$pretty);
+    if ($pretty === '') {
+        return $name;
+    }
+    return mb_convert_case($pretty, MB_CASE_TITLE, 'UTF-8');
 }

@@ -1,117 +1,109 @@
 <?php
 /**
- * Data Point
+ * Data Point (refactor peel 1 — no Theme dependency)
  *
- * @package EDTB\Main
+ * - Uses Schema.php for fields + friendly labels
+ * - Validates requested table against whitelist
+ * - Wires Vendor/MySQL_table_edit without editing vendor code
  */
 
-/**
- * Start session
- */
 session_start();
 
-/** @require Theme class */
-require_once __DIR__ . '/../style/Theme.php';
+// Core includes (paths kept portable)
+require_once dirname(__DIR__) . '/source/config.inc.php';
+require_once dirname(__DIR__) . '/source/config_ini.inc.php';
+require_once dirname(__DIR__) . '/source/functions.php';
 
-/**
- * initiate page header
- */
-$header = new Header();
+// Header UI (no Theme class)
+require_once dirname(__DIR__) . '/style/Header.php';
 
-/** @var string page_title */
-$header->pageTitle = 'Data Point';
+// Schema helpers for Data Point
+require_once __DIR__ . '/Schema.php';
 
-/**
- * display the header
- */
-$header->displayHeader();
-
-/** Map $settings DB config to globals for the vendor class */
-global $settings;
-$server = $settings['db_host'];
-$user   = $settings['db_user'];
-$pwd    = $settings['db_pass'];
-$db     = $settings['db_name'];
-
-/** @require functions file */
-require_once __DIR__ . '/functions.php';
-/** @require MySQL table edit class */
+// Vendor table editor (unchanged)
 require_once __DIR__ . '/Vendor/MySQL_table_edit/mte.php';
 
-/** @var string $dataTable */
-$dataTable = $_GET['table'] ?? ($settings['data_view_default_table'] ?? 'edtb_systems');
+// DB handle
+/** @var mysqli $mysqli */
+global $mysqli;
 
-/**
- * initate MySQLtabledit class
- */
+// Resolve requested table and validate against whitelist
+$allowedTables = datapoint_table_whitelist($mysqli);
+$requested     = isset($_GET['table']) ? (string)$_GET['table'] : '';
+$dataTable     = in_array($requested, $allowedTables, true) ? $requested : ($allowedTables[0] ?? 'edtb_systems');
+
+// Build column list + friendly labels
+list($fieldsInListView, $showText) = datapoint_get_column_labels($mysqli, $dataTable);
+
+// Configure MySQLtabledit (set both snake_case and camelCase props for compatibility)
 $tabledit = new MySQLtabledit();
 
-/** @var string table */
-$tabledit->table = $dataTable;
+$tableMap = [$dataTable => $dataTable];
 
-/**
- * get column comment from database to use as a name for the fields
- */
-global $mysqli;
-$output = [];
-$showt  = [];
+$tabledit->table               = $dataTable;
+$tabledit->links_to_db         = $tableMap;
+$tabledit->linksToDb           = $tableMap;
+$tabledit->primary_key         = 'id';
+$tabledit->primaryKey          = 'id';
+$tabledit->fields_in_list_view = $fieldsInListView;
+$tabledit->fieldsInListView    = $fieldsInListView;
+$tabledit->show_text           = $showText;
+$tabledit->showText            = $showText;
+$tabledit->num_rows_list_view  = 10;
+$tabledit->numRowsListView     = 10;
+$tabledit->url_base            = 'Vendor/MySQL_table_edit/';
+$tabledit->urlBase             = 'Vendor/MySQL_table_edit/';
+$tabledit->url_script          = '/DataPoint';
+$tabledit->urlScript           = '/DataPoint';
 
-/** Column list + labels (moved to Schema.php) */
-require_once __DIR__ . '/Schema.php';
-list($output, $showt) = datapoint_get_column_labels($mysqli, $dataTable);
+// (Optional) default skip list; adjust later via per-table config
+$tabledit->skip = [];
 
-/** Configure tabledit (set both camelCase and snake_case properties for compatibility) */
-$tabledit->linksToDb            = $settings['data_view_table'] ?? [$dataTable => $dataTable];
-$tabledit->links_to_db          = $tabledit->linksToDb;
-$tabledit->skip                 = $settings['data_view_ignore'][$dataTable] ?? [];
-$tabledit->primaryKey           = 'id';
-$tabledit->primary_key          = 'id';
-$tabledit->fieldsInListView     = $output;
-$tabledit->fields_in_list_view  = $output;
-$tabledit->numRowsListView      = 10;
-$tabledit->num_rows_list_view   = 10;
-$tabledit->urlBase              = 'Vendor/MySQL_table_edit/';
-$tabledit->url_base             = 'Vendor/MySQL_table_edit/';
-$tabledit->urlScript            = '/DataPoint';
-$tabledit->url_script           = '/DataPoint';
-$tabledit->showText             = $showt;
-$tabledit->show_text            = $showt;
-
-
-/** Configure tabledit (set both camelCase and snake_case properties for compatibility) */
-$tabledit->linksToDb            = $settings['data_view_table'] ?? [$dataTable => $dataTable];
-$tabledit->links_to_db          = $tabledit->linksToDb;
-$tabledit->skip                 = $settings['data_view_ignore'][$dataTable] ?? [];
-$tabledit->primaryKey           = 'id';
-$tabledit->primary_key          = 'id';
-$tabledit->fieldsInListView     = $output;
-$tabledit->fields_in_list_view  = $output;
-$tabledit->numRowsListView      = 10;
-$tabledit->num_rows_list_view   = 10;
-$tabledit->urlBase              = 'Vendor/MySQL_table_edit/';
-$tabledit->url_base             = 'Vendor/MySQL_table_edit/';
-$tabledit->urlScript            = '/DataPoint';
-$tabledit->url_script           = '/DataPoint';
-$tabledit->showText             = $showt;
-$tabledit->show_text            = $showt;
-
+// ---- Page Output ----
+$header = new Header();
 ?>
-    <div class="entries">
-        <div class="entries_inner">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Data Point</title>
+    <?php
+    // Prefer project CSS helper if available; otherwise fallback to style.css
+    if (method_exists($header, 'displayCss')) {
+        $header->displayCss();
+    } else {
+        echo '<link rel="stylesheet" href="/style/style.css">';
+    }
+    ?>
+</head>
+<body>
 <?php
-    /* Render the editor */
-    $tabledit->do_it();
+// Render site header if available
+if (method_exists($header, 'displayHeader')) {
+    $header->displayHeader('Data Point');
+}
 ?>
-        </div>
+
+<div class="container" style="padding: 10px 15px;">
+    <form method="get" action="/DataPoint/" style="margin-bottom:12px;">
+        <label for="table">Table:</label>
+        <select name="table" id="table" onchange="this.form.submit()">
+            <?php foreach ($allowedTables as $t): ?>
+                <option value="<?php echo htmlspecialchars($t); ?>"<?php if ($t === $dataTable) echo ' selected'; ?>>
+                    <?php echo htmlspecialchars($t); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <noscript><button type="submit">Open</button></noscript>
+    </form>
+
+    <div id="data-view">
+        <?php
+        // Render the vendor UI
+        $tabledit->do_it();
+        ?>
     </div>
-<?php
+</div>
 
-/**
- * initiate page footer
- */
-$footer = new Footer();
-
-/**
- * display the footer
- */
-$footer->displayFooter();
+</body>
+</html>

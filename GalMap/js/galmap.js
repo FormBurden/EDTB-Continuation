@@ -83,6 +83,7 @@
 				suggestCache.set(name.toLowerCase(), { name, x, y, z });
 			}
 			  
+			  
 		}
 
 		function fillCoords(hit) {
@@ -111,7 +112,7 @@
 			if (!csInput) return;
 			const key = csInput.value.trim().toLowerCase();
 
-			// 1) Prefer datalist option's data-* (instant, no network)
+			// 1) Prefer datalist option’s data-* (instant, no network)
 			if (dl && dl.options && dl.options.length) {
 				const match = Array.from(dl.options).find(o => (o.value || '').toLowerCase() === key);
 				if (match) {
@@ -132,6 +133,7 @@
 			// 3) Backend exact lookup fallback
 			await autofillFromServerByName(csInput.value.trim());
 		}
+		  
 		  
 
 		csInput?.addEventListener('input', debounce(() => {

@@ -370,7 +370,8 @@ $data['si_name'] .= $rareText . $userDists . '</span>';
 $__chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_stations'");
 $hasStationsTable = ($__chk && $__chk->num_rows > 0); if ($__chk) { $__chk->close(); }
 $stationExists = 0;
-
+$systemId = isset($systemId) ? (int)$systemId : (int)($_GET['system_id'] ?? $_GET['id'] ?? 0);
+if (!$systemId && isset($curSys['id'])) { $systemId = (int)$curSys['id']; }
 $stations = \EDTB\Domain\Stations\StationsRepository::findBySystemId($mysqli, (int)$systemId);
 
 if ($hasStationsTable) {
