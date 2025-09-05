@@ -47,6 +47,10 @@ require_once __DIR__ . '/../source/curSys.php';
 require_once __DIR__ . '/../src/Domain/Toolbox/ToolboxService.php';
 /** safer array get */
 function _g(array $a, string $k, $d=null) { return array_key_exists($k,$a) ? $a[$k] : $d; }
+$left = \EDTB\Domain\Toolbox\ToolboxService::leftColumn($settings, $curSys);
+$data['system_title'] = $left['system_title'];
+$data['system_info']  = $left['system_info'];
+$data['station_data'] = $left['station_data'];
 
 
 use \EDTB\Gallery\MakeGallery;

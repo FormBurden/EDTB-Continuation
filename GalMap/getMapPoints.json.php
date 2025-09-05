@@ -1,310 +1,143 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/lib/GalMapParams.php';
-use EDTB\GalMap\GalMapParams;
 
 /**
- * Galaxy Map JSON feed for ED3D.
- * Emits either a flat array of systems or (if you prefer) wrap in {"systems":[...]}.
- * Minimal required fields: name, coords{x,y,z}
+ * Self-contained JSON feed for Galaxy Map points.
+ * - Picks first viable source table with named systems + non-null coords.
+ * - center_system name is resolved to X/Y/Z if coordinates are not given.
+ * - Optional spherical distance filter (no SQRT).
+ * - Returns { systems: [...], resolved_center?: {...}, debug?: {...} }.
  */
-
 header('Content-Type: application/json; charset=utf-8');
-// Prevent any warnings/notices from corrupting JSON output:
-ini_set('display_errors', '0');
-error_reporting(E_ALL);
-
-// Hard-fail catcher to return a valid JSON error if something goes sideways:
-set_exception_handler(function ($e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'server_error', 'message' => $e->getMessage()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    exit;
-});
-set_error_handler(function($severity, $message, $file, $line) {
-    // Convert to exception so our handler above returns JSON
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
 
 $root = dirname(__DIR__);
+
+// --- Load config + DB bootstrap (use your existing includes) ---
 require_once $root . '/source/config.inc.php';
+if (file_exists($root . '/source/config_ini.inc.php')) {
+    require_once $root . '/source/config_ini.inc.php';
+}
+if (file_exists($root . '/source/MySQL.php')) {
+    require_once $root . '/source/MySQL.php';
+}
 
-
-// Try to acquire DB settings/connection in a portable way
-$mysqli = null;
-$server = [];
-try {
-    // Preferred: central MySQL helper (if your project uses it)
-    $mysqlHelper = $root . '/source/MySQL.php';
-    if (is_file($mysqlHelper)) {
-        require_once $mysqlHelper;
-        // Many EDTB forks instantiate $mysqli globally in MySQL.php; use it if available.
-        if (isset($mysqli) && $mysqli instanceof mysqli) {
-            // ok
-        } else {
-            // Fallback: read settings directly if MySQL.php exposes none
-            $dataCfg = defined('EDTB_DATA') ? EDTB_DATA . '/server_config.inc.php' : $root . '/data/server_config.inc.php';
-            if (is_file($dataCfg)) {
-                $server = include $dataCfg;
-            }
-            // Try edtoolbox ini if present
-            if (!$server) {
-                $ini = $root . '/source/data/edtoolbox_v1.ini';
-                if (is_file($ini)) {
-                    $iniArr = parse_ini_file($ini, true, INI_SCANNER_TYPED) ?: [];
-                    if (isset($iniArr['database'])) {
-                        $server = [
-                            'db_host' => $iniArr['database']['host'] ?? '127.0.0.1',
-                            'db_name' => $iniArr['database']['name'] ?? 'edtb',
-                            'db_user' => $iniArr['database']['user'] ?? 'edtb',
-                            'db_pass' => $iniArr['database']['pass'] ?? ($iniArr['database']['password'] ?? ''),
-                            'db_port' => (int)($iniArr['database']['port'] ?? 3306),
-                        ];
-                    }
-                }
-            }
-            if (!$server) {
-                // Last resort: environment
-                $server = [
-                    'db_host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
-                    'db_name' => $_ENV['DB_NAME'] ?? 'edtb',
-                    'db_user' => $_ENV['DB_USER'] ?? 'edtb',
-                    'db_pass' => $_ENV['DB_PASS'] ?? '',
-                    'db_port' => (int)($_ENV['DB_PORT'] ?? 3306),
-                ];
-            }
-            $mysqli = new mysqli(
-                $server['db_host'] ?? '127.0.0.1',
-                $server['db_user'] ?? 'edtb',
-                $server['db_pass'] ?? '',
-                $server['db_name'] ?? 'edtb',
-                (int)($server['db_port'] ?? 3306)
-            );
-            if ($mysqli->connect_errno) {
-                throw new RuntimeException('DB connect failed: ' . $mysqli->connect_error);
-            }
-        }
-    } else {
-        // No helper present: go straight to config files/env
-        $dataCfg = defined('EDTB_DATA') ? EDTB_DATA . '/server_config.inc.php' : $root . '/data/server_config.inc.php';
-        if (is_file($dataCfg)) {
-            $server = include $dataCfg;
-        }
-        if (!$server) {
-            $ini = $root . '/source/data/edtoolbox_v1.ini';
-            if (is_file($ini)) {
-                $iniArr = parse_ini_file($ini, true, INI_SCANNER_TYPED) ?: [];
-                if (isset($iniArr['database'])) {
-                    $server = [
-                        'db_host' => $iniArr['database']['host'] ?? '127.0.0.1',
-                        'db_name' => $iniArr['database']['name'] ?? 'edtb',
-                        'db_user' => $iniArr['database']['user'] ?? 'edtb',
-                        'db_pass' => $iniArr['database']['pass'] ?? ($iniArr['database']['password'] ?? ''),
-                        'db_port' => (int)($iniArr['database']['port'] ?? 3306),
-                    ];
-                }
-            }
-        }
-        if (!$server) {
-            $server = [
-                'db_host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
-                'db_name' => $_ENV['DB_NAME'] ?? 'edtb',
-                'db_user' => $_ENV['DB_USER'] ?? 'edtb',
-                'db_pass' => $_ENV['DB_PASS'] ?? '',
-                'db_port' => (int)($_ENV['DB_PORT'] ?? 3306),
-            ];
-        }
-        $mysqli = new mysqli(
-            $server['db_host'] ?? '127.0.0.1',
-            $server['db_user'] ?? 'edtb',
-            $server['db_pass'] ?? '',
-            $server['db_name'] ?? 'edtb',
-            (int)($server['db_port'] ?? 3306)
-        );
-        if ($mysqli->connect_errno) {
-            throw new RuntimeException('DB connect failed: ' . $mysqli->connect_error);
-        }
-    }
-} catch (Throwable $e) {
+// Expect a global $mysqli (from source/MySQL.php). Fail clearly if missing.
+if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     http_response_code(500);
-    echo json_encode(['error' => 'db_init_failed', 'message' => $e->getMessage()]);
+    echo json_encode([
+        'error' => 'db_not_connected',
+        'message' => 'MySQL connection ($mysqli) is not initialized. Ensure source/MySQL.php sets $mysqli.'
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Helpers
-function table_exists(mysqli $db, string $table): bool {
-    $res = $db->query("SHOW TABLES LIKE '" . $db->real_escape_string($table) . "'");
-    return $res && $res->num_rows > 0;
+// --- Small helpers (local, no external deps) ---
+function table_exists(mysqli $db, string $name): bool {
+    $name = $db->real_escape_string($name);
+    $res = $db->query("SHOW TABLES LIKE '{$name}'");
+    if ($res) { $ok = $res->num_rows > 0; $res->free(); return $ok; }
+    return false;
 }
-function pick_first_existing_table(mysqli $db, array $candidates): ?string {
-    foreach ($candidates as $t) {
-        if (table_exists($db, $t)) return $t;
-    }
-    return null;
+function table_has_named_coords(mysqli $db, string $table): bool {
+    $table = $db->real_escape_string($table);
+    $sql = "SELECT 1 FROM `{$table}` 
+            WHERE name IS NOT NULL AND name <> '' 
+              AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL 
+            LIMIT 1";
+    $res = $db->query($sql);
+    if ($res) { $ok = $res->num_rows > 0; $res->free(); return $ok; }
+    return false;
 }
-$resolvedCenter = null;
 
-
-
-// Inputs
-$limit       = max(1, min(50000, (int)($_GET['limit'] ?? 15000)));
-$visitedOnly = isset($_GET['visited_only']) && $_GET['visited_only'] === '1';
-$bmOnly      = isset($_GET['bookmarked_only']) && $_GET['bookmarked_only'] === '1';
-
-// Pick a source table for coordinates
-$sourceTable = pick_first_existing_table($mysqli, [
-    'edtb_systems',
-    'systems',
-    'eddb_systems'
-]);
-// If the first existing table has no populated names/coords, fall back.
-if ($sourceTable) {
-    $probeSql = "SELECT 1 FROM `{$sourceTable}` WHERE name IS NOT NULL AND name <> '' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL LIMIT 1";
-    $probe = $mysqli->query($probeSql);
-    $hasData = $probe && $probe->num_rows > 0;
-    if ($probe) { $probe->free(); }
-    if (!$hasData) {
-        // Try 'systems' then 'eddb_systems' explicitly
-        foreach (['systems', 'eddb_systems'] as $alt) {
-            if ($alt !== $sourceTable && table_exists($mysqli, $alt)) {
-                $probeAlt = $mysqli->query("SELECT 1 FROM `{$alt}` WHERE name IS NOT NULL AND name <> '' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL LIMIT 1");
-                if ($probeAlt && $probeAlt->num_rows > 0) {
-                    $sourceTable = $alt;
-                    $probeAlt->free();
-                    break;
-                }
-                if ($probeAlt) { $probeAlt->free(); }
-            }
-        }
+// --- Pick source table: edtb_systems → systems → eddb_systems (must have names + coords) ---
+$sourceCandidates = ['edtb_systems', 'systems', 'eddb_systems'];
+$sourceTable = null;
+foreach ($sourceCandidates as $cand) {
+    if (table_exists($mysqli, $cand) && table_has_named_coords($mysqli, $cand)) {
+        $sourceTable = $cand;
+        break;
     }
 }
-
 if (!$sourceTable) {
-    echo json_encode([], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'systems' => [],
+        'debug' => ['reason' => 'no_viable_source_table', 'candidates' => $sourceCandidates]
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
-// Resolve center_system -> numeric center (only if coords not already specified)
+
+// --- Parse params ---
+$limit        = isset($_GET['limit']) ? max(0, (int)$_GET['limit']) : 15000;
+$maxDistance  = isset($_GET['maxdistance']) ? max(0, (float)$_GET['maxdistance']) : 0.0;
+$centerX      = isset($_GET['centerX']) ? (float)$_GET['centerX'] : null;
+$centerY      = isset($_GET['centerY']) ? (float)$_GET['centerY'] : null;
+$centerZ      = isset($_GET['centerZ']) ? (float)$_GET['centerZ'] : null;
 $centerSystem = $_GET['center_system'] ?? ($_GET['centerSystem'] ?? null);
-if ($centerSystem && ($params->centerX === null || $params->centerY === null || $params->centerZ === null)) {
-    $sql = "SELECT x, y, z FROM `{$sourceTable}` WHERE name = ? LIMIT 1";
-    if ($stmt = $mysqli->prepare($sql)) {
+$debugFlag    = isset($_GET['debug']);
+
+// --- If only a name was provided, resolve it to coords from the chosen source table ---
+$resolvedCenter = null;
+if ($centerSystem && ($centerX === null || $centerY === null || $centerZ === null)) {
+    if ($stmt = $mysqli->prepare("SELECT x, y, z FROM `{$sourceTable}` WHERE name = ? LIMIT 1")) {
         $stmt->bind_param('s', $centerSystem);
         if ($stmt->execute()) {
             $stmt->bind_result($cx, $cy, $cz);
             if ($stmt->fetch()) {
-                $params->centerX = (float)$cx;
-                $params->centerY = (float)$cy;
-                $params->centerZ = (float)$cz;
-                $resolvedCenter = [
-                    'name' => (string)$centerSystem,
-                    'x' => $params->centerX,
-                    'y' => $params->centerY,
-                    'z' => $params->centerZ,
-                ];
+                $centerX = (float)$cx;
+                $centerY = (float)$cy;
+                $centerZ = (float)$cz;
+                $resolvedCenter = ['name' => (string)$centerSystem, 'x' => $centerX, 'y' => $centerY, 'z' => $centerZ];
             }
         }
         $stmt->close();
     }
 }
 
-
-// Optional joins for visited/bookmarks if present
-$visitedTable   = table_exists($mysqli, 'user_visited') ? 'user_visited' : (table_exists($mysqli, 'user_visited_systems') ? 'user_visited_systems' : null);
-$bookmarksTable = table_exists($mysqli, 'user_bookmarks') ? 'user_bookmarks' : (table_exists($mysqli, 'edtb_bookmarks') ? 'edtb_bookmarks' : null);
-
-// Build WHERE/JOINS
-$joins = [];
-$where = ["s.x IS NOT NULL", "s.y IS NOT NULL", "s.z IS NOT NULL"];
-$order = "s.name ASC";
-// Resolve textual center to coordinates if needed
-if ($params->centerSystem && ($params->centerX === null || $params->centerY === null || $params->centerZ === null)) {
-    $esc = $mysqli->real_escape_string($params->centerSystem);
-
-    // Prefer user's own systems if present; fall back to global table
-    $q = "
-        (SELECT x,y,z FROM user_systems_own
-         WHERE name = '{$esc}' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL
-         LIMIT 1)
-        UNION ALL
-        (SELECT x,y,z FROM edtb_systems
-         WHERE name = '{$esc}' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL
-         LIMIT 1)
-        LIMIT 1";
-
-    if ($resC = $mysqli->query($q)) {
-        if ($rowC = $resC->fetch_assoc()) {
-            $params->centerX = (float)$rowC['x'];
-            $params->centerY = (float)$rowC['y'];
-            $params->centerZ = (float)$rowC['z'];
-        }
-        $resC->free();
-    }
+// --- Build WHERE + optional distance predicate ---
+$where = "WHERE s.name IS NOT NULL AND s.name <> '' AND s.x IS NOT NULL AND s.y IS NOT NULL AND s.z IS NOT NULL";
+$distanceExpr = null;
+if ($centerX !== null && $centerY !== null && $centerZ !== null && $maxDistance > 0) {
+    $dx = (float)$centerX; $dy = (float)$centerY; $dz = (float)$centerZ; $r = (float)$maxDistance;
+    $distanceExpr = sprintf('(POW(s.x - %F,2) + POW(s.y - %F,2) + POW(s.z - %F,2))', $dx, $dy, $dz);
+    $where .= sprintf(' AND %s <= POW(%F,2)', $distanceExpr, $r);
 }
 
-// Apply spherical distance when we have a center + positive radius
-if ($params->centerX !== null && $params->centerY !== null && $params->centerZ !== null && $params->maxDistance > 0) {
-    $dx = (float)$params->centerX;
-    $dy = (float)$params->centerY;
-    $dz = (float)$params->centerZ;
-    $r  = (float)$params->maxDistance;
-
-    // squared distance (no SQRT) for speed
-    $where[] = sprintf(
-        '(POW(s.x - %F, 2) + POW(s.y - %F, 2) + POW(s.z - %F, 2)) <= POW(%F, 2)',
-        $dx, $dy, $dz, $r
-    );
-}
-
-
-
-if ($visitedOnly && $visitedTable) {
-    $joins[] = "INNER JOIN {$visitedTable} uv ON (uv.system_name = s.name)";
-    $order = "uv.last_visit DESC";
-}
-if ($bmOnly && $bookmarksTable) {
-    $joins[] = "INNER JOIN {$bookmarksTable} bm ON (bm.system_name = s.name)";
-    if (!$visitedOnly) {
-        $order = "bm.added_at DESC";
-    }
-}
+// --- Query (order by distance if filtering, else by name) ---
+$order = $distanceExpr ? "ORDER BY {$distanceExpr} ASC" : "ORDER BY s.name ASC";
+$limitSql = $limit > 0 ? "LIMIT {$limit}" : "";
 
 $sql = "SELECT s.name, s.x, s.y, s.z
-        FROM {$sourceTable} s
-        " . implode("\n        ", $joins) . "
-        WHERE " . implode(' AND ', $where) . "
-        ORDER BY {$order}
-        LIMIT {$limit}";
+        FROM `{$sourceTable}` AS s
+        {$where}
+        {$order}
+        {$limitSql}";
 
-$res = $mysqli->query($sql);
-if (!$res) {
-    throw new RuntimeException('Query failed: ' . $mysqli->error);
-}
-
+// --- Execute + emit ---
 $out = [];
-while ($row = $res->fetch_assoc()) {
-    $name = (string)($row['name'] ?? '');
-    if ($name === '') {
-        continue;
+if ($res = $mysqli->query($sql)) {
+    while ($row = $res->fetch_assoc()) {
+        $out[] = [
+            'name' => (string)$row['name'],
+            'x'    => (float)$row['x'],
+            'y'    => (float)$row['y'],
+            'z'    => (float)$row['z'],
+        ];
     }
-    $x = is_numeric($row['x'] ?? null) ? (float)$row['x'] : null;
-    $y = is_numeric($row['y'] ?? null) ? (float)$row['y'] : null;
-    $z = is_numeric($row['z'] ?? null) ? (float)$row['z'] : null;
-    if ($x === null || $y === null || $z === null) {
-        continue;
-    }
-    $out[] = [
-        'name'   => $name,
-        'coords' => ['x' => $x, 'y' => $y, 'z' => $z],
-        // Add optional keys here later if desired:
-        // 'infos' => 'Visited/bookmarked/etc.',
-        // 'url'   => '/System/?name=' . rawurlencode($name),
-    ];
+    $res->free();
+} else {
+    http_response_code(500);
+    echo json_encode([
+        'error'   => 'query_failed',
+        'message' => $mysqli->error,
+        'sql'     => $debugFlag ? $sql : null
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
 }
-$res->free();
 
 $payload = ['systems' => $out];
-if (!empty($_GET['debug'])) {
+if ($resolvedCenter !== null) { $payload['resolved_center'] = $resolvedCenter; }
+if ($debugFlag) {
     $dbRow = $mysqli->query('SELECT DATABASE() AS db')->fetch_assoc() ?: [];
     $payload['debug'] = ['db' => ($dbRow['db'] ?? null), 'source_table' => $sourceTable];
 }
 echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
