@@ -1547,14 +1547,18 @@ fieldset {
   position: absolute;
   left: 0;
   top: 46px;
-  right: 0;
+  /* keep this strip on the left panel only */
+  right: auto;
+  /* was: right: 0; */
+  width: 270px;
+  /* was: width: auto; */
   padding: 5px;
   color: #fffffa;
   background: #333;
   z-index: 1000002;
   vertical-align: top;
-  width: auto;
-  opacity: 0.93; }
+  opacity: 0.93;
+}
 
 .categories {
   display: inline-block;
@@ -2132,16 +2136,16 @@ img {
   padding: 3px;
   margin: 0; }
 
-/*# sourceMappingURL=style.css.map */
 /* --- GalMap: keep controls above the header/canvas overlays --- */
 #galmap-page {
   position: relative;
-  z-index: 1000005;
+  z-index: 100000050;
+  /* must be > .info (100000000) */
 }
 
-#galmap-form input,
-#galmap-form button,
-#galmap-form label {
+#galmap-form,
+#galmap-form * {
   position: relative;
-  z-index: 1000006;
+  z-index: 100000200;
+  /* keep inputs/buttons higher than any page overlay */
 }

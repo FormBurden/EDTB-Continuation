@@ -140,23 +140,12 @@ if ((isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])
     $data['update_map']          = $augment['update_map'];
     $data['new_sys']             = $augment['new_sys'];
     $data['current_system_name'] = $augment['current_system_name'];
-    $data['current_coordinates'] = $augment['current_coordinates'];
+    $data['current_coordinates'] = $augment['current_coordinates'];   
 
-    /**
-     * Data for the left column
-     */
-    $left = \EDTB\Domain\Toolbox\ToolboxService::leftColumn($settings, $curSys);
-    $data['system_title'] = $left['system_title'];
-    $data['system_info']  = $left['system_info'];
-    $data['station_data'] = $left['station_data'];
+    require __DIR__ . '/getData_leftColumn.php';
 
 
-
-    /**
-     * Stuff specifically for System.php
-     */
-    $data = array_merge($data, \EDTB\Domain\Toolbox\ToolboxService::systemInfo($settings, $curSys));
-
+    require_once __DIR__ . '/../System/getData_systemInfo.php';
 
     /**
      * System and general logs
