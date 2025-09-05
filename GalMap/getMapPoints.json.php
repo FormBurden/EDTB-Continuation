@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/lib/GalMapParams.php';
+use EDTB\GalMap\GalMapParams;
 
 /**
  * Galaxy Map JSON feed for ED3D.
@@ -138,6 +140,8 @@ function pick_first_existing_table(mysqli $db, array $candidates): ?string {
     }
     return null;
 }
+$params = GalMapParams::fromRequest($_GET);
+
 
 // Inputs
 $limit       = max(1, min(50000, (int)($_GET['limit'] ?? 15000)));
@@ -163,6 +167,24 @@ $bookmarksTable = table_exists($mysqli, 'user_bookmarks') ? 'user_bookmarks' : (
 $joins = [];
 $where = ["s.x IS NOT NULL", "s.y IS NOT NULL", "s.z IS NOT NULL"];
 $order = "s.name ASC";
+// Optional spherical distance filter when center + maxDistance are provided
+if ($params->maxDistance !== null
+    && $params->centerX !== null
+    && $params->centerY !== null
+    && $params->centerZ !== null) {
+
+    $dx = (float)$params->centerX;
+    $dy = (float)$params->centerY;
+    $dz = (float)$params->centerZ;
+    $r  = (float)$params->maxDistance;
+
+    // Use squared distance to avoid SQRT in MySQL for performance
+    $where[] = sprintf(
+        '(POW(s.x - %F, 2) + POW(s.y - %F, 2) + POW(s.z - %F, 2)) <= POW(%F, 2)',
+        $dx, $dy, $dz, $r
+    );
+}
+
 
 if ($visitedOnly && $visitedTable) {
     $joins[] = "INNER JOIN {$visitedTable} uv ON (uv.system_name = s.name)";
