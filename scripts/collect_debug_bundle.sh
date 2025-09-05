@@ -136,6 +136,8 @@ fi
 OUT="$ROOT/$BUNDLE_NAME"
 TMPDIR="$OUT.tmp"
 mkdir -p "$TMPDIR"
+[[ "${BROWSER_CAPTURE:-0}" -eq 1 ]] && "$ROOT/.edtb-venv/bin/python3" "$ROOT/scripts/capture_ff_attach.py" "$TMPDIR/browser"
+
 
 # Structure snapshot (exclude vendor/node_modules/.git)
 generate_structure(){

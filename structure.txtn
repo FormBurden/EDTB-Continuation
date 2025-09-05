@@ -45,6 +45,7 @@
 │   ├── systems_populated.csv
 │   └── systems_sample.csv
 ├── database
+│   ├── ddl_user_log.txt
 │   └── migrations
 │       ├── 0000_demote_views_to_tables.sql
 │       ├── 0001_linux_bootstrap.sql
@@ -77,15 +78,37 @@
 │       ├── 20250903_create_user_poi_categories.sql
 │       └── 20250903_create_user_poi.sql
 ├── DataPoint
+│   ├── Formatter.php
 │   ├── functions.php
 │   ├── index.php
+│   ├── Schema.php
 │   └── Vendor
 │       └── MySQL_table_edit
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
-├── edtb_facility_icon_map_extract.tar.gz
 ├── .edtb-files.txt
+├── edtb_issue_pick_test.tar.gz
+├── .edtb-venv
+│   ├── bin
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── Activate.ps1
+│   │   ├── jp.py
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.13
+│   │   ├── python -> /usr/bin/python
+│   │   ├── python3 -> python
+│   │   └── python3.13 -> python
+│   ├── .gitignore
+│   ├── include
+│   │   └── python3.13
+│   ├── lib
+│   │   └── python3.13
+│   ├── lib64 -> lib
+│   └── pyvenv.cfg
 ├── .env
 ├── .env.example
 ├── Gallery
@@ -97,6 +120,8 @@
 ├── GalMap
 │   ├── getMapPoints.json.php
 │   ├── index.php
+│   ├── lib
+│   │   └── GalMapParams.php
 │   └── Vendor
 │       └── ED3D-Galaxy-Map
 ├── GalNet
@@ -155,6 +180,7 @@
 │   └── index.php
 ├── README.md
 ├── scripts
+│   ├── capture_ff_attach.py
 │   ├── collect_debug_bundle.sh
 │   ├── dev-server.sh
 │   ├── edtb-services.sh
@@ -436,4 +462,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-67 directories, 370 files
+75 directories, 388 files
