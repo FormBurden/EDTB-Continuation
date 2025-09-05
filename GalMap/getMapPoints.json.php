@@ -158,6 +158,23 @@ if (!$sourceTable) {
     echo json_encode([], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
+// Resolve center_system -> numeric center (only if coords not already specified)
+$centerSystem = $_GET['center_system'] ?? ($_GET['centerSystem'] ?? null);
+if ($centerSystem && ($params->centerX === null || $params->centerY === null || $params->centerZ === null)) {
+    $sql = "SELECT x, y, z FROM `{$sourceTable}` WHERE name = ? LIMIT 1";
+    if ($stmt = $mysqli->prepare($sql)) {
+        $stmt->bind_param('s', $centerSystem);
+        if ($stmt->execute()) {
+            $stmt->bind_result($cx, $cy, $cz);
+            if ($stmt->fetch()) {
+                $params->centerX = (float)$cx;
+                $params->centerY = (float)$cy;
+                $params->centerZ = (float)$cz;
+            }
+        }
+        $stmt->close();
+    }
+}
 
 // Optional joins for visited/bookmarks if present
 $visitedTable   = table_exists($mysqli, 'user_visited') ? 'user_visited' : (table_exists($mysqli, 'user_visited_systems') ? 'user_visited_systems' : null);

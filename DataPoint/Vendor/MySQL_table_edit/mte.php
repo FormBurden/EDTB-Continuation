@@ -370,11 +370,8 @@ class MySQLtabledit
             // make table row
             $background = $background == '#38484f' ? '#273238' : '#38484f';
 
-            if ($this->showText[$key]) {
-                $showKey = $this->showText[$key];
-            } else {
-                $showKey = $key;
-            }
+            $showKey = $this->labelFor($key);
+
 
             $rows .= '<tr style="border-bottom:1px solid #000;background:' . $background . '">
                             <td style="vertical-align: middle; padding: 8px">
@@ -610,9 +607,8 @@ class MySQLtabledit
                             }
                             $coordResult->close();
                         }
-                    } $showOption = $this->labelFor($option);
-
                     }
+
                 }
 
                 $ii = 0;
@@ -702,9 +698,11 @@ class MySQLtabledit
                 unset($value);
                 $rows .= "<tr style='border-bottom:1px solid #000;background:$background'>$buttons $thisRow</tr>";
             }
-        } else {
+        }
+        if ($result->num_rows == 0) {
             $head = "<td style='padding:40px'>{$this->text['Nothing_found']}...</td>";
         }
+
 
         // navigation 3/3
 
@@ -1048,3 +1046,4 @@ class MySQLtabledit
         ";
     }
 
+}

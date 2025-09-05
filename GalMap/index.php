@@ -9,11 +9,12 @@ $header = new Header();
 $header->pageTitle = 'Galaxy Map';
 $header->displayHeader();
 ?>
+
 <link rel="stylesheet" href="Vendor/ED3D-Galaxy-Map/css/styles.css" />
 
 <style>
   /* keep it simple: map fills the remaining viewport below the top panel */
-  #galmap-wrap { padding: 10px 12px 0; }
+  #galmap-wrap { margin-top: 88px; padding: 10px 12px 0; }
   #ed3dmap { width: 100%; height: calc(100vh - 240px); position: relative; }
   #loader { position: absolute; top: 12px; right: 16px; z-index: 9999; display: none; }
   .gm-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 10px; }
@@ -64,7 +65,7 @@ $header->displayHeader();
 <!-- Dependencies: jQuery (site-wide), Three.js, ED3D map core -->
 <script src="../source/Vendor/jquery-2.2.0.min.js"></script>
 <script src="../source/Vendor/three.min.js"></script>
-<script src="GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
+<script src="Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 
 <script>
   (function () {
@@ -73,9 +74,10 @@ $header->displayHeader();
 
     // Build JSON URL from controls
     function jsonURL() {
-      var u = new URL('./getMapPoints.json.php', window.location.origin);
+      var u = new URL('getMapPoints.json.php', window.location.href);
       var limit = Math.max(1, Math.min(50000, parseInt(document.getElementById('gm_limit').value || '15000', 10)));
       u.searchParams.set('limit', String(limit));
+
       // Optional center inputs
       var cs = document.getElementById('gm_center_system').value.trim();
       var cx = document.getElementById('gm_cx').value.trim();
@@ -94,6 +96,7 @@ $header->displayHeader();
       if (rad !== '') {
         u.searchParams.set('maxdistance', rad);
       }
+
 
 
       if (document.getElementById('gm_visited').checked) {
