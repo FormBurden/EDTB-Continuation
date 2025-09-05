@@ -106,4 +106,63 @@ class ToolboxService
 
         return $out;
     }
+    /**
+     * Extracted from get/getData.php.
+     * Builds the "now playing" HTML based on local file or VLC JSON.
+     *
+     * @param array $settings
+     * @return string HTML including the <img> icon and the now-playing text.
+     */
+    public static function nowPlaying(array $settings): string
+    {
+        $nowplaying = '';
+
+        /**
+         *  from file
+         */
+        if (isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])) {
+            if (file_exists($settings['nowplaying_file'])) {
+                /** If Filename is playback.json will read JSON data for Google Play Music Desktop Player */
+                if (basename($settings['nowplaying_file']) === 'playback.json') {
+                    $jsonData = json_decode(file_get_contents($settings['nowplaying_file']), true);
+                    $nowplaying .= $jsonData['song']['title'] . ' By: ' . $jsonData['song']['artist'];
+                } else {
+                    /** Otherwise just output the contents of the file */
+                    $nowplaying .= file_get_contents($settings['nowplaying_file']);
+                }
+            } else {
+                $nowplaying .= "File doesn't exist";
+            }
+        }
+
+        /**
+         *  from VLC (@author Travis)
+         */
+        if (isset($settings['nowplaying_vlc_password']) && !empty($settings['nowplaying_vlc_password'])) {
+            $username = '';
+            $password = $settings['nowplaying_vlc_password'];
+            $url = $settings['nowplaying_vlc_url'];
+
+            $opts = [
+                'http' => [
+                    'method' => 'GET',
+                    'header' => 'Authorization: Basic ' . base64_encode("$username:$password")
+                ]
+            ];
+
+            $context = stream_context_create($opts);
+            $result = file_get_contents($url, false, $context);
+
+            $jsonData = json_decode($result, true);
+
+            $nowplaying .= $jsonData['information']['category']['meta']['now_playing'];
+        }
+
+        if (empty($nowplaying)) {
+            $nowplaying = 'Not playing';
+        }
+
+        return '<img src="/style/img/music.png" class="icon" alt="Now playing">' . $nowplaying;
+    }
 }
+

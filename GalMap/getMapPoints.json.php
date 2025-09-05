@@ -28,6 +28,7 @@ set_error_handler(function($severity, $message, $file, $line) {
 $root = dirname(__DIR__);
 require_once $root . '/source/config.inc.php';
 
+
 // Try to acquire DB settings/connection in a portable way
 $mysqli = null;
 $server = [];
@@ -140,7 +141,8 @@ function pick_first_existing_table(mysqli $db, array $candidates): ?string {
     }
     return null;
 }
-$params = GalMapParams::fromRequest($_GET);
+$resolvedCenter = null;
+
 
 
 // Inputs
@@ -170,11 +172,18 @@ if ($centerSystem && ($params->centerX === null || $params->centerY === null || 
                 $params->centerX = (float)$cx;
                 $params->centerY = (float)$cy;
                 $params->centerZ = (float)$cz;
+                $resolvedCenter = [
+                    'name' => (string)$centerSystem,
+                    'x' => $params->centerX,
+                    'y' => $params->centerY,
+                    'z' => $params->centerZ,
+                ];
             }
         }
         $stmt->close();
     }
 }
+
 
 // Optional joins for visited/bookmarks if present
 $visitedTable   = table_exists($mysqli, 'user_visited') ? 'user_visited' : (table_exists($mysqli, 'user_visited_systems') ? 'user_visited_systems' : null);
@@ -184,23 +193,45 @@ $bookmarksTable = table_exists($mysqli, 'user_bookmarks') ? 'user_bookmarks' : (
 $joins = [];
 $where = ["s.x IS NOT NULL", "s.y IS NOT NULL", "s.z IS NOT NULL"];
 $order = "s.name ASC";
-// Optional spherical distance filter when center + maxDistance are provided
-if ($params->maxDistance !== null
-    && $params->centerX !== null
-    && $params->centerY !== null
-    && $params->centerZ !== null) {
+// Resolve textual center to coordinates if needed
+if ($params->centerSystem && ($params->centerX === null || $params->centerY === null || $params->centerZ === null)) {
+    $esc = $mysqli->real_escape_string($params->centerSystem);
 
+    // Prefer user's own systems if present; fall back to global table
+    $q = "
+        (SELECT x,y,z FROM user_systems_own
+         WHERE name = '{$esc}' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL
+         LIMIT 1)
+        UNION ALL
+        (SELECT x,y,z FROM edtb_systems
+         WHERE name = '{$esc}' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL
+         LIMIT 1)
+        LIMIT 1";
+
+    if ($resC = $mysqli->query($q)) {
+        if ($rowC = $resC->fetch_assoc()) {
+            $params->centerX = (float)$rowC['x'];
+            $params->centerY = (float)$rowC['y'];
+            $params->centerZ = (float)$rowC['z'];
+        }
+        $resC->free();
+    }
+}
+
+// Apply spherical distance when we have a center + positive radius
+if ($params->centerX !== null && $params->centerY !== null && $params->centerZ !== null && $params->maxDistance > 0) {
     $dx = (float)$params->centerX;
     $dy = (float)$params->centerY;
     $dz = (float)$params->centerZ;
     $r  = (float)$params->maxDistance;
 
-    // Use squared distance to avoid SQRT in MySQL for performance
+    // squared distance (no SQRT) for speed
     $where[] = sprintf(
         '(POW(s.x - %F, 2) + POW(s.y - %F, 2) + POW(s.z - %F, 2)) <= POW(%F, 2)',
         $dx, $dy, $dz, $r
     );
 }
+
 
 
 if ($visitedOnly && $visitedTable) {
@@ -248,4 +279,5 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->free();
 
-echo json_encode(['systems' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+echo json_encode(['systems' => $out, 'resolved_center' => ($resolvedCenter ?? null)], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
