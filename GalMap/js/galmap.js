@@ -120,6 +120,28 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (outList) outList.textContent = systems.slice(0, 50).map(s => s.name).join(', ') || '(no systems matched)';
+		// --- also refresh the 3D map ---
+		const url = `/GalMap/getMapPoints.json.php?${qs.toString()}`;
+		Ed3d.jsonPath = url;
+		Ed3d.rebuild();
 	});
 });
+// --- Initialize ED3D map once on page load using current form values ---
+(function initEd3dOnce() {
+	const form = document.getElementById('galmap-form') || document.forms[0];
+	const fd = new FormData(form);
+	const qs = new URLSearchParams(fd);
+	if (!qs.get('limit')) qs.set('limit', '15000');
+	if (!qs.get('maxdistance')) qs.set('maxdistance', '50');
+
+	const url = `/GalMap/getMapPoints.json.php?${qs.toString()}`;
+	Ed3d.init({
+		container: 'ed3dmap',
+		basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
+		jsonPath: url,
+		withHudPanel: true,
+		startAnim: true
+	});
+})();
+  
   

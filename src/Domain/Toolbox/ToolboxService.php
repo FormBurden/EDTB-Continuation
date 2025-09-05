@@ -174,19 +174,29 @@ class ToolboxService
      */
     public static function leftColumn(array $settings, array $curSys): array
     {
-        // The include historically populates $data['system_title'], $data['system_info'], $data['station_data'] in its own scope.
-        // We mirror that contract and return just those three keys.
+        // Make the include see the same globals it had when run from get/getData.php
+        global $mysqli, $api;
+
+        // The include populates $data[...] keys in-place.
         $data = [];
 
+        // Ensure DB/$mysqli context is loaded before running the left-column include.
+        // curSys.php wires the DB connection and helpers that getData_leftColumn.php expects.
         $base = dirname(__DIR__, 3);
-        include $base . '/get/getData_leftColumn.php';
+        require_once $base . '/source/curSys.php';
 
+        // Run the original script 1:1 (it writes into $data[...] in this scope)
+        require $base . '/get/getData_leftColumn.php';
+
+        // Return exactly the three keys ED Toolbox expects in the JSON
         return [
             'system_title' => isset($data['system_title']) ? $data['system_title'] : '',
             'system_info'  => isset($data['system_info'])  ? $data['system_info']  : '',
             'station_data' => isset($data['station_data']) ? $data['station_data'] : '',
         ];
     }
+
+
 
 
 

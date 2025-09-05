@@ -2133,3 +2133,15 @@ img {
   margin: 0; }
 
 /*# sourceMappingURL=style.css.map */
+/* --- GalMap: keep controls above the header/canvas overlays --- */
+#galmap-page {
+  position: relative;
+  z-index: 1000005;
+}
+
+#galmap-form input,
+#galmap-form button,
+#galmap-form label {
+  position: relative;
+  z-index: 1000006;
+}
