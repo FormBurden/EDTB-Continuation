@@ -13,6 +13,11 @@ DRY_RUN=0
 INCLUDE_FROM=""
 READ_STDIN=0
 EXCLUDE_LOGS=0
+NO_NETWORK=0
+CAPTURE_SEC=""
+TMPDIR="${TMPDIR:-$(mktemp -d -t edtb_bundle_XXXXXX)}"
+
+
 
 # Hostname redaction for outputs
 HOST_RAW="$(hostname 2>/dev/null || uname -n || echo 'UNKNOWN_HOST')"
@@ -31,6 +36,10 @@ Options:
   --stdin             Also read extra paths from STDIN (newline-separated)
   --dry-run           Show contents, don't create the tar.gz
   --help              Show this help
+  --no-logs           Exclude logs directory from the bundle
+  --no-network        Do not attach to Firefox DevTools; skip console/network/DOM/perf capture
+  --capture-sec N     Override Firefox capture window (seconds), e.g. --capture-sec 10
+
 USAGE
 }
 
@@ -44,9 +53,14 @@ while [[ $# -gt 0 ]]; do
     --no-defaults) NO_DEFAULTS=1;;
     --from) shift; [[ $# -gt 0 ]] || die "--from requires a file"; INCLUDE_FROM="$1";;
     --stdin) READ_STDIN=1;;
+    --no-network) NO_NETWORK=1;;
     --dry-run) DRY_RUN=1;;
     --no-logs) EXCLUDE_LOGS=1;;
     --help) usage; exit 0;;
+      --capture-sec)
+        CAPTURE_SEC="$2"
+        shift
+        ;;
     --) shift; break;;
     -*) die "Unknown option: $1";;
     *) INCLUDE_PATHS+=("$1");;
@@ -128,15 +142,11 @@ pick_free_name(){
   done
 }
 # Only auto-suffix when using the default auto name
-if [[ "$BUNDLE_NAME" == edtb_debug_* ]]; then
-  BUNDLE_NAME="$(pick_free_name "$BUNDLE_NAME")"
+
+if [[ "$NO_NETWORK" -ne 1 ]]; then
+  [[ -n "${CAPTURE_SEC-}" ]] && export FF_CAPTURE_WINDOW_SEC="$CAPTURE_SEC"
+  "$ROOT/.edtb-venv/bin/python3" "$ROOT/scripts/capture_ff_attach.py" "$TMPDIR/browser"
 fi
-
-
-OUT="$ROOT/$BUNDLE_NAME"
-TMPDIR="$OUT.tmp"
-mkdir -p "$TMPDIR"
-[[ "${BROWSER_CAPTURE:-0}" -eq 1 ]] && "$ROOT/.edtb-venv/bin/python3" "$ROOT/scripts/capture_ff_attach.py" "$TMPDIR/browser"
 
 
 # Structure snapshot (exclude vendor/node_modules/.git)

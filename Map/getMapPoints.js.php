@@ -42,7 +42,7 @@ require_once __DIR__ . '/../source/MySQL.php';
 /** @require curSys */
 require_once __DIR__ . '/../source/curSys.php';
 
-header('content-type: application/x-javascript');
+header('Content-Type: application/javascript; charset=utf-8');
 
 if (isset($params->maxDistance) && is_numeric($params->maxDistance)) {
     $settings['maxdistance'] = $params->maxDistance;

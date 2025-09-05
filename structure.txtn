@@ -87,8 +87,14 @@
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
+├── edtb_ff_5s.tar.gz
+├── edtb_ff_attach_test.tmp
+│   └── browser
+│       ├── console.ndjson
+│       ├── dom.html
+│       ├── network.ndjson
+│       └── perf.json
 ├── .edtb-files.txt
-├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -462,4 +468,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-75 directories, 388 files
+77 directories, 392 files

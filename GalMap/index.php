@@ -9,7 +9,7 @@ $header = new Header();
 $header->pageTitle = 'Galaxy Map';
 $header->displayHeader();
 ?>
-<link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" />
+<link rel="stylesheet" href="GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" />
 
 <style>
   /* keep it simple: map fills the remaining viewport below the top panel */
@@ -49,16 +49,16 @@ $header->displayHeader();
 <!-- Dependencies: jQuery (site-wide), Three.js, ED3D map core -->
 <script src="/source/Vendor/jquery-2.2.0.min.js"></script>
 <script src="/source/Vendor/three.min.js"></script>
-<script src="/GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
+<script src="GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 
 <script>
   (function () {
     // Base path for ED3D vendor (it lazy-loads its own components from this base)
-    var basePath = '/GalMap/Vendor/ED3D-Galaxy-Map/';
+    var basePath = 'GalMap/Vendor/ED3D-Galaxy-Map/';
 
     // Build JSON URL from controls
     function jsonURL() {
-      var u = new URL('/GalMap/getMapPoints.json.php', window.location.origin);
+      var u = new URL('GalMap/getMapPoints.json.php', window.location.origin);
       var limit = Math.max(1, Math.min(50000, parseInt(document.getElementById('gm_limit').value || '15000', 10)));
       u.searchParams.set('limit', String(limit));
 

@@ -30,7 +30,7 @@ perf_path    = os.path.join(OUTDIR, "perf.json")
 HOST = os.environ.get("FF_RDP_HOST", "127.0.0.1")
 PORT = int(os.environ.get("FF_RDP_PORT", "6000"))
 URLP = os.environ.get("EDTB_CAPTURE_URL_PREFIX", "http://localhost:8080")
-WIN  = int(os.environ.get("FF_CAPTURE_WINDOW_SEC", "120"))
+WIN  = int(os.environ.get("FF_CAPTURE_WINDOW_SEC", "15"))
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
