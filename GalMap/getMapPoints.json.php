@@ -46,7 +46,7 @@ foreach ($candidates as $cand) {
 }
 if (!$source) {
     echo json_encode([
-        'categories' => ['General' => ['Systems' => ['name' => 'Systems', 'color' => '7cb5ec']]],
+        'categories' => ['Systems' => ['name' => 'Systems', 'color' => '#7cb5ec']],
         'systems' => [],
         'debug' => ['reason' => 'no_viable_source_table']
 
@@ -138,7 +138,7 @@ if ($res = $mysqli->query($sql)) {
 }
 
 $payload = [
-    'categories' => ['General' => ['Systems' => ['name' => 'Systems', 'color' => '7cb5ec']]],
+    'categories' => ['Systems' => ['name' => 'Systems', 'color' => '#7cb5ec']],
     'systems' => $out
 
 ];

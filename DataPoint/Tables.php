@@ -1,9 +1,10 @@
 <?php
 /**
  * DataPoint per-table configuration
- * - 'list'   = which columns to show in the list view (order kept)
- * - 'labels' = friendly header overrides for those columns
- * - 'order_by' (optional) = default ORDER BY clause (if supported by vendor)
+ * - 'list'     = which columns to show in the list view (order kept)
+ * - 'labels'   = friendly header overrides for those columns
+ * - 'order_by' = optional default ORDER BY clause
+ * - 'format'   = column => type (currently supports: 'bool')
  */
 function datapoint_config_for_table(string $table): array
 {
@@ -21,6 +22,9 @@ function datapoint_config_for_table(string $table): array
                     'needs_permit'  => 'Permit Required',
                 ],
                 'order_by' => 'name ASC',
+                'format' => [
+                    'needs_permit' => 'bool',
+                ],
             ];
 
         case 'edtb_stations':
@@ -36,9 +40,26 @@ function datapoint_config_for_table(string $table): array
                     'has_shipyard'          => 'Shipyard',
                 ],
                 'order_by' => 'name ASC',
+                'format' => [
+                    'has_blackmarket' => 'bool',
+                    'has_outfitting'  => 'bool',
+                    'has_shipyard'    => 'bool',
+                ],
+            ];
+
+        case 'edtb_facilities':
+            return [
+                'list' => ['id','code','name'],
+                'labels' => [
+                    'id'   => 'Id',
+                    'code' => 'Code',
+                    'name' => 'Name',
+                ],
+                'order_by' => 'id DESC',
+                'format' => [],
             ];
 
         default:
-            return []; // fallback: auto from Schema.php
+            return [];
     }
 }

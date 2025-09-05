@@ -14,9 +14,80 @@
 	function $id(id) { return document.getElementById(id); }
 	function isFiniteNum(v) { return typeof v === 'number' && isFinite(v); }
 
+	// Results panel updater — mirrors the map JSON
+	async function updateResults(qs) {
+		const url = `/GalMap/getMapPoints.json.php?${qs.toString()}`;
+		const res = await fetch(url, { cache: 'no-store' });
+		const data = await res.json();
+
+		const sys = Array.isArray(data?.systems) ? data.systems : [];
+		const countEl = $id('results-count');
+		const listEl = $id('results-list');
+
+		if (countEl) countEl.textContent = String(sys.length);
+		if (!listEl) return;
+
+		if (!sys.length) {
+			listEl.textContent = '(nothing yet)';
+			return;
+		}
+
+		// Distance from resolved center (preferred) or current form values
+		const rc = data?.resolved_center;
+		let cx = Number($id('centerX')?.value), cy = Number($id('centerY')?.value), cz = Number($id('centerZ')?.value);
+		if (rc && isFinite(rc.x) && isFinite(rc.y) && isFinite(rc.z)) {
+			cx = Number(rc.x); cy = Number(rc.y); cz = Number(rc.z);
+		}
+		const haveCenter = isFiniteNum(cx) && isFiniteNum(cy) && isFiniteNum(cz);
+
+		const html = sys.slice(0, 25).map(s => {
+			const c = Array.isArray(s.coords) ? s.coords : [];
+			let distTxt = '';
+			if (haveCenter && c.length === 3 && c.every(isFiniteNum)) {
+				const dx = c[0] - cx, dy = c[1] - cy, dz = c[2] - cz;
+				const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+				if (isFiniteNum(d)) distTxt = ` — ${d.toFixed(1)} ly`;
+			}
+			return `<div>${s.name}${distTxt}</div>`;
+		}).join('');
+
+		listEl.innerHTML = html;
+	}
+  
+
 	document.addEventListener('DOMContentLoaded', () => {
 		const csInput = $id('center_system') || $('input[name="center_system"]');
 		const form = $id('galmap-form') || (csInput && csInput.closest('form')) || document.forms[0];
+		// Center on current system (via PHP/curSys.php)
+		const btnCur = $id('center_current');
+		if (btnCur) {
+			btnCur.addEventListener('click', async () => {
+				try {
+					const res = await fetch('/GalMap/getCurrentSystem.json.php', { cache: 'no-store' });
+					const d = await res.json();
+
+					if (!d || !d.name || !isFiniteNum(d.x) || !isFiniteNum(d.y) || !isFiniteNum(d.z)) return;
+
+					// Fill inputs
+					const csInput = $id('center_system') || $('input[name="center_system"]');
+					if (csInput) csInput.value = d.name;
+					if (cx) cx.value = d.x;
+					if (cy) cy.value = d.y;
+					if (cz) cz.value = d.z;
+
+					// Seed suggest cache for instant X/Y/Z reuse
+					if (typeof d.name === 'string') {
+						(window.__galmapSuggestCache ||= new Map()).set(d.name.toLowerCase(), { name: d.name, x: d.x, y: d.y, z: d.z });
+					}
+
+					// Submit (Results panel updates immediately; map follows)
+					form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+				} catch (e) {
+					console.error('center_current failed', e);
+				}
+			});
+		}
+
 
 		const cx = $id('centerX') || $('input[name="centerX"]');
 		const cy = $id('centerY') || $('input[name="centerY"]');
@@ -144,9 +215,14 @@
 		}, 180));
 		csInput?.addEventListener('change', () => { void maybeAutofill(); });
 		csInput?.addEventListener('blur', () => { void maybeAutofill(); });
-		csInput?.addEventListener('keydown', (e) => {
-			if (e.key === 'Enter') { e.preventDefault(); void maybeAutofill(); form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+		csInput?.addEventListener('keydown', async (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				await maybeAutofill();
+				form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+			}
 		});
+		  
 
 		function buildQueryFromForm() {
 			const fd = new FormData(form || undefined);
@@ -159,30 +235,31 @@
 			return new URLSearchParams(fd);
 		}
 
-		form?.addEventListener('submit', (e) => {
+		form?.addEventListener('submit', async (e) => {
 			e.preventDefault();
+		  
+			// Ensure X/Y/Z are filled before building the query
+			await maybeAutofill();
+		  
 			const qs = buildQueryFromForm();
+			void updateResults(qs);
 			if (!window.Ed3d) { console.error('Ed3d not loaded'); return; }
-
+		  
 			if (mapEl) mapEl.innerHTML = ''; // clear any old overlays/hud so z-index remains sane
-
+		  
 			Ed3d.init({
-				container: 'ed3dmap',
-				basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
-				jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
-				withHudPanel: true,
-				startAnim: true
+			  container: 'ed3dmap',
+			  basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
+			  jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
+			  withHudPanel: true,
+			  startAnim: true
 			});
-
+		  
 			// After init, keep HUD below the form
 			setTimeout(() => {
-				const hud = $('#ed3dmap .hudPanel');
-				if (hud) hud.style.zIndex = '2';
+			  const hud = $('#ed3dmap .hudPanel');
+			  if (hud) hud.style.zIndex = '2';
 			}, 100);
-		});
-
-		// Auto-run once on load if form has defaults
-		if (form) setTimeout(() => form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })), 0);
-	});
+		  });		  
 })();
   

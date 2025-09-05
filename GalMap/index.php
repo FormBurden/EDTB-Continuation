@@ -12,6 +12,7 @@ $header->displayHeader();
   <h2>Galaxy Map (JSON-backed)</h2>
 
   <form id="galmap-form" class="form-inline" style="margin-bottom:12px; position:relative; z-index:1000006;">
+  <button type="button" id="center_current" class="btn btn-sm">Center: Current</button>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <label>limit <input id="limit" name="limit" type="number" value="15000" style="width:90px;"></label>
       <label>maxdistance <input id="maxdistance" name="maxdistance" type="number" value="50" style="width:90px;"></label>
