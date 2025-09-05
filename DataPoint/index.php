@@ -1,13 +1,14 @@
 <?php
 /**
- * Data Point — closer to original repo (tabs, distance sort, memory)
- * - Ensures DB globals for vendor
- * - Uses original helpers when present (Formatter.php, functions.php)
- * - Default table edtb_systems; per-table curation via Tables.php
+ * Data Point — original-repo features v2
+ * - Tabs across tables (vendor linksToDb)
+ * - Remembers last table
  * - Rows-per-page persisted (10/25/50/100)
- * - One-click CSV export (export.php)
- * - Tabs across ALL allowed tables (vendor renders them via linksToDb)
- * - Distance sort toggle (adds ?sort=distance&ad=...)
+ * - CSV export endpoint (export.php)
+ * - Distance sort toggle (when applicable)
+ * - NEW: Per-table Quick Filters (chips that auto-fill vendor search and submit)
+ * - NEW: Column Visibility Presets (per-table, hides/show columns client-side)
+ * - NEW: Boolean inputs in edit forms (checkboxes injected for bool fields)
  */
 
 session_start();
@@ -89,7 +90,7 @@ $_SESSION['dp_rows'] = $rows;
 /* ---- Columns + labels (auto) ---- */
 list($allFields, $autoLabels) = datapoint_get_column_labels($mysqli, $dataTable);
 
-/* ---- Per-table overrides (curated list + label overrides) ---- */
+/* ---- Per-table overrides (curated list + label overrides + filters + presets) ---- */
 $config = function_exists('datapoint_config_for_table') ? datapoint_config_for_table($dataTable) : [];
 
 if (!empty($config['list'])) {
@@ -158,6 +159,10 @@ $isDist = ($sort === 'distance');
 $nextAd = ($ad === 'a') ? 'd' : 'a';
 $distLabel = 'Distance ' . ($ad === 'a' ? '▼' : '▲');
 
+/* Derived convenience for client */
+$quickFilters = isset($config['quick_filters']) ? $config['quick_filters'] : [];
+$presets      = isset($config['presets']) ? $config['presets'] : [];
+
 /* ---- Render ---- */
 $header = new Header();
 $UPPER  = strtoupper($dataTable);
@@ -205,10 +210,7 @@ $UPPER  = strtoupper($dataTable);
     .dp-button:active{ transform:translateY(1px); background:#1f87a9; }
 
     /* ---------- DataPoint scoped styles ---------- */
-    .dp-mte{
-      --padY:8px; --padX:14px; --radius:6px;
-      color:var(--dp-ink);
-    }
+    .dp-mte{ color:var(--dp-ink); }
     .dp-mte select,
     .dp-mte input[type="text"],
     .dp-mte input[type="search"]{
@@ -236,11 +238,6 @@ $UPPER  = strtoupper($dataTable);
       background:transparent; color:var(--dp-ink);
       border:1px solid var(--dp-border); text-transform:uppercase;
     }
-
-    /* Specific labels */
-    .dp-mte input[type="submit"][value="SEARCH"],
-    .dp-mte input[type="submit"][value="Search"],
-    .dp-mte input[type="submit"][value*="Search" i]{ padding:7px 12px; font-size:12px; }
 
     /* Tables */
     .dp-mte table{ width:100%; border-collapse:collapse; }
@@ -273,66 +270,261 @@ $UPPER  = strtoupper($dataTable);
       display:flex; align-items:center; justify-content:center;
       gap:6px; margin:8px 0 12px; padding:0; list-style:none;
     }
-    .dp-mte ul.pagination:empty{ display:none; }
-    .dp-mte .mte_nav a.mtelink,
-    .dp-mte .mte_nav_prev_next{
-      display:inline-block; padding:4px 9px; border-radius:5px;
-      background:#0f1419; color:#9fb8c3; text-decoration:none;
-      border:1px solid var(--dp-border);
-    }
 
     /* Boolean badges */
     .dp-bool { display:inline-block; padding:2px 7px; border-radius:10px; font-size:12px; font-weight:700; }
     .dp-bool.yes { background:#1b6f1b; color:#fff; }
     .dp-bool.no  { background:#6f1b1b; color:#fff; }
+
+    /* Quick filter chips */
+    .dp-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 0; }
+    .dp-chip{
+      display:inline-block; background:#0f1419; color:#cfe8f1;
+      border:1px solid var(--dp-border); border-radius:999px;
+      padding:6px 10px; cursor:pointer; user-select:none; font-size:12px;
+    }
+    .dp-chip:hover{ border-color:var(--dp-accent); color:#fff; }
+    .dp-chip b{ font-weight:700; }
+
+    /* Preset selector */
+    .dp-preset{ display:flex; align-items:center; gap:6px; }
+    .dp-hidden{ display:none !important; }
     </style>
     <script>
-    // Client-side state for boolean formatting
+    // Client state
     window.DP_STATE = {
       table: <?php echo json_encode($dataTable); ?>,
       fields: <?php echo json_encode(array_values($fieldsInListView)); ?>,
+      labels: <?php echo json_encode($showText); ?>,
       colIndex: <?php echo json_encode($colIndex); ?>,
       format: <?php echo json_encode(isset($config['format']) ? $config['format'] : []); ?>,
+      quickFilters: <?php echo json_encode($quickFilters); ?>,
+      presets: <?php echo json_encode($presets); ?>,
       rows: <?php echo (int)$rows; ?>
     };
-    document.addEventListener('DOMContentLoaded', function(){
-      var st = window.DP_STATE;
-      if (!st || !st.fields || !st.fields.length) return;
 
-      // Find the first data table whose header matches the fields count
+    // Utilities
+    function dp_applyBooleanBadges(listTable, state){
+      var fmt = state.format || {};
+      var boolCols = [];
+      for (var key in fmt) {
+        if (fmt[key] === 'bool' && state.colIndex.hasOwnProperty(key)) {
+          boolCols.push(state.colIndex[key]);
+        }
+      }
+      if (!boolCols.length) return;
+      var rows = listTable.querySelectorAll('tbody tr');
+      rows.forEach(function(r){
+        var cells = r.children;
+        boolCols.forEach(function(idx){
+          var c = cells[idx];
+          if (!c) return;
+          var raw = (c.textContent || '').trim();
+          if (raw === '') return;
+          var yes = /^(1|true|yes)$/i.test(raw);
+          var no  = /^(0|false|no)$/i.test(raw);
+          if (yes || no) {
+            c.innerHTML = '<span class="dp-bool '+(yes?'yes':'no')+'">'+(yes?'Yes':'No')+'</span>';
+          }
+        });
+      });
+    }
+
+    function dp_findListTable(state){
       var tables = document.querySelectorAll('.dp-mte table');
       var listTable = null;
       tables.forEach(function(t){
         var ths = t.querySelectorAll('thead th');
-        if (!listTable && ths && ths.length === st.fields.length) { listTable = t; }
+        if (!listTable && ths && ths.length === state.fields.length) { listTable = t; }
       });
-      if (!listTable) return;
+      return listTable;
+    }
 
-      // Boolean formatting
-      var fmt = st.format || {};
-      var boolCols = [];
-      for (var key in fmt) {
-        if (fmt[key] === 'bool' && st.colIndex.hasOwnProperty(key)) {
-          boolCols.push(st.colIndex[key]);
-        }
+    function dp_applyPreset(state, presetName){
+      var listTable = dp_findListTable(state);
+      if (!listTable) return;
+      var showCols = null;
+      if (presetName && state.presets && state.presets[presetName]) {
+        showCols = state.presets[presetName];
       }
-      if (boolCols.length) {
-        var rows = listTable.querySelectorAll('tbody tr');
-        rows.forEach(function(r){
-          var cells = r.children;
-          boolCols.forEach(function(idx){
-            var c = cells[idx];
-            if (!c) return;
-            var raw = (c.textContent || '').trim();
-            if (raw === '') return;
-            var yes = /^(1|true|yes)$/i.test(raw);
-            var no  = /^(0|false|no)$/i.test(raw);
-            if (yes || no) {
-              c.innerHTML = '<span class="dp-bool '+(yes?'yes':'no')+'">'+(yes?'Yes':'No')+'</span>';
+      // Default: show all fields
+      var allow = {};
+      if (showCols && showCols.length){
+        showCols.forEach(function(f){ if(state.colIndex.hasOwnProperty(f)) allow[state.colIndex[f]] = true; });
+      } else {
+        state.fields.forEach(function(f, i){ allow[i] = true; });
+      }
+      // th
+      listTable.querySelectorAll('thead th').forEach(function(th, idx){
+        th.classList.toggle('dp-hidden', !allow[idx]);
+      });
+      // tds
+      listTable.querySelectorAll('tbody tr').forEach(function(tr){
+        Array.prototype.forEach.call(tr.children, function(td, idx){
+          td.classList.toggle('dp-hidden', !allow[idx]);
+        });
+      });
+      try{ localStorage.setItem('dp_preset_'+state.table, presetName || ''); }catch(e){}
+    }
+
+    function dp_renderQuickFilters(state){
+      var wrap = document.getElementById('dp-quickfilters');
+      if (!wrap) return;
+      if (!state.quickFilters || !state.quickFilters.length) { wrap.style.display='none'; return; }
+
+      var frag = document.createDocumentFragment();
+      state.quickFilters.forEach(function(group){
+        var items = group.items || [];
+        if (!items.length) return;
+        var row = document.createElement('div');
+        row.className = 'dp-chips';
+        if (group.label){
+          var title = document.createElement('div');
+          title.textContent = group.label + ':';
+          title.style.minWidth = '80px';
+          title.style.opacity = '0.8';
+          row.appendChild(title);
+        }
+        items.forEach(function(it){
+          var chip = document.createElement('span');
+          chip.className = 'dp-chip';
+          chip.innerHTML = (it.icon ? '<b>'+it.icon+'</b> ' : '') + (it.label || it.value || it.field);
+          chip.addEventListener('click', function(){
+            dp_applyQuickFilter(state, it);
+          });
+          row.appendChild(chip);
+        });
+        frag.appendChild(row);
+      });
+      wrap.appendChild(frag);
+    }
+
+    function dp_applyQuickFilter(state, item){
+      // Try to fill the vendor's search form and submit it
+      var form = document.getElementById('search_form') || document.querySelector('.dp-mte form[action*="search"]') || document.querySelector('.dp-mte form');
+      if (!form){ location.reload(); return; }
+
+      // Find a field selector (first <select>) and a text box (first text/search)
+      var fieldSel = form.querySelector('select');
+      var txt = form.querySelector('input[type="text"], input[type="search"]');
+
+      function setFieldSelect(sel, field){
+        if (!sel) return;
+        var want = String(field).toLowerCase();
+        var label = (state.labels && state.labels[field]) ? String(state.labels[field]).toLowerCase() : null;
+        var matched = false;
+        Array.prototype.forEach.call(sel.options, function(opt){
+          var ov = String(opt.value || '').toLowerCase();
+          var ot = String(opt.text || '').toLowerCase();
+          if (ov === want || ot === want || (label && ot === label)) {
+            opt.selected = true; matched = true;
+          }
+        });
+        if (!matched && sel.options.length){ sel.selectedIndex = 0; }
+      }
+
+      if (item.field) setFieldSelect(fieldSel, item.field);
+      if (txt && (item.value !== undefined && item.value !== null)){
+        txt.value = String(item.value);
+      }
+      // Operator hook if vendor exposes one (commonly a second select)
+      var opSel = form.querySelectorAll('select')[1];
+      if (opSel && item.op){
+        Array.prototype.forEach.call(opSel.options, function(opt){
+          var ov = String(opt.value || '').toLowerCase();
+          var ot = String(opt.text || '').toLowerCase();
+          if (ov === String(item.op).toLowerCase() || ot === String(item.op).toLowerCase()){
+            opt.selected = true;
+          }
+        });
+      }
+      try { form.submit(); } catch(e){ location.reload(); }
+    }
+
+    function dp_upgradeBooleanInputs(state){
+      // Transform text/select inputs for bool columns into checkboxes
+      var boolFields = [];
+      for (var k in (state.format||{})) if (state.format[k]==='bool') boolFields.push(k);
+      if (!boolFields.length) return;
+
+      function upgrade(form){
+        boolFields.forEach(function(name){
+          var sel = [
+            'input[name="'+name+'"]',
+            'select[name="'+name+'"]',
+            'input[name$="['+name+']"]',
+            'select[name$="['+name+']"]'
+          ].join(',');
+          var el = form.querySelector(sel);
+          if (!el) return;
+
+          var current = (el.value || '').trim();
+          var yes = /^(1|true|yes)$/i.test(current);
+
+          // Hidden real field to submit 0/1
+          var hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = el.name;
+          hidden.value = yes ? '1' : '0';
+
+          // Checkbox UI
+          var cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = yes;
+          cb.addEventListener('change', function(){
+            hidden.value = cb.checked ? '1' : '0';
+          });
+
+          // Label
+          var lbl = document.createElement('label');
+          lbl.style.marginLeft = '6px';
+          lbl.textContent = 'Yes/No';
+
+          // Insert and disable original
+          el.parentNode.insertBefore(cb, el);
+          el.parentNode.insertBefore(lbl, el.nextSibling);
+          el.parentNode.insertBefore(hidden, el);
+          el.disabled = true;
+          el.classList.add('dp-hidden');
+        });
+      }
+
+      // Upgrade existing forms
+      document.querySelectorAll('.dp-mte form').forEach(upgrade);
+
+      // Watch for dynamically inserted edit forms
+      var obs = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          Array.prototype.forEach.call(m.addedNodes, function(n){
+            if (n.nodeType===1){
+              if (n.tagName==='FORM') upgrade(n);
+              n.querySelectorAll && n.querySelectorAll('form').forEach(upgrade);
             }
           });
         });
-      }
+      });
+      obs.observe(document.querySelector('.dp-mte') || document.body, {childList:true, subtree:true});
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      var st = window.DP_STATE;
+      if (!st) return;
+
+      // Apply saved preset (if any)
+      try{
+        var saved = localStorage.getItem('dp_preset_'+st.table);
+        if (saved) dp_applyPreset(st, saved);
+      }catch(e){}
+
+      // Render quick filters
+      dp_renderQuickFilters(st);
+
+      // Boolean badges in cells
+      var tbl = dp_findListTable(st);
+      if (tbl) dp_applyBooleanBadges(tbl, st);
+
+      // Upgrade form inputs for booleans
+      dp_upgradeBooleanInputs(st);
     });
     </script>
 </head>
@@ -359,7 +551,7 @@ $UPPER  = strtoupper($dataTable);
         <noscript><button type="submit" class="dp-button">Open</button></noscript>
     </form>
 
-    <!-- Top controls: Rows-per-page + Export + Distance sort -->
+    <!-- Top controls: Rows-per-page + Export + Distance sort + Preset -->
     <div class="dp-controls">
         <div class="left">
             <form method="get" action="/DataPoint/">
@@ -379,11 +571,34 @@ $UPPER  = strtoupper($dataTable);
                     <?php echo htmlspecialchars($distLabel); ?>
                 </a>
             <?php endif; ?>
+            <?php if (!empty($presets)): ?>
+            <div class="dp-preset">
+                <label for="dp-preset">Preset:</label>
+                <select id="dp-preset" onchange="dp_applyPreset(window.DP_STATE, this.value)">
+                    <option value="">All Columns</option>
+                    <?php foreach ($presets as $pname => $plist): ?>
+                        <option value="<?php echo htmlspecialchars($pname); ?>"><?php echo htmlspecialchars($pname); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <script>
+              (function(){
+                try{
+                  var st=window.DP_STATE, sel=document.getElementById('dp-preset');
+                  var saved=localStorage.getItem('dp_preset_'+st.table)||'';
+                  if (saved && sel.querySelector('option[value="'+saved+'"]')) sel.value = saved;
+                }catch(e){}
+              })();
+            </script>
+            <?php endif; ?>
         </div>
         <div class="right">
             <a class="dp-button" href="/DataPoint/export.php?table=<?php echo urlencode($dataTable); ?>">Export CSV</a>
         </div>
     </div>
+
+    <!-- Quick Filters -->
+    <div id="dp-quickfilters"></div>
 
     <div id="data-view" class="dp-mte">
         <?php $tabledit->do_it(); ?>

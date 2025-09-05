@@ -2,51 +2,76 @@
 declare(strict_types=1);
 $root = dirname(__DIR__);
 require_once $root . '/style/Header.php';
-require_once __DIR__ . '/../style/Footer.php';
+require_once $root . '/style/Footer.php';
 
 $header = new Header();
 $pageTitle = 'Galaxy Map';
 $header->displayHeader();
 ?>
-<div id="galmap-page" class="container" style="padding:30px;">
-  <h2>Galaxy Map (JSON-backed)</h2>
+<div class="galmap-wrap">
+  <h1 class="galmap-title">Galaxy Map</h1>
 
-  <form id="galmap-form" class="form-inline" style="margin-bottom:12px; position:relative; z-index:1000006;">
-  <button type="button" id="center_current" class="btn btn-sm">Center: Current</button>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <label>limit <input id="limit" name="limit" type="number" value="15000" style="width:90px;"></label>
-      <label>maxdistance <input id="maxdistance" name="maxdistance" type="number" value="50" style="width:90px;"></label>
+  <form id="galmap-form" class="gm-controls" action="#" method="get" autocomplete="off">
+    <div class="row">
+      <label>Center system</label>
+      <input type="text" id="center_system" name="center_system" list="system_names" placeholder="e.g. Sol">
+      <datalist id="system_names"></datalist>
 
-      <label>center system <input id="center_system" name="center_system" type="text" placeholder="Sol" list="system-suggest" style="width:160px;"></label>
-      <label>x <input id="centerX" name="centerX" type="text" style="width:80x;"></label>
-      <label>y <input id="centerY" name="centerY" type="text" style="width:80px;"></label>
-      <label>z <input id="centerZ" name="centerZ" type="text" style="width:80px;"></label>
+      <label>Max distance</label>
+      <input type="number" id="maxdistance" name="maxdistance" step="1" value="50" min="1" max="100000">
 
-      <label><input id="visited_only" name="visited_only" type="checkbox" value="1"> visited only</label>
-      <label><input id="bookmarked_only" name="bookmarked_only" type="checkbox" value="1"> bookmarked only</label>
+      <label>Limit</label>
+      <input type="number" id="limit" name="limit" step="1" value="15000" min="1" max="15000">
 
-      <button type="submit">Apply</button>
+      <button type="button" id="center_current" class="btn btn-sm">Center: Current</button>
+    </div>
+
+    <div class="row">
+      <label>Color by</label>
+      <select id="color_by" name="color_by">
+        <option value="none">None</option>
+        <option value="allegiance">Allegiance</option>
+        <option value="government">Government</option>
+        <option value="economy">Economy</option>
+        <option value="security">Security</option>
+      </select>
+
+      <label><input type="checkbox" id="visited_only" name="visited_only" value="1"> Visited only</label>
+      <label><input type="checkbox" id="bookmarked_only" name="bookmarked_only" value="1"> Bookmarked only</label>
+
+      <button type="submit" class="btn">Apply</button>
+    </div>
+
+    <!-- Center coords (auto-filled from suggestions or exact lookup) -->
+    <div class="row coords">
+      <label>X</label><input type="number" id="centerX" name="centerX" step="0.0001" placeholder="X">
+      <label>Y</label><input type="number" id="centerY" name="centerY" step="0.0001" placeholder="Y">
+      <label>Z</label><input type="number" id="centerZ" name="centerZ" step="0.0001" placeholder="Z">
     </div>
   </form>
 
-  <div>
-    <strong>Results:</strong> <span id="results-count">0</span>
-    <div id="results-list" style="margin-top:6px; font-size: 0.95em; color:#ccc;">(nothing yet)</div>
+  <div class="gm-main">
+    <div class="left-panel">
+      <div class="legend" id="legend"></div>
+      <div class="results">
+        <div class="results-header">
+          Results: <span id="results-count">0</span>
+        </div>
+        <div id="results-list" class="results-list">(nothing yet)</div>
+      </div>
+    </div>
+    <div class="map-panel">
+      <div id="ed3dmap" class="ed3dmap"></div>
+    </div>
   </div>
-
-  <hr>
-  <!-- ED3D map viewport -->
-  <div id="ed3d-wrapper" style="position:relative; height: calc(100vh - 180px); min-height: 520px; margin-top: 8px;">
-    <div id="ed3dmap" class="edmap"></div>
-  </div>
-  <p style="font-size:0.9em;opacity:.8">Data source: <code>/GalMap/getMapPoints.json.php</code> (works even without player logs; user tables are optional joins).</p>
 </div>
+
 <link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css">
 <script src="/source/Vendor/three.min.js"></script>
-<script src="/GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
+<!-- IMPORTANT: use the library build, not the old wrapper -->
+<script src="/GalMap/Vendor/ED3D-Galaxy-Map/ed3d.min.js"></script>
 <script src="/GalMap/js/galmap.js"></script>
 
 <?php
 $footer = new Footer();
 $footer->displayFooter();
-

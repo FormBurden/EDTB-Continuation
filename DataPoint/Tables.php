@@ -1,20 +1,20 @@
 <?php
 /**
- * DataPoint per-table configuration + tab titles
- * - 'list'     = which columns to show in the list view (order kept)
- * - 'labels'   = friendly header overrides for those columns
- * - 'order_by' = optional default ORDER BY clause
- * - 'format'   = column => type (currently supports: 'bool')
- * - datapoint_table_title($table) returns friendly tab label
+ * DataPoint per-table configuration + tab titles + quick filters + presets
+ * - 'list'     = columns to show in list view (order kept)
+ * - 'labels'   = header overrides for those columns
+ * - 'order_by' = default ORDER BY
+ * - 'format'   = column => type ('bool')
+ * - 'quick_filters' = array of groups: ['label'=>..., 'items'=>[ ['label'=>..,'field'=>..,'value'=>..,'op'=>..,'icon'=>..], ... ]]
+ * - 'presets'  = name => [field, field, ...]
  */
 
 function datapoint_table_title(string $table): string
 {
-    // Human-friendly titles for known tables; fallback: strip edtb_ and titleize
     switch ($table) {
-        case 'edtb_systems':   return 'Systems';
-        case 'edtb_stations':  return 'Stations';
-        case 'edtb_facilities':return 'Facilities';
+        case 'edtb_systems':    return 'Systems';
+        case 'edtb_stations':   return 'Stations';
+        case 'edtb_facilities': return 'Facilities';
         default:
             $t = preg_replace('/^edtb_/', '', $table);
             $t = str_replace('_', ' ', $t);
@@ -42,6 +42,27 @@ function datapoint_config_for_table(string $table): array
                 'format' => [
                     'needs_permit' => 'bool',
                 ],
+                'quick_filters' => [
+                    ['label' => 'Allegiance', 'items' => [
+                        ['label'=>'Federation', 'field'=>'allegiance', 'value'=>'Federation'],
+                        ['label'=>'Empire',     'field'=>'allegiance', 'value'=>'Empire'],
+                        ['label'=>'Independent','field'=>'allegiance', 'value'=>'Independent'],
+                        ['label'=>'Alliance',   'field'=>'allegiance', 'value'=>'Alliance'],
+                    ]],
+                    ['label' => 'Permit', 'items' => [
+                        ['label'=>'Requires Permit', 'field'=>'needs_permit', 'value'=>'1', 'icon'=>'🛂'],
+                        ['label'=>'No Permit',       'field'=>'needs_permit', 'value'=>'0', 'icon'=>'✅'],
+                    ]],
+                    ['label' => 'Economy', 'items' => [
+                        ['label'=>'High Tech', 'field'=>'economy', 'value'=>'High Tech'],
+                        ['label'=>'Industrial','field'=>'economy', 'value'=>'Industrial'],
+                        ['label'=>'Extraction','field'=>'economy', 'value'=>'Extraction'],
+                    ]],
+                ],
+                'presets' => [
+                    'Overview' => ['name','allegiance','government','economy','population'],
+                    'Flags'    => ['name','needs_permit'],
+                ],
             ];
 
         case 'edtb_stations':
@@ -62,6 +83,22 @@ function datapoint_config_for_table(string $table): array
                     'has_outfitting'  => 'bool',
                     'has_shipyard'    => 'bool',
                 ],
+                'quick_filters' => [
+                    ['label' => 'Facilities', 'items' => [
+                        ['label'=>'Shipyard',   'field'=>'has_shipyard',   'value'=>'1', 'icon'=>'🚢'],
+                        ['label'=>'Outfitting', 'field'=>'has_outfitting', 'value'=>'1', 'icon'=>'🛠️'],
+                        ['label'=>'Black Market','field'=>'has_blackmarket','value'=>'1', 'icon'=>'💱'],
+                    ]],
+                    ['label' => 'Pad', 'items' => [
+                        ['label'=>'Large Pad',  'field'=>'max_landing_pad_size', 'value'=>'L'],
+                        ['label'=>'Medium Pad', 'field'=>'max_landing_pad_size', 'value'=>'M'],
+                        ['label'=>'Small Pad',  'field'=>'max_landing_pad_size', 'value'=>'S'],
+                    ]],
+                ],
+                'presets' => [
+                    'Commerce' => ['name','type','max_landing_pad_size','has_outfitting','has_shipyard'],
+                    'Security' => ['name','type','has_blackmarket'],
+                ],
             ];
 
         case 'edtb_facilities':
@@ -74,6 +111,10 @@ function datapoint_config_for_table(string $table): array
                 ],
                 'order_by' => 'id DESC',
                 'format' => [],
+                'quick_filters' => [],
+                'presets' => [
+                    'Codes' => ['code','name'],
+                ],
             ];
 
         default:

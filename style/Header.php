@@ -94,69 +94,7 @@ class Header extends Theme
 
             <!-- own js -->
             <script src="/source/javascript.js"></script>
-
-            <script>
-            (function () {
-            function loadEDToolbox() {
-                var box = document.getElementById('scrollable');
-                if (!box) return;
-
-                fetch('/get/getData.php?request=0', { credentials: 'same-origin', cache: 'no-store' })
-                .then(function (r) { return r.text().then(function (txt) { return {ok:r.ok, status:r.status, txt:txt}; }); })
-                .then(function (res) {
-                    if (!res.ok) {
-                    console.error('EDTB fetch error', res.status, res.txt.slice(0,400));
-                    box.innerHTML = '<em>Failed to load ED Toolbox.</em>';
-                    return;
-                    }
-                    var d;
-                    try {
-                    d = JSON.parse(res.txt);
-                    } catch (e) {
-                    console.error('EDTB JSON parse failed:', e, res.txt.slice(0,400));
-                    // Even if JSON.parse failed, try to show something for visibility
-                    box.innerHTML = '<em>Failed to load ED Toolbox.</em>';
-                    return;
-                    }
-                    // Inject the Commander’s log panel HTML
-                    if (d && typeof d === 'object') {
-                    var html = (d.log_data && typeof d.log_data === 'string') ? d.log_data : '<em>(empty)</em>';
-                    box.innerHTML = html;
-                    // Debug to console so we can see lengths during testing
-                    try { console.log('EDTB: log_data length', (d.log_data||'').length, 'system', d.current_system_name||'(none)'); } catch(_){}
-                    } else {
-                    box.innerHTML = '<em>(empty)</em>';
-                    }
-                })
-                .catch(function (e) {
-                    console.error('EDTB fetch threw:', e);
-                    var box = document.getElementById('scrollable');
-                    if (box) box.innerHTML = '<em>Failed to load ED Toolbox.</em>';
-                });
-            }
-
-            // Run on page ready (no pathname gating — some themes use different routes)
-            document.addEventListener('DOMContentLoaded', loadEDToolbox);
-
-            // Also refresh when user clicks the left “ED TOOLBOX” row (handles SPA-like nav)
-            document.addEventListener('click', function (ev) {
-                var t = ev.target;
-                for (var i = 0; i < 3 && t; i++, t = t.parentElement) {
-                if (!t) break;
-                var txt = (t.textContent || '').trim().toUpperCase();
-                if (txt === 'ED TOOLBOX') {
-                    setTimeout(loadEDToolbox, 0);
-                    break;
-                }
-                }
-            });
-            })();
-            </script>
-
-
-
-
-            <!-- global variable for clock -->
+          <!-- global variable for clock -->
             <script>
                 var gmt = "<?= $settings['game_time']?>";
             </script>
@@ -328,7 +266,7 @@ class Header extends Theme
         $maplink = $settings['default_map'] === 'galaxy_map' ? '/GalMap' : '/Map';
 
         $links = [
-                'ED ToolBox--log.png--true' => '/',
+                'ED ToolBox--log.png--true' => '/EDToolbox/',
                 'System Information--info.png--true' => '/System',
                         'Galaxy Map&nbsp;&nbsp;&&nbsp;&nbsp;Neighborhood Map--grid.png--true' => $maplink,
                         'Points of Interest&nbsp;&nbsp;&&nbsp;&nbsp;Bookmarks--poi.png--true' => '/Bookmarks',
