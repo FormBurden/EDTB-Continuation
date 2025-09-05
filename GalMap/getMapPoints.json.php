@@ -81,6 +81,26 @@ if (($centerX === null || $centerY === null || $centerZ === null) && $centerSyst
 } elseif ($centerSystem !== '' && $centerX !== null && $centerY !== null && $centerZ !== null) {
     $resolvedCenter = ['name' => $centerSystem, 'x' => $centerX, 'y' => $centerY, 'z' => $centerZ];
 }
+require_once $root . '/GalMap/lib/cache.php';
+
+// Build a stable cache key using the resolved inputs
+$key = edtb_cache_key('galmap:points', [
+    'src'   => $source,
+    'cx'    => $centerX,
+    'cy'    => $centerY,
+    'cz'    => $centerZ,
+    'cs'    => $centerSystem,
+    'r'     => $maxDistance,
+    'limit' => (int)$limit,
+]);
+
+if ($__cache = edtb_cache_instance()) {
+    $cached = $__cache->get($key);
+    if ($cached !== null && $cached !== false) {
+        echo $cached;
+        exit;
+    }
+}
 
 // WHERE + optional distance predicate
 $where = "WHERE s.name IS NOT NULL AND s.name <> '' AND s.x IS NOT NULL AND s.y IS NOT NULL AND s.z IS NOT NULL";
@@ -124,4 +144,8 @@ $payload = [
 ];
 if ($resolvedCenter !== null) $payload['resolved_center'] = $resolvedCenter;
 
-echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+if (isset($key) && ($__cache = edtb_cache_instance())) {
+    $__cache->set($key, $json, EDTB_GALMAP_POINTS_TTL);
+}
+echo $json;

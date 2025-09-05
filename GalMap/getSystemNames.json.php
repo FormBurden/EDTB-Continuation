@@ -50,6 +50,24 @@ if ($q === '') {
     echo json_encode(['suggestions' => []], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
+require_once $root . '/GalMap/lib/cache.php';
+
+// Build a stable cache key from params & source table
+$key = edtb_cache_key('galmap:suggest', [
+    'src'   => $source,
+    'q'     => $q,
+    'exact' => (bool)$exact,
+    'limit' => (int)$limit,
+]);
+
+if ($__cache = edtb_cache_instance()) {
+    $cached = $__cache->get($key);
+    if ($cached !== null && $cached !== false) {
+        echo $cached;
+        exit;
+    }
+}
+
 
 $out = [];
 
@@ -85,4 +103,9 @@ if ($exact) {
     }
 }
 
-echo json_encode(['suggestions' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$json = json_encode(['suggestions' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+if (isset($key) && ($__cache = edtb_cache_instance())) {
+    $__cache->set($key, $json, EDTB_GALMAP_SUGGEST_TTL);
+}
+echo $json;
+
