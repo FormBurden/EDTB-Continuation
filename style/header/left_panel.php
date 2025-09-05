@@ -89,7 +89,7 @@
                 </div>
                 <div class="seslog" id="seslog">
                     <?php
-                    if ($settings['show_now_playing'] === 'true') {
+                    if (($settings['show_now_playing'] ?? 'false') === 'true') {
                         ?>
                         <div id="nowplaying"></div>
                         <a href="javascript:void(0)" onclick="toggleLogs('seslog')">

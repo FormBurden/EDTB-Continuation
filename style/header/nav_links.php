@@ -16,7 +16,7 @@ $links = [
         'Galnet News--news.png--false' => '/GalNet',
         'Screenshot Gallery--gallery.png--false' => '/Gallery',
         'Rare Commodities--rare.png--false' => '/RareCommodities',
-        'Map Creator--mapcreator.png--false' => '/Map',
+        'Map Creator--map_settings.png--false' => '/Map',
 ];
 
 $i = 1;

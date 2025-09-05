@@ -121,6 +121,17 @@ if (defined('DATA_DIR') && empty($server_config['data_dir'])) {
 // Keep some helpful constants for the rest of the codebase.
 if (!defined('INSTALL_PATH')) define('INSTALL_PATH', $server_config['install_path']);
 if (!defined('DATA_DIR'))    define('DATA_DIR', $server_config['data_dir']);
+// === Canonical UI defaults (Linux port) ===
+// Ensure essential UI keys exist (no per-call guards scattered around).
+if (!isset($settings) || !is_array($settings)) {
+    $settings = [];
+}
+
+// Only set when missing (do not override existing values).
+$settings['edtb_version']     = $settings['edtb_version']     ?? 'DEV';
+$settings['cmdr_name']        = $settings['cmdr_name']        ?? 'CMDR';
+$settings['game_time']        = $settings['game_time']        ?? '00:00:00';
+$settings['show_now_playing'] = $settings['show_now_playing'] ?? 'false';
 
 if (!defined('GALNET_FEED')) {
     // Frontier GalNet JSON (newest first, 12 items)

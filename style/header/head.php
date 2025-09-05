@@ -29,9 +29,9 @@
 
             <!-- markitup -->
             <script src="/source/Vendor/markitup/jquery.markitup.js"></script>
-            <script src="/source/Vendor/markitup/sets/default/set.js"></script>
+            <script src="/source/Vendor/markitup/sets/html/set.js"></script>
             <link rel="stylesheet" type="text/css" href="/source/Vendor/markitup/skins/simple/style.css" />
-            <link rel="stylesheet" type="text/css" href="/source/Vendor/markitup/sets/default/style.css" />
+            <link rel="stylesheet" type="text/css" href="/source/Vendor/markitup/sets/html/style.css" />
 
             <!-- own js -->
             <script src="/source/javascript.js"></script>
