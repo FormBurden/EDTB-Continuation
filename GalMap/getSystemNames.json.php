@@ -13,7 +13,6 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     exit;
 }
 
-// Helpers
 function table_exists(mysqli $db, string $table): bool {
     $table = $db->real_escape_string($table);
     $res = $db->query("SHOW TABLES LIKE '{$table}'");
@@ -30,7 +29,6 @@ function has_named_coords(mysqli $db, string $table): bool {
     return false;
 }
 
-// choose source
 $candidates = ['edtb_systems', 'systems', 'eddb_systems'];
 $source = null;
 foreach ($candidates as $cand) {
@@ -43,6 +41,8 @@ if (!$source) {
 
 $q = trim((string)($_GET['q'] ?? ''));
 $limit = (int)($_GET['limit'] ?? 15);
+$exact = isset($_GET['exact']) && $_GET['exact'] !== '0' && $_GET['exact'] !== 'false';
+
 if ($limit <= 0) $limit = 15;
 if ($limit > 100) $limit = 100;
 
@@ -51,25 +51,38 @@ if ($q === '') {
     exit;
 }
 
-$like1 = $q . '%';
-$like2 = '% ' . $q . '%';
-
-$sql = "SELECT name, x, y, z
-        FROM `{$source}`
-        WHERE name LIKE ? OR name LIKE ?
-        ORDER BY name ASC
-        LIMIT {$limit}";
-
 $out = [];
-if ($stmt = $mysqli->prepare($sql)) {
-    $stmt->bind_param('ss', $like1, $like2);
-    if ($stmt->execute()) {
-        $stmt->bind_result($name, $x, $y, $z);
-        while ($stmt->fetch()) {
-            $out[] = ['name' => (string)$name, 'x' => (float)$x, 'y' => (float)$y, 'z' => (float)$z];
+
+if ($exact) {
+    $sql = "SELECT name, x, y, z FROM `{$source}` WHERE name = ? LIMIT 1";
+    if ($stmt = $mysqli->prepare($sql)) {
+        $stmt->bind_param('s', $q);
+        if ($stmt->execute()) {
+            $stmt->bind_result($name, $x, $y, $z);
+            while ($stmt->fetch()) {
+                $out[] = ['name' => (string)$name, 'x' => (float)$x, 'y' => (float)$y, 'z' => (float)$z];
+            }
         }
+        $stmt->close();
     }
-    $stmt->close();
+} else {
+    $like1 = $q . '%';
+    $like2 = '% ' . $q . '%';
+    $sql = "SELECT name, x, y, z
+            FROM `{$source}`
+            WHERE name LIKE ? OR name LIKE ?
+            ORDER BY name ASC
+            LIMIT {$limit}";
+    if ($stmt = $mysqli->prepare($sql)) {
+        $stmt->bind_param('ss', $like1, $like2);
+        if ($stmt->execute()) {
+            $stmt->bind_result($name, $x, $y, $z);
+            while ($stmt->fetch()) {
+                $out[] = ['name' => (string)$name, 'x' => (float)$x, 'y' => (float)$y, 'z' => (float)$z];
+            }
+        }
+        $stmt->close();
+    }
 }
 
 echo json_encode(['suggestions' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

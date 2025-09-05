@@ -1672,6 +1672,7 @@ fieldset {
   top: 0;
   right: 0;
   z-index: 1000;
+  pointer-events: none;
   background-color: rgba(30, 30, 30, 0.9); }
   #loader svg {
     margin: 150px auto;
@@ -2148,4 +2149,19 @@ img {
   position: relative;
   z-index: 100000200;
   /* keep inputs/buttons higher than any page overlay */
+}
+/* GalMap: keep controls above the ED3D canvas/hud */
+#galmap-form {
+  position: relative;
+  z-index: 50;
+}
+
+#ed3dmap {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+}
+
+#ed3dmap .hudPanel {
+  z-index: 2;
 }
