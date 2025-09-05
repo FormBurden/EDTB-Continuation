@@ -84,10 +84,11 @@
 │   ├── Schema.php
 │   └── Vendor
 │       └── MySQL_table_edit
+├── debug
+│   └── php_lint_datapoint.txt
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
-├── edtb_ff_5s.tar.gz
 ├── edtb_ff_attach_test.tmp
 │   └── browser
 │       ├── console.ndjson
@@ -95,6 +96,9 @@
 │       ├── network.ndjson
 │       └── perf.json
 ├── .edtb-files.txt
+├── edtb_galmap_enter_fix.tar.gz
+├── edtb_galmap_loader_fix.tar.gz
+├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -243,7 +247,8 @@
 │       ├── Powers
 │       ├── Rares
 │       ├── Stations
-│       └── System
+│       ├── System
+│       └── Toolbox
 ├── structure.txtn
 ├── style
 │   ├── fonts
@@ -468,4 +473,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-77 directories, 392 files
+79 directories, 395 files

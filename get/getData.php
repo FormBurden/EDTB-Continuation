@@ -44,7 +44,7 @@ require_once __DIR__ . '/../source/functions.php';
 require_once __DIR__ . '/../source/MySQL.php';
 /** @require curSys */
 require_once __DIR__ . '/../source/curSys.php';
-
+require_once __DIR__ . '/../src/Domain/Toolbox/ToolboxService.php';
 /** safer array get */
 function _g(array $a, string $k, $d=null) { return array_key_exists($k,$a) ? $a[$k] : $d; }
 
@@ -165,65 +165,27 @@ if ((isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])
  * If we've arrived in a new system or
  * are requesting page for the first time
  */
-$data['update_in_progress'] = 'false';
-$data['update_notification_data'] = 'false';
-if ($newSystem !== false || $request == 0) {
-    /**
-     * update system and station data in the background if last update was more than 6 hours ago
+    if ($newSystem !== false || $request == 0) {
+
+    $data['update_in_progress']    = 'false';
+    $data['update_notification']   = '';
+    $data['update_notification_data'] = 'false';
+
+    $up = \EDTB\Domain\Toolbox\ToolboxService::updateStatusAndAutoUpdate($settings, $newSystem, (int)$request);
+    $data['update_in_progress']      = $up['update_in_progress'];
+    $data['update_notification']     = $up['update_notification'];
+    $data['update_notification_data'] = $up['update_notification_data'];
+
+
+        /**
+     * update galmap json / new system tag / current system & coords
+     * (extracted to service for ED Toolbox refactor)
      */
-    $lastUpdate = edtbCommon('last_data_update', 'unixtime');
-    $timeFrame = time() - 6 * 60 * 60;
-
-    $autoUpdateEnabled = $settings['data_auto_update'] ?? true;
-
-    // run update script
-    if ($autoUpdateEnabled !== 'false' && $lastUpdate < $timeFrame) {
-        // fetch last update start time
-        $lastDataUpdateStart = edtbCommon('last_data_update_start', 'unixtime');
-        $startTimeFrame = time() - 160;
-
-        if ($lastDataUpdateStart < $startTimeFrame) {
-            $batchFile = $settings['install_path'] . '/bin/UpdateData/updatedata_bg.bat';
-            $vbsFile = $settings['install_path'] . '/bin/UpdateData/runbat.vbs';
-
-            if (file_exists($batchFile) && file_exists($vbsFile)) {
-                edtbCommon('last_data_update_start', 'unixtime', true, time());
-
-                pclose(popen('"' . $vbsFile . '"' . ' ' . '"' . $batchFile . '"', 'r'));
-
-                $data['update_in_progress'] = 'true';
-                $data['update_notification'] .= '<a href="javascript:void(0)" title="Data update in progress" onclick="$(\'#notice\').fadeToggle(\'fast\')">';
-                $data['update_notification'] .= '<img src="/style/img/notice.png" class="icon26" alt="Update">';
-                $data['update_notification'] .= '</a>';
-                $data['update_notification_data'] = 'System and station data is being updated in the background.<br><br>';
-                $data['update_notification_data'] .= 'You can continue using ED ToolBox normally.';
-            } else {
-                write_log('Error: ' . $batchFile . " doesn't exist");
-            }
-        }
-    }
-
-    /**
-     * update galmap json if system is new or file doesn't exist
-     * or if last update was more than an hour ago
-     */
-    $data['update_map'] = 'false';
-    $lastMapUpdate = edtbCommon('last_map_update', 'unixtime');
-    $mapUpdateTimeFrame = time() - 1 * 60 * 60;
-
-    if ($newSystem !== false || !file_exists($_SERVER['DOCUMENT_ROOT'] . '/GalMap/map_points.json') ||
-        $lastMapUpdate < $mapUpdateTimeFrame
-    ) {
-        $data['update_map'] = 'true';
-    }
-
-    $data['new_sys'] = 'false';
-    if ($newSystem !== false) {
-        $data['new_sys'] = 'true';
-    }
-
-    $data['current_system_name'] = $curSys['name'] ?? '';
-    $data['current_coordinates'] = $curSys['coordinates'] ?? null;
+    $augment = \EDTB\Domain\Toolbox\ToolboxService::mapAndCurrent($curSys, $newSystem);
+    $data['update_map']          = $augment['update_map'];
+    $data['new_sys']             = $augment['new_sys'];
+    $data['current_system_name'] = $augment['current_system_name'];
+    $data['current_coordinates'] = $augment['current_coordinates'];
 
     /**
      * Data for the left column

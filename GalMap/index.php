@@ -161,32 +161,7 @@ $header->displayHeader();
         })
         .catch(function () { if (cb) cb(false); });
     }
-    // ----- center-system -> coords lookup (fills x/y/z, then cb) -----
-    function lookupCenterSystem(name, cb) {
-      if (!name) { if (cb) cb(false); return; }
-      var url = new URL('getMapPoints.json.php', window.location.href);
-      url.searchParams.set('limit', '1');
-      url.searchParams.set('center_system', name);
-      url.searchParams.set('maxdistance', '1');
-
-      fetch(url.toString(), { credentials: 'same-origin' })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (data && data.systems && data.systems.length) {
-            var c = data.systems[0].coords || {};
-            if (typeof c.x !== 'undefined' && typeof c.y !== 'undefined' && typeof c.z !== 'undefined') {
-              document.getElementById('gm_cx').value = c.x;
-              document.getElementById('gm_cy').value = c.y;
-              document.getElementById('gm_cz').value = c.z;
-              if (cb) cb(true, c);
-              return;
-            }
-          }
-          if (cb) cb(false);
-        })
-        .catch(function () { if (cb) cb(false); });
-    }
-
+    
     // Rebuild map with new data source (ED3D supports a rebuild call)
     function applyFilters() {
       var url = jsonURL();
@@ -215,13 +190,14 @@ $header->displayHeader();
       }
     });
 
-    // Pressing Enter in the "center system" box triggers the same flow
+    // Pressing Enter in "center system" triggers the same flow
     document.getElementById('gm_center_system').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
         document.getElementById('gm_apply').click();
       }
     });
+
 
     // Auto-fill coords when a center system is entered
     var csInput = document.getElementById('gm_center_system');
