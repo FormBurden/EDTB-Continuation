@@ -2165,3 +2165,35 @@ img {
 #ed3dmap .hudPanel {
   z-index: 2;
 }
+/* === EDTB Linux header: pin header icons to top-right === */
+.rightpanel-top {
+  position: relative;
+}
+
+.rightpanel-icons {
+  position: absolute;
+  right: 14px;
+  top: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 1002;
+}
+
+.rightpanel-icons img.elite_emb {
+  width: 22px;
+  height: 22px;
+  opacity: .95;
+}
+/* === EDTB Linux: force settings/about panels to viewport top-right === */
+#settings,
+#about {
+  position: fixed;
+  /* ignore parent layout */
+  top: 64px;
+  /* just below the blue header strip */
+  right: 16px;
+  left: auto !important;
+  z-index: 1003;
+  /* above overlays */
+}

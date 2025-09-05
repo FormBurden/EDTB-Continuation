@@ -10,7 +10,7 @@ global $settings, $api;
 
             <!-- page title and search systems & stations -->
             <div class="rightpanel-title">
-                <div id="pageTitle"><?= htmlspecialchars($this->pageTitle)?></div>
+            <div id="pageTitle"><?= $this->pageTitle?></div>
                 <div id="quicksearch">
                     <form id="searchform" method="get" action="/NearestSystems/">
                         <input type="text" class="textbox" id="sys_jump" name="system_name" placeholder="Find a system..." oninput="showResult(this.value, '0')">
@@ -18,6 +18,17 @@ global $settings, $api;
                     </form>
                 </div>
             </div>
+            <!-- settings & about -->
+            <div class="rightpanel-icons">
+                <a href="javascript:void(0)" id="settings_click" title="Settings">
+                    <img src="/style/img/settings.png" alt="Settings" class="elite_emb">
+                </a>
+                <a href="javascript:void(0)" id="about_click" title="About">
+                    <img src="/style/img/about.png" alt="About" class="elite_emb">
+                </a>
+            </div>
+
+            <!-- session log -->
 
             <!-- session log -->
             <div id="seslog_wrap">
