@@ -164,5 +164,51 @@ class ToolboxService
 
         return '<img src="/style/img/music.png" class="icon" alt="Now playing">' . $nowplaying;
     }
+    /**
+     * Wrapper for get/getData_leftColumn.php (1:1 behavior).
+     * Returns keys: system_title, system_info, station_data (if set).
+     *
+     * @param array $settings
+     * @param array $curSys
+     * @return array
+     */
+    public static function leftColumn(array $settings, array $curSys): array
+    {
+        global $mysqli;
+        $data = [];
+        $base = dirname(__DIR__, 3);
+        include $base . '/get/getData_leftColumn.php';
+        $out = [];
+        foreach (['system_title','system_info','station_data'] as $k) {
+            if (isset($data[$k])) {
+                $out[$k] = $data[$k];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Wrapper for System/getData_systemInfo.php (1:1 behavior).
+     * Returns keys: si_name, si_stations, si_detailed (if set).
+     *
+     * @param array $settings
+     * @param array $curSys
+     * @return array
+     */
+    public static function systemInfo(array $settings, array $curSys): array
+    {
+        global $mysqli;
+        $data = [];
+        $base = dirname(__DIR__, 3);
+        include $base . '/System/getData_systemInfo.php';
+        $out = [];
+        foreach (['si_name','si_stations','si_detailed'] as $k) {
+            if (isset($data[$k])) {
+                $out[$k] = $data[$k];
+            }
+        }
+        return $out;
+    }
 }
+
 

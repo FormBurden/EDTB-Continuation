@@ -144,12 +144,14 @@ if ((isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])
     /**
      * Data for the left column
      */
-    require_once __DIR__ . '/../get/getData_leftColumn.php';
+    $data = array_merge($data, \EDTB\Domain\Toolbox\ToolboxService::leftColumn($settings, $curSys));
+
 
     /**
      * Stuff specifically for System.php
      */
-    require_once __DIR__ . '/../System/getData_systemInfo.php';
+    $data = array_merge($data, \EDTB\Domain\Toolbox\ToolboxService::systemInfo($settings, $curSys));
+
 
     /**
      * System and general logs

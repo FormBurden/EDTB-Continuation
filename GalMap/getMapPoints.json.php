@@ -156,6 +156,28 @@ $sourceTable = pick_first_existing_table($mysqli, [
     'systems',
     'eddb_systems'
 ]);
+// If the first existing table has no populated names/coords, fall back.
+if ($sourceTable) {
+    $probeSql = "SELECT 1 FROM `{$sourceTable}` WHERE name IS NOT NULL AND name <> '' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL LIMIT 1";
+    $probe = $mysqli->query($probeSql);
+    $hasData = $probe && $probe->num_rows > 0;
+    if ($probe) { $probe->free(); }
+    if (!$hasData) {
+        // Try 'systems' then 'eddb_systems' explicitly
+        foreach (['systems', 'eddb_systems'] as $alt) {
+            if ($alt !== $sourceTable && table_exists($mysqli, $alt)) {
+                $probeAlt = $mysqli->query("SELECT 1 FROM `{$alt}` WHERE name IS NOT NULL AND name <> '' AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL LIMIT 1");
+                if ($probeAlt && $probeAlt->num_rows > 0) {
+                    $sourceTable = $alt;
+                    $probeAlt->free();
+                    break;
+                }
+                if ($probeAlt) { $probeAlt->free(); }
+            }
+        }
+    }
+}
+
 if (!$sourceTable) {
     echo json_encode([], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
@@ -279,5 +301,10 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->free();
 
-echo json_encode(['systems' => $out, 'resolved_center' => ($resolvedCenter ?? null)], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$payload = ['systems' => $out];
+if (!empty($_GET['debug'])) {
+    $dbRow = $mysqli->query('SELECT DATABASE() AS db')->fetch_assoc() ?: [];
+    $payload['debug'] = ['db' => ($dbRow['db'] ?? null), 'source_table' => $sourceTable];
+}
+echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
