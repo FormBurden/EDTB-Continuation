@@ -13,53 +13,49 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     exit;
 }
 
-// Helpers (local)
-function table_exists(mysqli $db, string $name): bool {
-    $name = $db->real_escape_string($name);
-    $res = $db->query("SHOW TABLES LIKE '{$name}'");
-    if ($res) { $ok = $res->num_rows > 0; $res->free(); return $ok; }
-    return false;
-}
-function table_has_named_coords(mysqli $db, string $table): bool {
+// Helpers
+function table_exists(mysqli $db, string $table): bool {
     $table = $db->real_escape_string($table);
-    $sql = "SELECT 1 FROM `{$table}`
-            WHERE name IS NOT NULL AND name <> ''
-              AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL
+    $res = $db->query("SHOW TABLES LIKE '{$table}'");
+    return (bool)$res && $res->num_rows > 0;
+}
+function has_named_coords(mysqli $db, string $table): bool {
+    $table = $db->real_escape_string($table);
+    $sql = "SELECT 1 FROM `{$table}` 
+            WHERE name IS NOT NULL AND name <> '' 
+              AND x IS NOT NULL AND y IS NOT NULL AND z IS NOT NULL 
             LIMIT 1";
     $res = $db->query($sql);
     if ($res) { $ok = $res->num_rows > 0; $res->free(); return $ok; }
     return false;
 }
 
-// Pick source table (prefer edtb_systems → systems → eddb_systems)
-$sourceCandidates = ['edtb_systems', 'systems', 'eddb_systems'];
-$sourceTable = null;
-foreach ($sourceCandidates as $cand) {
-    if (table_exists($mysqli, $cand) && table_has_named_coords($mysqli, $cand)) {
-        $sourceTable = $cand;
-        break;
-    }
+// choose source
+$candidates = ['edtb_systems', 'systems', 'eddb_systems'];
+$source = null;
+foreach ($candidates as $cand) {
+    if (table_exists($mysqli, $cand) && has_named_coords($mysqli, $cand)) { $source = $cand; break; }
 }
-if (!$sourceTable) {
-    echo json_encode(['suggestions' => []], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+if (!$source) {
+    echo json_encode(['suggestions' => [], 'debug' => ['reason' => 'no_viable_source_table']], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Params
 $q = trim((string)($_GET['q'] ?? ''));
-$limit = max(1, (int)($_GET['limit'] ?? 15));
-if ($q === '' || mb_strlen($q) < 2) {
+$limit = (int)($_GET['limit'] ?? 15);
+if ($limit <= 0) $limit = 15;
+if ($limit > 100) $limit = 100;
+
+if ($q === '') {
     echo json_encode(['suggestions' => []], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Prefix match + word-boundary-ish match
 $like1 = $q . '%';
 $like2 = '% ' . $q . '%';
 
-// NOTE: LIMIT is injected after int cast (MySQL param placeholders + LIMIT is flaky in mysqli)
 $sql = "SELECT name, x, y, z
-        FROM `{$sourceTable}`
+        FROM `{$source}`
         WHERE name LIKE ? OR name LIKE ?
         ORDER BY name ASC
         LIMIT {$limit}";

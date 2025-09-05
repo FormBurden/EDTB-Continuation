@@ -96,8 +96,6 @@
 │       ├── network.ndjson
 │       └── perf.json
 ├── .edtb-files.txt
-├── edtb_galmap_enter_fix.tar.gz
-├── edtb_galmap_loader_fix.tar.gz
 ├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
 │   ├── bin
@@ -129,7 +127,10 @@
 │       └── spgm
 ├── GalMap
 │   ├── getMapPoints.json.php
+│   ├── getSystemNames.json.php
 │   ├── index.php
+│   ├── js
+│   │   └── galmap.js
 │   ├── lib
 │   │   └── GalMapParams.php
 │   └── Vendor
@@ -231,6 +232,7 @@
 │       ├── clipboard.min.js
 │       ├── codemirror
 │       ├── color-thief.js
+│       ├── Highcharts -> /mnt/Unlimited-Gaming/Modding/Elite Dangerous/MyProject/EDTB-Continuation-Clean/Map/Vendor/Highcharts
 │       ├── jquery-2.2.0.min.js
 │       ├── jquery-ui-1.11.4
 │       ├── markitup
@@ -473,4 +475,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-79 directories, 395 files
+81 directories, 395 files

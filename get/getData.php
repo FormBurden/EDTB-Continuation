@@ -142,10 +142,24 @@ if ((isset($settings['nowplaying_file']) && !empty($settings['nowplaying_file'])
     $data['current_system_name'] = $augment['current_system_name'];
     $data['current_coordinates'] = $augment['current_coordinates'];   
 
-    require __DIR__ . '/getData_leftColumn.php';
+    $__left = (function() use ($settings, $curSys, $mysqli, $api) {
+        $data = [];
+        require __DIR__ . '/getData_leftColumn.php';
+        return [
+            'system_title' => $data['system_title'] ?? '',
+            'system_info'  => $data['system_info']  ?? '',
+            'station_data' => $data['station_data'] ?? '',
+        ];
+    })();
+    
 
 
     require_once __DIR__ . '/../System/getData_systemInfo.php';
+    // re-apply left column fields after systemInfo include (in case it reset $data)
+    $data['system_title'] = $__left['system_title'];
+    $data['system_info']  = $__left['system_info'];
+    $data['station_data'] = $__left['station_data'];
+    
 
     /**
      * System and general logs
