@@ -785,8 +785,7 @@ class MySQLtabledit
          * Search form + Add Record button
          */
         foreach ($this->fieldsInListView as $option) {
-            $showOption = $this->showText[$option] ? $this->showText[$option] : $option;
-
+            $showOption = $this->labelFor($option);
             $options .= $option == $inSearchField ? '<option selected value="' . $option . '">' . $showOption . '</option>' : '<option value="' . $option . '">' . $showOption . '</option>';
         }
         unset($option);
