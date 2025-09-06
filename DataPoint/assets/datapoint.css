@@ -1,0 +1,257 @@
+:root {
+	--dp-accent: #2ca0c9;
+	--dp-accent-press: #1c7ea1;
+	--dp-bg: #0b0f14;
+	--dp-card: #101720;
+	--dp-muted: #9fb8c3;
+	--dp-border: #1c2833;
+	--dp-green: #3aa269;
+	--dp-red: #d36262;
+	--dp-amber: #d0a54c;
+}
+
+/* Title pill bar (classic) */
+.dp-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 0;
+	margin-bottom: 6px;
+}
+
+.dp-title-pill {
+	display: inline-block;
+	padding: 6px 12px;
+	border-radius: 999px;
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	font-weight: 700;
+	letter-spacing: .3px;
+}
+
+.dp-gear {
+	cursor: pointer;
+	user-select: none;
+	font-size: 18px;
+	opacity: .8;
+}
+
+.dp-gear:hover {
+	opacity: 1;
+}
+
+/* Hidden table switcher (gear toggles) */
+.dp-switch {
+	display: none;
+	margin: 8px 0 14px;
+}
+
+.dp-switch select {
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	padding: 6px 8px;
+	border-radius: 6px;
+}
+
+/* Controls row */
+.dp-controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 8px 0 10px;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.dp-controls .left,
+.dp-controls .right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.dp-button {
+	display: inline-block;
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	padding: 6px 10px;
+	border-radius: 6px;
+	text-decoration: none;
+}
+
+.dp-button:hover {
+	border-color: var(--dp-accent);
+	color: #fff;
+}
+
+/* Boolean pills */
+.dp-bool {
+	display: inline-block;
+	padding: 2px 7px;
+	border-radius: 999px;
+	font-size: 12px;
+	border: 1px solid var(--dp-border);
+}
+
+.dp-bool.yes {
+	background: #0f1419;
+	color: #b9f4c8;
+	border-color: #214b37;
+}
+
+.dp-bool.no {
+	background: #141010;
+	color: #f3b5b5;
+	border-color: #4b2121;
+}
+
+/* Quick filter chips */
+#dp-quickfilters {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 4px 0 10px;
+	flex-wrap: wrap;
+}
+
+.dp-chip {
+	display: inline-block;
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	border-radius: 999px;
+	padding: 6px 10px;
+	cursor: pointer;
+	user-select: none;
+	font-size: 12px;
+}
+
+.dp-chip:hover {
+	border-color: var(--dp-accent);
+	color: #fff;
+}
+
+.dp-chip b {
+	font-weight: 700;
+}
+
+/* Preset selector */
+.dp-preset {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.dp-hidden {
+	display: none !important;
+}
+
+/* MTE table theming */
+.dp-mte table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.dp-mte thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: linear-gradient(#131b25, #0e141c);
+	color: #cfe8f1;
+	border-bottom: 1px solid var(--dp-border);
+	padding: 8px 8px;
+}
+
+.dp-mte tbody td {
+	border-top: 1px solid var(--dp-border);
+	padding: 9px 8px;
+}
+
+.dp-mte tbody tr:hover {
+	background: #111820;
+}
+
+/* Pagination variants */
+.dp-mte .mte_navigation,
+.dp-mte .mte_pages,
+.dp-mte .pages {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 8px 0 12px;
+}
+
+.dp-mte .mte_navigation a,
+.dp-mte .mte_pages a,
+.dp-mte .pages a {
+	display: inline-block;
+	padding: 4px 9px;
+	border-radius: 5px;
+	background: #0f1419;
+	color: #9fb8c3;
+	text-decoration: none;
+	border: 1px solid var(--dp-border);
+}
+
+.dp-mte .mte_navigation a:hover,
+.dp-mte .mte_pages a:hover,
+.dp-mte .pages a:hover {
+	color: #cfe8f1;
+	border-color: var(--dp-accent);
+}
+
+.dp-mte .current,
+.dp-mte .mte_selected_page {
+	display: inline-block;
+	padding: 4px 9px;
+	border-radius: 5px;
+	background: #0f1419;
+	border: 1px solid var(--dp-accent);
+	color: #fff;
+}
+
+/* Vendor search bar normalization */
+.dp-mte .mte_search {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 6px 0 8px;
+}
+
+.dp-mte .mte_search select,
+.dp-mte .mte_search input[type="text"],
+.dp-mte .mte_search input[type="search"] {
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	padding: 6px 8px;
+	border-radius: 6px;
+}
+
+/* Vendor inline form inputs */
+.dp-mte input[type="text"],
+.dp-mte input[type="number"],
+.dp-mte textarea,
+.dp-mte select {
+	background: #0f1419;
+	color: #cfe8f1;
+	border: 1px solid var(--dp-border);
+	padding: 6px 8px;
+	border-radius: 6px;
+}
+
+.dp-mte input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
+/* “Distance sort” button color */
+.dp-button.dp-dist {
+	border-color: #2a3742;
+}
