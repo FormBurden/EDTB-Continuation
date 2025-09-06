@@ -86,6 +86,8 @@ require_once $ROOT . '/System/Formatters/SystemInfoFormatters.php';
 require_once $ROOT . '/System/Services/SystemInfoDetails.php';
 require_once $ROOT . '/System/Services/SystemInfoStations.php';
 require_once $ROOT . '/System/Services/SystemInfoRares.php';
+require_once $ROOT . '/System/Services/SystemInfoHeader.php';
+
 
 
 
@@ -294,18 +296,16 @@ list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock(
 );
 
 
-$rareText = buildRaresMiniLabel((int)$actualNumRes, $settings['rare_range'] ?? 50.0, $cRaresData, $curSys['x'] ?? null, $curSys['y'] ?? null, $curSys['z'] ?? null);
+$data['si_name'] .= renderSystemHeaderHtml(
+    (string)$siSystemDisplayName,
+    (string)$siCrosslinks,
+    (string)$siSystemState,
+    (string)$siSystemSecurity,
+    (int)$numVisits,
+    (string)$rareText,
+    (string)$userDists
+);
 
-$data['si_name'] .= $siSystemDisplayName . $siCrosslinks;
-$data['si_name'] .= '&nbsp;&nbsp;<span style="font-size: 11px;  text-transform: uppercase; vertical-align: middle">';
-$data['si_name'] .= formatSiHeaderMeta($siSystemState, $siSystemSecurity, (int)$numVisits);
-$data['si_name'] .= $rareText . $userDists . '</span>';
-$data['si_stations'] = renderStationsHtml($mysqli, (int)$siSystemId);
-
-
-/**
- * detailed system info
- */
 $getSystemId   = $_GET['system_id']   ?? 'undefined';
 $getSystemName = $_GET['system_name'] ?? 'undefined';
 
