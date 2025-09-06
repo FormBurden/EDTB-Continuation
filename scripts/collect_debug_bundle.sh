@@ -334,9 +334,57 @@ fi
 
 
 fi
+# Build a checksums file inside the bundle root
+CHECKSUM_FILE="$TMPDIR/CHECKSUMS.txt"
+{
+  echo "### EDTB Debug Bundle Checksums"
+  echo "### Bundle Name: $BUNDLE_NAME"
+  echo "### Created UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  echo
+
+  # Requested files from --from .edtb-files.txt (copied under requested/)
+  if [[ -d "$TMPDIR/requested" ]]; then
+    (
+      cd "$TMPDIR/requested"
+      find . -type f -print0 | LC_ALL=C sort -z | \
+      while IFS= read -r -d '' f; do
+        printf '### %s\n' "requested/${f#./}"
+        sha256sum "$f"
+      done
+    )
+  fi
+
+  # Logs (if present and not excluded)
+  if [[ -d "$TMPDIR/logs" ]]; then
+    (
+      cd "$TMPDIR/logs"
+      find . -type f -print0 | LC_ALL=C sort -z | \
+      while IFS= read -r -d '' f; do
+        printf '### %s\n' "logs/${f#./}"
+        sha256sum "$f"
+      done
+    )
+  fi
+
+  # Firefox debug capture (browser/)
+  if [[ -d "$TMPDIR/browser" ]]; then
+    (
+      cd "$TMPDIR/browser"
+      find . -type f -print0 | LC_ALL=C sort -z | \
+      while IFS= read -r -d '' f; do
+        printf '### %s\n' "browser/${f#./}"
+        sha256sum "$f"
+      done
+    )
+  fi
+} > "$CHECKSUM_FILE"
+
 TARBALL="$ROOT/${BUNDLE_NAME}.tar.gz"
 tar -C "$TMPDIR" -czf "$TARBALL" .
 rm -rf "$TMPDIR"
+TARBALL_SHA256="$(sha256sum "$TARBALL" | awk '{print $1}')"
+
 
 echo "Bundle created: ${TARBALL}" | redact_host
+echo "SHA256: ${TARBALL_SHA256}"
 echo "Upload that tar.gz here."
