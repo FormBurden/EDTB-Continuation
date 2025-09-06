@@ -51,7 +51,7 @@ final class RaresRepository
                       + pow((edtb_systems.z-(' . $cz . ')),2)
                     ) AS distance,
                     edtb_rares.item, edtb_rares.system_name, edtb_rares.station,
-                    edtb_rares.sc_est_mins, edtb_rares.ls_to_star,
+                    edtb_rares.ls_to_star,
                     edtb_rares.needs_permit, edtb_rares.max_landing_pad_size,
                     edtb_systems.x, edtb_systems.y, edtb_systems.z
 

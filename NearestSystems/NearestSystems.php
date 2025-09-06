@@ -42,12 +42,11 @@ use \EDTB\source\System;
 
 
 require_once __DIR__ . '/Traits/DbTrait.php';
-require_once __DIR__ . '/Traits/ParamsTrait.php';
-require_once __DIR__ . '/Traits/QueryTrait.php';
-require_once __DIR__ . '/Traits/FiltersTrait.php';
 require_once __DIR__ . '/Traits/ContentTrait.php';
 require_once __DIR__ . '/Formatters/Table.php';
 require_once __DIR__ . '/Services/NearestSystemsQuery.php';
+require_once __DIR__ . '/Params/NearestSystemsParams.php';
+
 
 
 
@@ -58,7 +57,8 @@ require_once __DIR__ . '/Services/NearestSystemsQuery.php';
  */
 class NearestSystems
 {
-    use NearestSystemsDbTrait, NearestSystemsParamsTrait, NearestSystemsQueryTrait, NearestSystemsFiltersTrait, NearestSystemsContentTrait;
+    use NearestSystemsDbTrait, NearestSystemsContentTrait;
+
 
     /** @var string $system the system to use as a starting point */
     public $system;
@@ -154,20 +154,24 @@ class NearestSystems
         }
     }
 
-    /**
-     *
-     * @return string
-     */
     public function nearest()
     {
-        $this->getQueryParams();
+        // Build params (replaces getQueryParams)
+        $built = NearestSystemsParams::build($_GET);
+        $this->addToQuery       .= $built['addToQuery'];
+        $this->powerParams      .= $built['powerParams'];
+        $this->allegianceParams .= $built['allegianceParams'];
 
-        $this->getQuery();
-
-        $this->filters();
+        // Build main SQL (replaces getQuery + filters)
+        $svc   = new NearestSystemsQuery($this->mysqli, $this->useX, $this->useY, $this->useZ);
+        $built = $svc->build($_GET, $this->addToQuery);
+        $this->mainQuery = $built['sql'];
+        $this->stations  = $built['stations'];
 
         $this->content();
     }
+
+
 
 
 
