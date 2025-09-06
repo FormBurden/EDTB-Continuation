@@ -98,6 +98,7 @@
 │       ├── network.ndjson
 │       └── perf.json
 ├── .edtb-files.txt
+├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -516,4 +517,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-94 directories, 423 files
+94 directories, 424 files

@@ -11,12 +11,17 @@ final class Bookmarks
     public static function fetch(\mysqli $mysqli, array $settings, array $curSys): array
     {
         $out = [];
-        $q = 'SELECT user_bookmarks.comment, user_bookmarks.added_on,
-                     edtb_systems.name AS system_name, edtb_systems.x, edtb_systems.y, edtb_systems.z,
-                     user_bm_categories.name AS category_name
-              FROM user_bookmarks
-              LEFT JOIN edtb_systems ON user_bookmarks.system_name = edtb_systems.name
-              LEFT JOIN user_bm_categories ON user_bookmarks.category_id = user_bm_categories.id';
+        $q = 'SELECT
+                    user_bookmarks.note AS comment,
+                    UNIX_TIMESTAMP(user_bookmarks.created_at) AS added_on,
+                    edtb_systems.name AS system_name,
+                    edtb_systems.x, edtb_systems.y, edtb_systems.z,
+                    \'Bookmark\' AS category_name
+            FROM user_bookmarks
+            LEFT JOIN edtb_systems
+                ON user_bookmarks.system_name COLLATE utf8mb4_unicode_ci
+                = edtb_systems.name COLLATE utf8mb4_unicode_ci';
+
         $res = $mysqli->query($q) or \write_log($mysqli->error, __FILE__, __LINE__);
 
         while ($row = $res->fetch_object()) {

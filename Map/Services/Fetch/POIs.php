@@ -13,7 +13,7 @@ final class POIs
         $out = [];
         $q = "SELECT up.name AS poi_name, up.system_name, es.x AS sx, es.y AS sy, es.z AS sz
             FROM user_poi AS up
-            LEFT JOIN edtb_systems AS es ON up.system_name = es.name";
+            LEFT JOIN edtb_systems AS es ON up.system_name COLLATE utf8mb4_unicode_ci = es.name COLLATE utf8mb4_unicode_ci";
 
         $res = $mysqli->query($q) or \write_log($mysqli->error, __FILE__, __LINE__);
         while ($row = $res->fetch_object()) {

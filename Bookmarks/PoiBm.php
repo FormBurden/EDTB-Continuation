@@ -45,6 +45,8 @@ class PoiBm
 
     /** @var int $timeDifference local time difference from UTC */
     public $timeDifference = 0;
+    /** @var \mysqli */ public \mysqli $mysqli;
+
 
     /**
      * PoiBm constructor.
