@@ -104,10 +104,70 @@ if [[ -n "$INCLUDE_FROM" ]]; then
   [[ -f "$INCLUDE_FROM" ]] || die "Not found: $INCLUDE_FROM"
   while IFS= read -r line; do [[ -n "${line// }" ]] && INCLUDE_PATHS+=("$line"); done <"$INCLUDE_FROM"
 fi
-if [[ $READ_STDIN -eq 1 ]]; then
-  while IFS= read -r line; do [[ -n "${line// }" ]] && INCLUDE_PATHS+=("$line"); done
+if (( READ_STDIN )); then
+  while IFS= read -r __line || [[ -n "$__line" ]]; do
+    [[ -z "$__line" || "$__line" =~ ^[[:space:]]*# ]] && continue
+    expand_and_add "$__line"
+  done
 fi
+
 [[ $NO_DEFAULTS -eq 0 ]] && add_default_paths
+# Expand entries like "dir/*" into all files inside that folder (non-recursive)
+expand_star_entries(){
+  local -a out=()
+  local rel dir f
+  shopt -s nullglob
+  for rel in "${INCLUDE_PATHS[@]}"; do
+    # normalize leading ./ if present
+    rel="${rel#./}"
+    if [[ "$rel" == */'*' ]]; then
+      dir="${rel%/*}"
+      if [[ -d "$ROOT/$dir" ]]; then
+        # include files in the directory, skip subdirectories
+        for f in "$ROOT/$dir"/*; do
+          [[ -f "$f" ]] || continue
+          out+=( "${f#$ROOT/}" )
+        done
+      else
+        # leave as-is; the normal validation will warn if not found
+        out+=( "$rel" )
+      fi
+    else
+      out+=( "$rel" )
+    fi
+  done
+  shopt -u nullglob
+  INCLUDE_PATHS=("${out[@]}")
+}
+# Expand any entry containing shell globs (e.g., "database/migrations/2025*.sql")
+expand_wildcard_entries(){
+  local -a out=()
+  local rel
+  local -a matches
+  shopt -s nullglob
+  for rel in "${INCLUDE_PATHS[@]}"; do
+    # normalize leading ./ if present
+    rel="${rel#./}"
+    if [[ "$rel" == *[\*\?\[]* ]]; then
+      # Safely expand against ROOT using compgen; keep files only
+      mapfile -t matches < <(compgen -G "$ROOT/$rel")
+      if (( ${#matches[@]} )); then
+        local m
+        for m in "${matches[@]}"; do
+          [[ -f "$m" ]] || continue
+          out+=( "${m#$ROOT/}" )
+        done
+      else
+        # No matches: keep the literal for normal validation/warnings
+        out+=( "$rel" )
+      fi
+    else
+      out+=( "$rel" )
+    fi
+  done
+  shopt -u nullglob
+  INCLUDE_PATHS=("${out[@]}")
+}
 
 # Bash-only dedupe
 dedupe_in_place(){
@@ -117,6 +177,8 @@ dedupe_in_place(){
   done
   INCLUDE_PATHS=("${uniq[@]}")
 }
+expand_wildcard_entries
+expand_star_entries
 dedupe_in_place
 
 # Validate

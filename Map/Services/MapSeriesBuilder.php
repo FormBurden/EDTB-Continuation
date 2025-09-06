@@ -37,9 +37,6 @@ final class MapSeriesBuilder
         if (self::truthy($settings['nmap_show_bookmarks'] ?? 'true')) {
             $pieces = array_merge($pieces, Bookmarks::fetch($mysqli, $settings, $curSys));
         }
-        if (self::truthy($settings['nmap_show_rares'] ?? 'true')) {
-            $pieces = array_merge($pieces, Rares::fetch($mysqli, $settings, $curSys));
-        }
         if (self::truthy($settings['nmap_show_visited_systems'] ?? 'true')) {
             $pieces = array_merge($pieces, Visited::fetch($mysqli, $settings, $curSys));
         }

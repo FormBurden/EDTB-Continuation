@@ -91,12 +91,6 @@
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
-├── edtb_ff_attach_test.tmp
-│   └── browser
-│       ├── console.ndjson
-│       ├── dom.html
-│       ├── network.ndjson
-│       └── perf.json
 ├── .edtb-files.txt
 ├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
@@ -517,4 +511,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-94 directories, 424 files
+92 directories, 420 files

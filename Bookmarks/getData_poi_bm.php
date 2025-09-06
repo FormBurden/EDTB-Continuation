@@ -122,14 +122,21 @@ $usez = $usable['z'];
                             up.system_name,
                             up.comment AS text,
                             up.created_at AS added_on,
-                            COALESCE(es.x, uso.x) AS x,
-                            COALESCE(es.y, uso.y) AS y,
-                            COALESCE(es.z, uso.z) AS z,
-                            user_bm_categories.name AS category_name
+                            COALESCE(es.x, uso.x) AS item_coordx,
+                            COALESCE(es.y, uso.y) AS item_coordy,
+                            COALESCE(es.z, uso.z) AS item_coordz,
+                            user_poi_categories.name AS catname
                     FROM user_poi AS up
-                    LEFT JOIN edtb_systems AS es ON up.system_name COLLATE utf8mb4_unicode_ci = es.name COLLATE utf8mb4_unicode_ci
-                    LEFT JOIN user_systems_own AS uso ON up.system_name COLLATE utf8mb4_unicode_ci = uso.name COLLATE utf8mb4_unicode_ci
-                    LEFT JOIN user_bm_categories ON up.category_id = user_bm_categories.id';
+                    LEFT JOIN edtb_systems AS es
+                      ON up.system_name COLLATE utf8mb4_unicode_ci
+                       = es.name COLLATE utf8mb4_unicode_ci
+                    LEFT JOIN user_systems_own AS uso
+                      ON up.system_name COLLATE utf8mb4_unicode_ci
+                       = uso.name COLLATE utf8mb4_unicode_ci
+                    LEFT JOIN user_poi_categories
+                      ON up.category_id = user_poi_categories.id';
+
+
 
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
