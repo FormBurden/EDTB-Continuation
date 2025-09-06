@@ -83,6 +83,10 @@ require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
 require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
 require_once $ROOT . '/System/Formatters/SystemInfoFormatters.php';
+require_once $ROOT . '/System/Services/SystemInfoDetails.php';
+require_once $ROOT . '/System/Services/SystemInfoStations.php';
+
+
 
 
 
@@ -365,228 +369,8 @@ $__chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_sch
 $hasStationsTable = ($__chk && $__chk->num_rows > 0); if ($__chk) { $__chk->close(); }
 $stationExists = 0;
 $systemId = isset($systemId) ? (int)$systemId : (int)($_GET['system_id'] ?? $_GET['id'] ?? 0);
-if (!$systemId && isset($curSys['id'])) { $systemId = (int)$curSys['id']; }
-$stations = \EDTB\Domain\Stations\StationsRepository::findBySystemId($mysqli, (int)$systemId);
+$data['si_stations'] = renderStationsHtml($mysqli, (int)$siSystemId);
 
-if ($hasStationsTable) {
-    $stationResult = \EDTB\Domain\Stations\StationsRepository::selectResultBySystemId($mysqli, (int)$siSystemId);
-    $stationExists = $stationResult->num_rows;
-    
-
-if ($stationExists == 0) {
-    $data['si_stations'] = 'No station data available';
-} else {
-    while ($stationObj = $stationResult->fetch_object()) {
-        $sName = $stationObj->name;
-        $fullTitle = trim((string)$stationObj->name);
-        $stationId = $stationObj->id;
-        $sName = buildStationTitleWithWiki((int)$stationId, $fullTitle);
-
-        $lsFromStar = $stationObj->ls_from_star;
-        $maxLandingPadSize = $stationObj->max_landing_pad_size;
-
-        $sFaction = empty($stationObj->faction) ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
-        $sDistanceFromStar = $lsFromStar == 0 ? '' : '' . number_format($lsFromStar) . ' ls - ';
-        $sInformation = '<span style="float: right;  margin-right: 8px">&boxur; &nbsp;' . $sDistanceFromStar . 'Landing pad: ' . $maxLandingPadSize . '</span><br>';
-        $sGovernment = empty($stationObj->government) ? 'Government unknown' : $stationObj->government;
-        $sAllegiance = empty($stationObj->allegiance) ? 'Allegiance unknown' : $stationObj->allegiance;
-
-        $sState = empty($stationObj->state) ? '' : '<strong>State:</strong> ' . $stationObj->state . '<br>';
-        $type = empty($stationObj->type) ? 'Type unknown' : $stationObj->type;
-        $economies = empty($stationObj->economies) ? 'Economies unknown' : $stationObj->economies;
-        $economies = empty($economies) ? 'Economies unknown' : $economies;
-
-        $commodityLines = buildCommodityLines($stationObj);
-        $sFaction = empty($stationObj->faction) ? '' : '<strong>Faction:</strong> ' . $stationObj->faction;
-        $outfittingUpdatedAgo = !empty($stationObj->outfitting_updated_at) ? 'Outfitting last updated: ' . get_timeago($stationObj->outfitting_updated_at, true, true) : '';
-        $shipyardUpdatedAgo = !empty($stationObj->shipyard_updated_at) ? ' (updated ' . get_timeago($stationObj->shipyard_updated_at, true, true) . ')' : '';
-
-        $sellingShips = empty($stationObj->selling_ships) ? '' : str_replace("'", '', (string)$stationObj->selling_ships) . $shipyardUpdatedAgo;
-
-        $sellingModules = '';
-
-        /**
-         * Information about the modules sold at the station
-         */
-        if (!empty($stationObj->selling_modules)) {
-            $modules = $stationObj->selling_modules;
-
-            $modulesS = explode('-', $modules);
-
-            $modulesT = '';
-            $lastClass = '';
-            $lastModuleName = '';
-            $lastCategoryName = '';
-
-            
-            $modCat = \EDTB\Domain\Stations\StationsRepository::modulesByIds($mysqli, $modulesS);
-
-
-            arsort($modCat);
-
-            $modulesT .= '<table style="margin-top: 10px">';
-            $modulesT .= '<tr>';
-            $modulesT .= '<td class="transparent" colspan="3" style="font-weight: 700">' . $outfittingUpdatedAgo . '</td>';
-            $modulesT .= '</tr>';
-
-            $modulesT .= '<tr style="vertical-align: top">';
-            foreach ($modCat as $key => $value) {
-                $mCategoryName = $key;
-                $modulesT .= '<td>';
-                $modulesT .= '<table style="margin-right: 10px">';
-                $modulesT .= '<tr>';
-                $modulesT .= '<td class="heading" colspan="3">';
-                $modulesT .= $mCategoryName;
-                $modulesT .= '</td>';
-                $modulesT .= '</tr>';
-
-                asort($value);
-
-                foreach ($value as $module) {
-                    $mName = $module['group_name'];
-                    $mClass = $module['class'];
-                    $mRating = $module['rating'];
-                    $mPrice = $module['price'];
-
-                    if ($mName !== $lastModuleName) {
-                        $modulesT .= '<tr>';
-                        $modulesT .= '<td class="dark" colspan="3">';
-                        $modulesT .= '<strong>' . $mName . '</strong>';
-                        $modulesT .= '</td>';
-                        $modulesT .= '</tr>';
-                        $lastClass = '';
-                    }
-
-                    $modulesT .= '<tr>';
-                    if ($mClass !== $lastClass) {
-                        $modulesT .= '<td class="light">Class ' . $mClass . '</td>';
-                    } else {
-                        $modulesT .= '<td class="transparent"></td>';
-                    }
-
-                    $modulesT .= '<td class="light">Rating ' . $mRating . '</td>';
-                    $modulesT .= '<td class="light">Price ' . number_format($mPrice) . '</td>';
-
-                    $lastModuleName = $mName;
-                    $lastClass = $mClass;
-                    $modulesT .= '</tr>';
-                }
-                $modulesT .= '</td></table>';
-            }
-
-            $modulesT .= '</tr></table>';
-
-            $sellingModules = '<br><br><div onclick="$(\'#modules_' . $stationId . '\').fadeToggle(\'fast\')">';
-            $sellingModules .= '<a href="javascript:void(0)"><img src="/style/img/plus.png" alt="plus" class="icon">Selling modules</a>';
-            $sellingModules .= '</div>';
-            $sellingModules .= '<div id="modules_' . $stationId . '" style="display: none">' . $modulesT . '</div>';
-        }
-
-        $shipyard = $stationObj->shipyard;
-        $outfitting = $stationObj->outfitting;
-        $commoditiesMarket = $stationObj->commodities_market;
-        $blackMarket = $stationObj->black_market;
-        $refuel = $stationObj->refuel;
-        $repair = $stationObj->repair;
-        $rearm = $stationObj->rearm;
-        $isPlanetary = $stationObj->is_planetary;
-
-        $icon = getStationIcon($type, $isPlanetary);
-
-        $facilities = facilitiesFromStation($stationObj);
-
-        $services = buildFacilitiesHtml($facilities, (int)$stationId);
-
-        $info = $sFaction . $sInformation . $commodityLines;
-        $info = str_replace("['", '', (string)$info);
-        $info = str_replace(["']", "', '"], ['', ', '], (string)$info);
-
-        $economies = str_replace("['", '', (string)$economies);
-        $economies = str_replace(["']", "', '"], ['', ', '], (string)$economies);
-
-        // get allegiance icon
-        $allegianceIcon = getAllegianceIcon($sAllegiance);
-
-        $data['si_stations'] .= '<div class="systeminfo_station" style="background-image: url(/style/img/' . $allegianceIcon . '); background-repeat: no-repeat; background-position: right 0 bottom -2px">';
-        //$data["si_stations"] .= '<div class="heading" onclick="$(\'#info_'.$stationId.'\').toggle();$(\'#prices_'.$stationId.'\').toggle()">';
-        $data['si_stations'] .= '<div class="heading">';
-        $data['si_stations'] .= $icon . $sName;
-
-        $data['si_stations'] .= '<span style="font-weight: 400; font-size: 10px">';
-        $data['si_stations'] .= '&nbsp;[ ' . $type . ' - ' . $sAllegiance . ' - ' . $sGovernment . ' - ' . $economies . ' ]';
-        $data['si_stations'] .= '</span>';
-
-        $data['si_stations'] .= '<span class="right">';
-        $data['si_stations'] .= '<a href="https://inara.cz/galaxy-station/?search=' . rawurlencode($stationObj->name . ' [' . $siSystemName . ']') . '" title="View station on INARA.cz" target="_blank">';
-        $data['si_stations'] .= '<img src="/style/img/eddb.png" alt="EDDB" style="width: 10px; height: 12px">';
-        $data['si_stations'] .= '</a>';
-        $data['si_stations'] .= '</span>';
-
-        $data['si_stations'] .= '</div>';
-
-        $data['si_stations'] .= '<div class="wpsearch" id="wpsearch_' . $stationId . '" style="display: none"></div>';
-
-        $data['si_stations'] .= '<div id="info_'. $stationId .'" class="systeminfo_station_info">';
-        $data['si_stations'] .= $info;
-        if ($info !== '') {
-            $data['si_stations'] .= '<br>';
-        }
-
-        $data['si_stations'] .= $services;
-        $data['si_stations'] .= $sellingShips;
-        $data['si_stations'] .= $sellingModules;
-        $data['si_stations'] .= '</div>';
-
-        // prices information
-        /**$query = "SELECT    listings.supply, listings.buy_price, listings.sell_price, listings.demand,
-                                        commodities.name, commodities.average_price, commodities.category_id, commodities.category
-                                        FROM listings
-                                        LEFT JOIN commodities ON listings.commodity_id = commodities.id
-                                        WHERE listings.station_id = '$stationEddbId'
-                                        ORDER BY commodities.category_id");
-
-        $data["si_stations"] .= '<div id="prices_'. $stationId .'" class="systeminfo_station_prices"><table width="100%">';
-
-            $curCat = "";
-            while ($arr3 = mysqli_fetch_assoc($pRes))
-            {
-                $categoryId = $arr3["category_id"];
-                $category = $arr3["category"];
-                $commodity = $arr3["name"];
-
-                $supply = $arr3["supply"];
-                $buy = $arr3["buy_price"];
-                $sell = $arr3["sell_price"];
-                $demand = $arr3["demand"];
-
-                $maxProfit = $arr4["profit"];
-
-                if ($curCat != $categoryId)
-                {
-                    $data["si_stations"] .= '<tr>';
-                        $data["si_stations"] .= '<td class="light">' . $category . '</td>';
-                        $data["si_stations"] .= '<td class="light">Supply</td>';
-                        $data["si_stations"] .= '<td class="light">Buy price</td>';
-                        $data["si_stations"] .= '<td class="light">Sell price</td>';
-                        $data["si_stations"] .= '<td class="light">Demand</td>';
-                    $data["si_stations"] .= '</tr>';
-                }
-
-                $data["si_stations"] .= '<tr>';
-                    $data["si_stations"] .= '<td class="dark">' . $commodity . '</td>';
-                    $data["si_stations"] .= '<td class="dark">' . number_format($supply) . '</td>';
-                    $data["si_stations"] .= '<td class="dark">' . number_format($buy) . '</td>';
-                    $data["si_stations"] .= '<td class="dark">' . number_format($sell) . '</td>';
-                    $data["si_stations"] .= '<td class="dark">' . number_format($demand) . '</td>';
-                $data["si_stations"] .= '</tr>';
-
-                
-            }
-        $data["si_stations"] .= '</table></div>'; */
-
-        $data['si_stations'] .= '</div>';
-    }
-}
 
 $stationResult->close();
 } else {
@@ -605,30 +389,17 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
     if ($siSystemPower !== 'None' && $siSystemPowerState !== 'None') {
         $escSystemPower = $mysqli->real_escape_string($siSystemPower);
 
-        $hq = \EDTB\Domain\Powers\PowersRepository::getHQSystemName($mysqli, $siSystemPower);
-
-
-        $siSystemData = '<a href="#" title="Headquarters: ' . $hq . '">' . $siSystemPower . '</a> [' . $siSystemPowerState . ']';
-    } elseif (empty($siSystemPower) && empty($siSystemPowerState)) {
-        $siSystemData = $siSystemPowerState;
-    } else {
-        $siSystemData = '';
-    }
-
-    $dispPopulation = is_numeric($siSystemPopulation) ? number_format($siSystemPopulation) : $siSystemPopulation;
-
-    $data['si_detailed'] .= '<img src="/style/img/powers/' . str_replace(' ', '_', $siSystemPower) . '.jpg" class="powerpic" alt="' . $siSystemPower . '"><br>';
-    $data['si_detailed'] .= '<span style="font-size: 13px; font-weight: 700">' . $siSystemData . '</span><br><br>';
-    $__rows = [];
-    if (!empty($siSystemAllegiance)    && $siSystemAllegiance    !== 'None') { $__rows[] = '<strong>Allegiance:</strong> ' . $siSystemAllegiance; }
-    if (!empty($siSystemGovernment)    && $siSystemGovernment    !== 'None') { $__rows[] = '<strong>Government:</strong> ' . $siSystemGovernment; }
-    if (is_numeric($siSystemPopulation) && (int)$siSystemPopulation > 0)      { $__rows[] = '<strong>Population:</strong> ' . number_format((int)$siSystemPopulation); }
-    if (!empty($siSystemEconomy)       && $siSystemEconomy       !== 'None') { $__rows[] = '<strong>Economy:</strong> '    . $siSystemEconomy; }
-    if (!empty($siSystemRulingFaction) && $siSystemRulingFaction !== 'None') { $__rows[] = '<strong>Faction:</strong> '    . $siSystemRulingFaction; }
-
-    if (!empty($__rows)) {
-        $data['si_detailed'] .= '<span>' . implode('<br>', $__rows) . '</span>';
-    }
+        $data['si_detailed'] .= buildSystemDetailsHtml(
+            $mysqli,
+            $siSystemPower,
+            $siSystemPowerState,
+            $siSystemPopulation,
+            $siSystemAllegiance,
+            $siSystemGovernment,
+            $siSystemEconomy,
+            $siSystemRulingFaction
+        );
+        
 
 
 }

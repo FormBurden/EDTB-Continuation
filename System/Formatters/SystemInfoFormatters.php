@@ -83,6 +83,7 @@ function buildStationTitleWithWiki(int $stationId, string $title): string
  * Build the system crosslinks strip and add the "Map this system" link if not mapped.
  */
 function buildSystemCrosslinks(string $systemName): string
+require_once $ROOT . '/System/Services/SystemInfoStations.php';
 {
     $out = \EDTB\source\System::crosslinks($systemName);
 
