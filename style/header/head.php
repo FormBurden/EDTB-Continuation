@@ -18,18 +18,13 @@ $title = isset($this->pageTitle) && $this->pageTitle !== ''
 <link rel="stylesheet" href="/style/style.css">
 <link rel="stylesheet" href="/style/colors.css">
 
-<!-- jQuery: use local if present; otherwise CDN fallback -->
-<script src="/style/js/jquery.min.js"></script>
-<script>
-  if (!window.jQuery) {
-    var s=document.createElement('script');
-    s.src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js";
-    s.integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==";
-    s.crossOrigin="anonymous";
-    document.head.appendChild(s);
-  }
-</script>
+<!-- jQuery: CDN first; if it fails, write local fallback synchronously -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous"></script>
+<script>window.jQuery || document.write('<script src="/style/js/jquery.min.js"><\/script>')</script>
 
 <script src="/style/js/edtb.js"></script>
+
 </head>
 
