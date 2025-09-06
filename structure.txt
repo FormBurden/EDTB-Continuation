@@ -98,7 +98,6 @@
 │       ├── network.ndjson
 │       └── perf.json
 ├── .edtb-files.txt
-├── edtb_safe_loader_check.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -181,6 +180,10 @@
 │   ├── getMapData.php
 │   ├── getMapPoints.js.php
 │   ├── index.php
+│   ├── Serializers
+│   │   └── HighchartsSeries.php
+│   ├── Services
+│   │   └── Fetch
 │   └── Vendor
 │       └── Highcharts
 ├── Marvin
@@ -275,13 +278,15 @@
 │       ├── System
 │       └── Toolbox
 ├── structure.txt
-├── structure.txtn
 ├── style
+│   ├── colors.css
 │   ├── fonts
 │   │   ├── EUROCAPS.TTF
 │   │   ├── Sintony-Bold.ttf
 │   │   ├── Sintony-Regular.ttf
 │   │   └── telegrama_render.otf
+│   ├── footer
+│   │   └── rightpanel.php
 │   ├── Footer.php
 │   ├── header
 │   │   ├── about.php
@@ -382,6 +387,9 @@
 │   │   ├── up.png
 │   │   ├── user.png
 │   │   └── vareditor.png
+│   ├── js
+│   │   ├── edtb.js
+│   │   └── jquery.min.js
 │   ├── SASS
 │   │   ├── _3dmap.sass
 │   │   ├── _data_point.sass
@@ -507,4 +515,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-89 directories, 419 files
+94 directories, 422 files
