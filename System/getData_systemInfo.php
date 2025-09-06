@@ -134,15 +134,15 @@ if ($hasSystemId || $hasSystemName) {
     $curSys['simbad_ref'] = isset($systemObj->simbad_ref) ? $systemObj->simbad_ref : '';
 
     $siSystemId           = $systemObj->id ?? null;
-    $siSystemPopulation   = (isset($systemObj->population) && $systemObj->population !== '') ? $systemObj->population : 'None';
-    $siSystemAllegiance   = (isset($systemObj->allegiance)   && $systemObj->allegiance   !== '') ? $systemObj->allegiance   : 'None';
-    $siSystemEconomy      = (isset($systemObj->economy)      && $systemObj->economy      !== '') ? $systemObj->economy      : 'None';
-    $siSystemGovernment   = (isset($systemObj->government)   && $systemObj->government   !== '') ? $systemObj->government   : 'None';
-    $siSystemRulingFaction= (isset($systemObj->ruling_faction)&& $systemObj->ruling_faction!== '') ? $systemObj->ruling_faction: 'None';
-    $siSystemState        = (isset($systemObj->state)        && $systemObj->state        !== '') ? $systemObj->state        : 'None';
-    $siSystemSecurity     = (isset($systemObj->security)     && $systemObj->security     !== '') ? $systemObj->security     : 'None';
-    $siSystemPower        = (isset($systemObj->power)        && $systemObj->power        !== '') ? $systemObj->power        : 'None';
-    $siSystemPowerState   = (isset($systemObj->power_state)  && $systemObj->power_state  !== '') ? $systemObj->power_state  : 'None';
+    $siSystemPopulation    = (isset($systemObj->population)     && $systemObj->population     !== '') ? $systemObj->population     : 'None';
+    $siSystemAllegiance    = (isset($systemObj->allegiance)     && $systemObj->allegiance     !== '') ? $systemObj->allegiance     : 'None';
+    $siSystemEconomy       = (isset($systemObj->economy)        && $systemObj->economy        !== '') ? $systemObj->economy        : 'None';
+    $siSystemGovernment    = (isset($systemObj->government)     && $systemObj->government     !== '') ? $systemObj->government     : 'None';
+    $siSystemRulingFaction = (isset($systemObj->ruling_faction) && $systemObj->ruling_faction !== '') ? $systemObj->ruling_faction : 'None';
+    $siSystemState         = (isset($systemObj->state)          && $systemObj->state          !== '') ? $systemObj->state          : 'None';
+    $siSystemSecurity      = (isset($systemObj->security)       && $systemObj->security       !== '') ? $systemObj->security       : 'None';
+    $siSystemPower         = (isset($systemObj->power)          && $systemObj->power          !== '') ? $systemObj->power          : 'None';
+    $siSystemPowerState    = (isset($systemObj->power_state)    && $systemObj->power_state    !== '') ? $systemObj->power_state    : 'None';
 
     // Distance from current or lastKnown system (null-safe)
     $curX = $curSys['x'] ?? null;
@@ -173,12 +173,6 @@ if ($hasSystemId || $hasSystemName) {
     $curSys['z'] = $sz;
 
 
-    $siDistAdd = $curSys['name'] . ': ' . number_format($dist1, 1) . ' ly' . $adds . ' - ';
-    $curSys['x'] = $systemObj->si_system_coordx;
-    $curSys['y'] = $systemObj->si_system_coordy;
-    $curSys['z'] = $systemObj->si_system_coordz;
-
-    if ($result) { $result->close(); }
 }
 /**
  * if system_id not set, show info about current system
@@ -324,7 +318,7 @@ if ($raresCloseby > 0) {
             $cRaresData .= '(';
             $cRaresData .= $rareObj->sc_est_mins;
             $cRaresData .= '&nbsp;min)&nbsp';
-            $cRaresData .= $rareObj->needs_permit = '1' ? '' : '&nbsp;-&nbsp;Permit needed';
+            $cRaresData .= ($rareObj->needs_permit == '1') ? '' : '&nbsp;-&nbsp;Permit needed';
             $cRaresData .= '-&nbsp';
             $cRaresData .= $rareObj->max_landing_pad_size;
             $cRaresData .= '</span><br><br>';
@@ -638,4 +632,4 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
 
 
 }
-header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE); exit;
+header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); exit;

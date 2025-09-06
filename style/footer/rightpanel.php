@@ -1,6 +1,6 @@
             <div class="rightpanel-content">
                 <?php
-                <?php global $mysqli; ?>
+                global $mysqli;
                 /** @include log */
                 include_once $_SERVER['DOCUMENT_ROOT'] . '/Log/add_log.php';
 

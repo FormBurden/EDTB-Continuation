@@ -1,0 +1,11 @@
+[
+  {"id": 1,  "name": "Class G Star",                "type": "star",   "width": 140, "min_value": 20000, "max_value": 40000},
+  {"id": 2,  "name": "Class M Star",                "type": "star",   "width": 150, "min_value": 5000,  "max_value": 10000},
+
+  {"id": 10, "name": "Icy Body",                    "type": "planet", "width": 50,  "min_value": 500,   "max_value": 1500},
+  {"id": 11, "name": "Rocky Body",                  "type": "planet", "width": 55,  "min_value": 1000,  "max_value": 3000},
+  {"id": 12, "name": "High metal content world",    "type": "planet", "width": 60,  "min_value": 3000,  "max_value": 6000},
+  {"id": 20, "name": "Gas Giant",                   "type": "planet", "width": 100, "min_value": 2000,  "max_value": 8000},
+
+  {"id": 90, "name": "Asteroid Belt",               "type": "other",  "width": 20,  "min_value": 0,     "max_value": 0}
+]

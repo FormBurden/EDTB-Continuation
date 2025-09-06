@@ -83,17 +83,20 @@
 │   ├── assets
 │   │   ├── datapoint.css
 │   │   └── datapoint.js
+│   ├── Bootstrap.php
 │   ├── export.php
 │   ├── Formatter.php
 │   ├── functions.php
 │   ├── index.php
 │   ├── partials
+│   │   ├── assets.php
 │   │   ├── controls.php
 │   │   ├── quickfilters.php
 │   │   ├── switcher.php
 │   │   ├── table.php
 │   │   └── topbar.php
 │   ├── Schema.php
+│   ├── TableEditFactory.php
 │   ├── Tables.php
 │   └── Vendor
 │       └── MySQL_table_edit
@@ -103,6 +106,7 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
+├── edtb_issue_pick_test.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -513,6 +517,7 @@
 │   │   ├── water_world_4.png
 │   │   ├── white_dwarf_0.png
 │   │   └── wolf-rayet_star_0.png
+│   ├── bodies.json
 │   ├── index.php
 │   ├── Init.js
 │   ├── Partials
@@ -524,4 +529,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-95 directories, 430 files
+95 directories, 435 files
