@@ -1,45 +1,35 @@
 <?php require_once __DIR__ . '/../Theme.php'; ?>
-<?= /** BEGIN head.php (moved from the top of Header::displayHeader) */ '' ?>
+<?php
+/** head.php — document head & assets */
+global $settings;
 
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <!-- icon, styles and custom fonts -->
-            <link type="image/png" href="/style/img/icon.png" rel="icon" />
-            <link type="text/css" href="/style/style.css?ver=<?= $settings['edtb_version']?>" rel="stylesheet" />
+/** Prefer the class property if Header set it; fall back to settings */
+$title = isset($this->pageTitle) && $this->pageTitle !== ''
+    ? $this->pageTitle
+    : ($settings['edtb_name'] ?? 'ED ToolBox');
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></title>
 
-            <?php
-            if (\EDTB\style\Theme::sidebarStyle() === 'narrow') {
-                ?>
-                <link type="text/css" href="/style/style_narrow.css?ver=<?= $settings['edtb_version']?>" rel="stylesheet" />
-                <?php
-            }
-            ?>
+<link rel="stylesheet" href="/style/style.css">
+<link rel="stylesheet" href="/style/colors.css">
 
-            <!-- jquery -->
-            <script src="/source/Vendor/jquery-2.2.0.min.js"></script>
-            <!-- wiselinks -->
-            <script src="/source/Vendor/wiselinks-1.2.2.min.js"></script>
-            <!-- clipboard -->
-            <script src="/source/Vendor/clipboard.min.js"></script>
-            <!-- audio recorder -->
-            <script src="/source/Vendor/Recordmp3js/recordmp3.js"></script>
-            <script src="/source/Vendor/adamwdraper-Numeral-js-7487acb/numeral.js"></script>
+<!-- jQuery: use local if present; otherwise CDN fallback -->
+<script src="/style/js/jquery.min.js"></script>
+<script>
+  if (!window.jQuery) {
+    var s=document.createElement('script');
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js";
+    s.integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==";
+    s.crossOrigin="anonymous";
+    document.head.appendChild(s);
+  }
+</script>
 
-            <!-- markitup -->
-            <script src="/source/Vendor/markitup/jquery.markitup.js"></script>
-            <script src="/source/Vendor/markitup/sets/html/set.js"></script>
-            <link rel="stylesheet" type="text/css" href="/source/Vendor/markitup/skins/simple/style.css" />
-            <link rel="stylesheet" type="text/css" href="/source/Vendor/markitup/sets/html/style.css" />
+<script src="/style/js/edtb.js"></script>
+</head>
 
-            <!-- own js -->
-            <script src="/source/javascript.js"></script>
-          <!-- global variable for clock -->
-            <script>
-                var gmt = "<?= $settings['game_time']?>";
-            </script>
-
-            <title>CMDR <?= $settings['cmdr_name']?>'s ToolBox</title>
-        </head>
-<?= /** END head.php */ '' ?>

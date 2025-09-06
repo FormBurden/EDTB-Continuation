@@ -98,7 +98,7 @@
 │       ├── network.ndjson
 │       └── perf.json
 ├── .edtb-files.txt
-├── edtb_header_theme_vendor.tar.gz
+├── edtb_safe_loader_check.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -239,6 +239,13 @@
 │   ├── FDMaps.php
 │   ├── functions.php
 │   ├── functions_safe.php
+│   ├── Helpers
+│   │   ├── Common.php
+│   │   ├── Coords.php
+│   │   ├── Game.php
+│   │   ├── Icons.php
+│   │   ├── Safe
+│   │   └── Text.php
 │   ├── javascript.js
 │   ├── Migrator.php
 │   ├── MySQL.php
@@ -267,6 +274,7 @@
 │       ├── Stations
 │       ├── System
 │       └── Toolbox
+├── structure.txt
 ├── structure.txtn
 ├── style
 │   ├── fonts
@@ -386,7 +394,6 @@
 │   ├── style.css.map
 │   ├── style_narrow.css
 │   └── Theme.php
-├── style.tar.gz
 ├── System
 │   ├── Formatters
 │   │   └── SystemInfoFormatters.php
@@ -500,4 +507,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-87 directories, 414 files
+89 directories, 419 files

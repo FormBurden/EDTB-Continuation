@@ -1,4 +1,8 @@
+
+
+<?php global $settings; ?>
 <?= /** BEGIN about.php (moved from Header::about) */ '' ?>
+
         <div class="settings_panel" id="about">
             <table class="table">
                 <tr>

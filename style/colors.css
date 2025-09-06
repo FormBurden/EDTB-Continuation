@@ -1,0 +1,19 @@
+/* Minimal theme palette + a few utility classes */
+:root {
+  --bg: #0e0f12;
+  --panel: #171a1f;
+  --text: #e7e9ee;
+  --muted: #9aa3b2;
+  --accent: #f59e0b;
+  --accent-2: #60a5fa;
+  --danger: #ef4444;
+  --ok: #10b981;
+}
+
+html, body { background: var(--bg); color: var(--text); }
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.notice { background: #1f2430; border-left: 4px solid var(--accent); padding: 10px 12px; margin: 10px 0; border-radius: 6px; }
+.notice_title { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.notice_text { color: var(--muted); }
