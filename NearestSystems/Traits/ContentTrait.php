@@ -30,43 +30,19 @@ trait NearestSystemsContentTrait
         $rows = $result->num_rows;
 
         if ($rows > 0) {
-            echo '<table class="system_table">';
-            echo '<tr><th>System</th>';
-            if ($this->stations !== false) {
-                echo '<th>Station</th><th>LS From Star</th><th>Pad</th><th>Type</th>';
-            }
-            echo '<th>Allegiance</th><th>Gov</th><th>Sec</th><th>Eco</th><th>Pop</th></tr>';
+            echo NearestSystemsTableFormatter::tableOpen();
+            echo NearestSystemsTableFormatter::header($this->stations);
 
             while ($row = $result->fetch_object()) {
-                $this->stationInfo($row);
+                echo NearestSystemsTableFormatter::row($row, $this->stations);
             }
 
-            echo '</table>';
+            echo NearestSystemsTableFormatter::tableClose();
+
         } else {
             echo '<div class="box">No results' . $this->is_unknown . '.</div>';
         }
 
         $result->close();
-    }
-
-    private function stationInfo($row)
-    {
-        echo '<tr>';
-        echo '<td>' . $row->system . '</td>';
-
-        if ($this->stations !== false) {
-            echo '<td>' . $row->station_name . '</td>';
-            echo '<td>' . $row->ls_from_star . '</td>';
-            echo '<td>' . $row->max_landing_pad_size . '</td>';
-            echo '<td>' . $row->type . '</td>';
-        }
-
-        echo '<td>' . ($row->allegiance ?? '') . '</td>';
-        echo '<td>' . ($row->government ?? '') . '</td>';
-        echo '<td>' . ($row->security ?? '') . '</td>';
-        echo '<td>' . ($row->economy ?? '') . '</td>';
-        echo '<td>' . number_format((int)($row->population ?? 0)) . '</td>';
-
-        echo '</tr>';
     }
 }
