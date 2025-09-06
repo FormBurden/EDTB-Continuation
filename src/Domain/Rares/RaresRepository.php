@@ -52,17 +52,16 @@ final class RaresRepository
                     ) AS distance,
                     edtb_rares.item, edtb_rares.system_name, edtb_rares.station,
                     edtb_rares.ls_to_star,
-                    edtb_rares.needs_permit, edtb_rares.max_landing_pad_size,
                     edtb_systems.x, edtb_systems.y, edtb_systems.z
 
                     FROM edtb_rares
-                    LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name
+                    LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name COLLATE utf8mb4_unicode_ci
                     WHERE
                     edtb_systems.x BETWEEN ' . ($cx - $range) . ' AND ' . ($cx + $range) . '
                     AND edtb_systems.y BETWEEN ' . ($cy - $range) . ' AND ' . ($cy + $range) . '
                     AND edtb_systems.z BETWEEN ' . ($cz - $range) . ' AND ' . ($cz + $range) . '
                     ORDER BY
-                    edtb_rares.system_name = \'' . $escName . '\' DESC,
+                    edtb_rares.system_name = \'' . $escName . '\' COLLATE utf8mb4_unicode_ci DESC,
                     distance ASC
                     LIMIT 10';
 

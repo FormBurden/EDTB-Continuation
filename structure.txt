@@ -105,8 +105,9 @@
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
+├── .edtb-files.001.txt
 ├── .edtb-files.txt
-├── edtb_issue_pick_test.tar.gz
+├── edtb_rares_followup.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
@@ -208,13 +209,25 @@
 │   │   └── Power_Zachary Hudson.txt
 │   └── SystemData.php
 ├── NearestSystems
+│   ├── Formatters
+│   │   └── Table.php
 │   ├── index.php
 │   ├── NearestSystems.php
-│   └── partials
-│       ├── AllegianceIcons.php
-│       ├── Filters.php
-│       ├── Powers.php
-│       └── Search.php
+│   ├── Params
+│   │   └── NearestSystemsParams.php
+│   ├── partials
+│   │   ├── AllegianceIcons.php
+│   │   ├── Filters.php
+│   │   ├── Powers.php
+│   │   └── Search.php
+│   ├── Services
+│   │   └── NearestSystemsQuery.php
+│   └── Traits
+│       ├── ContentTrait.php
+│       ├── DbTrait.php
+│       ├── FiltersTrait.php
+│       ├── ParamsTrait.php
+│       └── QueryTrait.php
 ├── public
 │   ├── index.php
 │   └── source -> ../source
@@ -417,10 +430,16 @@
 │   │   └── SystemInfoFormatters.php
 │   ├── getData_systemInfo.php
 │   ├── index.php
-│   └── Lookups
-│       ├── AllegianceIconMap.php
-│       ├── FacilitiesIconMap.php
-│       └── StationTypeIconMap.php
+│   ├── Lookups
+│   │   ├── AllegianceIconMap.php
+│   │   ├── FacilitiesIconMap.php
+│   │   └── StationTypeIconMap.php
+│   └── Services
+│       ├── SystemInfoDetails.php
+│       ├── SystemInfoHeader.php
+│       ├── SystemInfoLinks.php
+│       ├── SystemInfoRares.php
+│       └── SystemInfoStations.php
 ├── systemd-user
 │   ├── edtb-edsm-import.service
 │   └── edtb-edsm-import.timer
@@ -529,4 +548,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-95 directories, 435 files
+100 directories, 449 files

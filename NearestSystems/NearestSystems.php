@@ -41,7 +41,7 @@ require_once __DIR__ . '/partials/Search.php';
 use \EDTB\source\System;
 
 
-require_once __DIR__ . '/Traits/DbTrait.php';
+
 require_once __DIR__ . '/Traits/ContentTrait.php';
 require_once __DIR__ . '/Formatters/Table.php';
 require_once __DIR__ . '/Services/NearestSystemsQuery.php';
@@ -57,7 +57,7 @@ require_once __DIR__ . '/Params/NearestSystemsParams.php';
  */
 class NearestSystems
 {
-    use NearestSystemsDbTrait, NearestSystemsContentTrait;
+    use NearestSystemsContentTrait;
 
 
     /** @var string $system the system to use as a starting point */
@@ -88,12 +88,50 @@ class NearestSystems
     /** @var string $mainQuery */
     private $mainQuery;
     private $mysqli;
+    
 
 
     /**
      * NearestSystems constructor.
      */
     public function __construct()
+    {
+        // Prefer global mysqli if already created by config.inc.php / MySQL.php
+        global $mysqli, $server, $user, $pwd, $db;
+
+        $this->connectMysqli();
+        $this->ensureDbSelected();
+
+
+        $this->resolveCoordinates();
+
+    }
+
+    public function nearest()
+    {
+        // Build params (replaces getQueryParams)
+        $built = NearestSystemsParams::build($_GET);
+        $this->addToQuery       .= $built['addToQuery'];
+        $this->powerParams      .= $built['powerParams'];
+        $this->allegianceParams .= $built['allegianceParams'];
+
+        // Build main SQL (replaces getQuery + filters)
+        $svc   = new NearestSystemsQuery($this->mysqli, $this->useX, $this->useY, $this->useZ);
+        $built = $svc->build($_GET, $this->addToQuery);
+        $this->mainQuery = $built['sql'];
+        $this->stations  = $built['stations'];
+
+        $this->content();
+    }
+
+            /**
+         * Select a database if we connected without one. Mirrors the previous trait logic.
+         */
+    /**
+     * Establish or reuse a mysqli connection using legacy globals/env,
+     * identical logic to the previous inline code.
+     */
+    private function connectMysqli(): void
     {
         // Prefer global mysqli if already created by config.inc.php / MySQL.php
         global $mysqli, $server, $user, $pwd, $db;
@@ -115,10 +153,13 @@ class NearestSystems
         if ($this->mysqli->connect_errno) {
             echo 'Failed to connect to MySQL: ' . $this->mysqli->connect_error;
         }
+    }
 
-        // ← exactly one call, here:
-        $this->ensureDbSelected();
-
+    /**
+     * Determine which coordinates to use, identical logic moved out of __construct().
+     */
+    private function resolveCoordinates(): void
+    {
         // determine what coordinates to use
         $this->system = isset($_GET['system']) ? (int)$_GET['system'] : 0;
 
@@ -153,28 +194,80 @@ class NearestSystems
             $this->is_unknown = ' *';
         }
     }
-
-    public function nearest()
+       
+    private function ensureDbSelected(): void
     {
-        // Build params (replaces getQueryParams)
-        $built = NearestSystemsParams::build($_GET);
-        $this->addToQuery       .= $built['addToQuery'];
-        $this->powerParams      .= $built['powerParams'];
-        $this->allegianceParams .= $built['allegianceParams'];
+        if (!($this->mysqli instanceof \mysqli)) {
+            return;
+        }
 
-        // Build main SQL (replaces getQuery + filters)
-        $svc   = new NearestSystemsQuery($this->mysqli, $this->useX, $this->useY, $this->useZ);
-        $built = $svc->build($_GET, $this->addToQuery);
-        $this->mainQuery = $built['sql'];
-        $this->stations  = $built['stations'];
+        // Already selected?
+        if ($probe = @$this->mysqli->query('SELECT DATABASE() AS db')) {
+            if ($row = $probe->fetch_object()) {
+                if (!empty($row->db)) {
+                    $probe->close();
+                    return;
+                }
+            }
+            $probe->close();
+        }
 
-        $this->content();
+        // Gather candidate DB names
+        $candidates = [];
+
+        // 1) Legacy globals
+        if (!empty($GLOBALS['db'])) {
+            $candidates[] = (string)$GLOBALS['db'];
+        }
+
+        // 2) env vars commonly used in containers
+        if (!empty($_ENV['DB_NAME']))        $candidates[] = (string)$_ENV['DB_NAME'];
+        if (!empty($_ENV['MYSQL_DATABASE'])) $candidates[] = (string)$_ENV['MYSQL_DATABASE'];
+
+        // 3) server_config.inc.php array form
+        $paths = [
+            dirname(__DIR__) . '/data/server_config.inc.php',
+            __DIR__ . '/../data/server_config.inc.php',
+            '/data/server_config.inc.php',
+        ];
+        foreach ($paths as $p) {
+            if (@is_file($p)) {
+                $cfg = @include $p;
+                if (is_array($cfg) && !empty($cfg['db'])) {
+                    $candidates[] = (string)$cfg['db'];
+                }
+            }
+        }
+
+            // 4) server_config.inc.php constant form
+            if (defined('EDTB_DB')) {
+                $candidates[] = (string)EDTB_DB;
+            }
+
+            // 5) $_SERVER overrides
+            if (!empty($_SERVER['MYSQL_DATABASE'])) {
+                $candidates[] = (string)$_SERVER['MYSQL_DATABASE'];
+            }
+
+            $candidates = array_values(array_unique(array_filter(
+                $candidates,
+                static fn($v) => is_string($v) && $v !== ''
+            )));
+
+            foreach ($candidates as $dbName) {
+                if (@$this->mysqli->select_db($dbName)) {
+                    return;
+                }
+            }
+        }
+
+    /**
+     * Thin wrapper to keep write_log behavior on query errors.
+     */
+    private function safeQuery($query)
+    {
+        $result = $this->mysqli->query($query) or write_log($this->mysqli->error, __FILE__, __LINE__);
+        return $result;
     }
 
-
-
-
-
-
-
-}
+    }
