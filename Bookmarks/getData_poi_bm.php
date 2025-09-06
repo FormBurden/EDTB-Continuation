@@ -121,25 +121,24 @@ $usez = $usable['z'];
                             up.name AS item_name,
                             up.system_name,
                             up.comment AS text,
-                            up.created_at AS added_on,
+                            UNIX_TIMESTAMP(up.created_at) AS added_on,
                             COALESCE(es.x, uso.x) AS item_coordx,
                             COALESCE(es.y, uso.y) AS item_coordy,
                             COALESCE(es.z, uso.z) AS item_coordz,
+                            es.id AS system_id,
                             user_poi_categories.name AS catname
                     FROM user_poi AS up
                     LEFT JOIN edtb_systems AS es
-                      ON up.system_name COLLATE utf8mb4_unicode_ci
-                       = es.name COLLATE utf8mb4_unicode_ci
+                    ON up.system_name COLLATE utf8mb4_unicode_ci
+                    = es.name COLLATE utf8mb4_unicode_ci
                     LEFT JOIN user_systems_own AS uso
-                      ON up.system_name COLLATE utf8mb4_unicode_ci
-                       = uso.name COLLATE utf8mb4_unicode_ci
+                    ON up.system_name COLLATE utf8mb4_unicode_ci
+                    = uso.name COLLATE utf8mb4_unicode_ci
                     LEFT JOIN user_poi_categories
-                      ON up.category_id = user_poi_categories.id';
-
-
-
+                    ON up.category_id = user_poi_categories.id';
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
+
 
             $poi = new PoiBm();
 
@@ -174,19 +173,18 @@ $usez = $usable['z'];
                         user_bookmarks.system_id,
                         user_bookmarks.system_name,
                         user_bookmarks.note AS text,
-                        user_bookmarks.created_at AS added_on,
+                        UNIX_TIMESTAMP(user_bookmarks.created_at) AS added_on,
                         IFNULL(edtb_systems.x, user_systems_own.x) AS item_coordx,
                         IFNULL(edtb_systems.y, user_systems_own.y) AS item_coordy,
                         IFNULL(edtb_systems.z, user_systems_own.z) AS item_coordz,
                         \'Bookmark\' AS catname
                         FROM user_bookmarks
                         LEFT JOIN edtb_systems
-                          ON user_bookmarks.system_name COLLATE utf8mb4_unicode_ci
-                           = edtb_systems.name COLLATE utf8mb4_unicode_ci
+                        ON user_bookmarks.system_name COLLATE utf8mb4_unicode_ci
+                        = edtb_systems.name COLLATE utf8mb4_unicode_ci
                         LEFT JOIN user_systems_own
-                          ON user_bookmarks.system_name COLLATE utf8mb4_unicode_ci
-                           = user_systems_own.name COLLATE utf8mb4_unicode_ci';
-
+                        ON user_bookmarks.system_name COLLATE utf8mb4_unicode_ci
+                        = user_systems_own.name COLLATE utf8mb4_unicode_ci';
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
 
@@ -197,6 +195,7 @@ $usez = $usable['z'];
             $bm->usey = $usey;
             $bm->usez = $usez;
             $bm->timeDifference = $systemTime;
+
 
             $bm->makeTable($result, 'Bm');
 

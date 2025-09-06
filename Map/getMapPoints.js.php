@@ -74,7 +74,28 @@ if (!validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
 
 
 $series = \EDTB\Map\Services\MapSeriesBuilder::build($mysqli, $settings, $curSys, $params);
+
+// === derive extents & chart options ===
+$centerX = (float)$curSys['x'];
+$centerY = (float)$curSys['y'];
+$centerZ = (float)$curSys['z'];
+$maxdistance = (isset($settings['maxdistance']) && is_numeric($settings['maxdistance']))
+    ? (float)$settings['maxdistance'] : 50.0;
+
+$minx = $centerX - $maxdistance;
+$maxx = $centerX + $maxdistance;
+$miny = $centerY - $maxdistance;
+$maxy = $centerY + $maxdistance;
+$minz = $centerZ - $maxdistance;
+$maxz = $centerZ + $maxdistance;
+
+// Highcharts options expected inline below
+$zoomtype = "zoomType: 'xy',";
+$panning  = 'true';
+$pankey   = "panKey: 'shift',";
+$threed   = (isset($params->mode) && $params->mode === '3d') ? 'true' : 'false';
 ?>
+
 
 /** custom tooltip format */
 function tooltipFormatter() {
@@ -86,7 +107,7 @@ function tooltipFormatter() {
         <?php
     } else {
         ?>
-        value = this.series.name.toUpperCase() + " is " + Math.round(Math.sqrt(Math.pow((this.x-(<?= $curSys['x']?>)), 2)+Math.pow((this.y-(<?= $curSys['y']?>)), 2)+Math.pow((this.point.z-(<?= $curSys['z']?>)), 2))) + " ly away";
+        value = this.series.name.toUpperCase() + " is " + Math.round(Math.sqrt(Math.pow((this.point.x-(<?= $curSys['x']?>)), 2)+Math.pow((this.point.y-(<?= $curSys['y']?>)), 2)+Math.pow((this.point.z-(<?= $curSys['z']?>)), 2))) + " ly away";
         <?php
     }
     ?>
@@ -357,14 +378,12 @@ $(function ()
     $('#loader').hide();
 });
 
-var disclaimer = $('#disclaimer');
-<?php
-if ($disclaimer !== '') {
-    ?>
+$(function () {
+    var disclaimer = $('#disclaimer');
+    <?php if ($disclaimer !== '') { ?>
     disclaimer.html('<?= $disclaimer?>');
-    <?php
-} else {
-    ?>
+    <?php } else { ?>
     disclaimer.html("");
-    <?php
-}
+    <?php } ?>
+});
+
