@@ -48,7 +48,7 @@ if ($poiId == '0') {
     $data['poi_name'] = '';
     $data['category_id'] = '0';
 } else {
-    $query = "  SELECT id, poi_name, system_name, text, category_id, x, y, z
+    $query = "  SELECT id, name AS poi_name, system_name, comment AS text, category_id, x, y, z
                 FROM user_poi
                 WHERE id = '$poiId'
                 LIMIT 1";

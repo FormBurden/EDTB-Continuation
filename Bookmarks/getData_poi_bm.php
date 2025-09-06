@@ -114,18 +114,21 @@ $usez = $usable['z'];
             /**
              * fetch poi in correct order
              */
-            $query = '  SELECT SQL_CACHE user_poi.id, user_poi.poi_name AS item_name,
-                        user_poi.system_name, user_poi.text, user_poi.added_on,
-                        IFNULL(user_poi.x, user_systems_own.x) AS item_coordx,
-                        IFNULL(user_poi.y, user_systems_own.y) AS item_coordy,
-                        IFNULL(user_poi.z, user_systems_own.z) AS item_coordz,
-                        edtb_systems.id AS system_id,
-                        user_poi_categories.name AS catname
-                        FROM user_poi
-                        LEFT JOIN edtb_systems ON user_poi.system_name = edtb_systems.name
-                        LEFT JOIN user_poi_categories ON user_poi_categories.id = user_poi.category_id
-                        LEFT JOIN user_systems_own ON user_poi.system_name = user_systems_own.name
-                        ORDER BY catname ASC';
+            $query = '  SELECT SQL_CACHE
+                            up.id,
+                            up.name AS item_name,
+                            up.system_name,
+                            up.comment AS text,
+                            up.created_at AS added_on,
+                            COALESCE(es.x, uso.x) AS x,
+                            COALESCE(es.y, uso.y) AS y,
+                            COALESCE(es.z, uso.z) AS z,
+                            user_bm_categories.name AS category_name
+                    FROM user_poi AS up
+                    LEFT JOIN edtb_systems AS es ON up.system_name = es.name
+                    LEFT JOIN user_systems_own AS uso ON up.system_name = uso.name
+                    LEFT JOIN user_bm_categories ON up.category_id = user_bm_categories.id';
+
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
 

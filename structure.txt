@@ -183,7 +183,8 @@
 │   ├── Serializers
 │   │   └── HighchartsSeries.php
 │   ├── Services
-│   │   └── Fetch
+│   │   ├── Fetch
+│   │   └── MapSeriesBuilder.php
 │   └── Vendor
 │       └── Highcharts
 ├── Marvin
@@ -515,4 +516,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-94 directories, 422 files
+94 directories, 423 files

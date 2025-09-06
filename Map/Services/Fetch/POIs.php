@@ -11,12 +11,15 @@ final class POIs
     public static function fetch(\mysqli $mysqli, array $settings, array $curSys): array
     {
         $out = [];
-        $q = "SELECT poi_name, system_name, x, y, z FROM user_poi WHERE x != '' AND y != '' AND z != ''";
+        $q = "SELECT up.name AS poi_name, up.system_name, es.x AS sx, es.y AS sy, es.z AS sz
+            FROM user_poi AS up
+            LEFT JOIN edtb_systems AS es ON up.system_name = es.name";
+
         $res = $mysqli->query($q) or \write_log($mysqli->error, __FILE__, __LINE__);
         while ($row = $res->fetch_object()) {
             $name     = $row->system_name;
             $dispName = $row->poi_name !== '' ? $row->poi_name : $row->system_name;
-            $x = (float)$row->x; $y = (float)$row->y; $z = (float)$row->z;
+            $x = (float)$row->sx; $y = (float)$row->sy; $z = (float)$row->sz;
             $dist = self::distanceIfValid($x, $y, $z, $curSys);
             if ($dist !== null && $dist <= (float)$settings['maxdistance']) {
                 $escName = $mysqli->real_escape_string($name);

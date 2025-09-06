@@ -306,9 +306,9 @@ class PoiBm
 
         if ($pId !== '' && $pId !== null) {
             $stmt = "   UPDATE user_poi SET
-                        poi_name = '$escName',
+                        name = '$escName',
                         system_name = '$escSysname',
-                        text = '$escEntry',
+                        comment = '$escEntry',
                         category_id = '$categoryId'" . $addc . "
                         WHERE id = '$pId'";
         } elseif (isset($_GET['deleteid'])) {
@@ -316,13 +316,12 @@ class PoiBm
                         WHERE id = '" . $_GET['deleteid'] . "'
                         LIMIT 1";
         } else {
-            $stmt = "   INSERT INTO user_poi (poi_name, system_name, text, category_id, x, y, z, added_on)
+            $stmt = "   INSERT INTO user_poi (name, system_name, comment, category_id, x, y, z)
                         VALUES
                         ('$escName',
                         '$escSysname',
                         '$escEntry',
-                        '$categoryId'" . $addb . ',
-                        UNIX_TIMESTAMP())';
+                        '$categoryId'" . $addb . ')';
         }
 
         $this->mysqli->query($stmt) or write_log($this->mysqli->error, __FILE__, __LINE__);
