@@ -140,15 +140,16 @@ if ($hasSystemId || $hasSystemName) {
     $curSys['simbad_ref'] = isset($systemObj->simbad_ref) ? $systemObj->simbad_ref : '';
 
     $siSystemId           = $systemObj->id ?? null;
-    $siSystemPopulation    = (isset($systemObj->population)     && $systemObj->population     !== '') ? $systemObj->population     : 'None';
-    $siSystemAllegiance    = (isset($systemObj->allegiance)     && $systemObj->allegiance     !== '') ? $systemObj->allegiance     : 'None';
-    $siSystemEconomy       = (isset($systemObj->economy)        && $systemObj->economy        !== '') ? $systemObj->economy        : 'None';
-    $siSystemGovernment    = (isset($systemObj->government)     && $systemObj->government     !== '') ? $systemObj->government     : 'None';
-    $siSystemRulingFaction = (isset($systemObj->ruling_faction) && $systemObj->ruling_faction !== '') ? $systemObj->ruling_faction : 'None';
-    $siSystemState         = (isset($systemObj->state)          && $systemObj->state          !== '') ? $systemObj->state          : 'None';
-    $siSystemSecurity      = (isset($systemObj->security)       && $systemObj->security       !== '') ? $systemObj->security       : 'None';
-    $siSystemPower         = (isset($systemObj->power)          && $systemObj->power          !== '') ? $systemObj->power          : 'None';
-    $siSystemPowerState    = (isset($systemObj->power_state)    && $systemObj->power_state    !== '') ? $systemObj->power_state    : 'None';
+    $siSystemPopulation   = (isset($systemObj->population)     && $systemObj->population     !== '') ? $systemObj->population     : 'None';
+    $siSystemAllegiance   = (isset($systemObj->allegiance)     && $systemObj->allegiance     !== '') ? $systemObj->allegiance     : 'None';
+    $siSystemEconomy      = (isset($systemObj->economy)        && $systemObj->economy        !== '') ? $systemObj->economy        : 'None';
+    $siSystemGovernment   = (isset($systemObj->government)     && $systemObj->government     !== '') ? $systemObj->government     : 'None';
+    $siSystemRulingFaction= (isset($systemObj->ruling_faction) && $systemObj->ruling_faction !== '') ? $systemObj->ruling_faction  : 'None';
+    $siSystemState        = (isset($systemObj->state)          && $systemObj->state          !== '') ? $systemObj->state          : 'None';
+    $siSystemSecurity     = (isset($systemObj->security)       && $systemObj->security       !== '') ? $systemObj->security       : 'None';
+    $siSystemPower        = (isset($systemObj->power)          && $systemObj->power          !== '') ? $systemObj->power          : 'None';
+    $siSystemPowerState   = (isset($systemObj->power_state)    && $systemObj->power_state    !== '') ? $systemObj->power_state    : 'None';
+
 
     // Distance from current or lastKnown system (null-safe)
     $curX = $curSys['x'] ?? null;
@@ -193,15 +194,16 @@ else {
     }
 
     $siSystemId          = $curSys['id']          ?? null;
-    $siSystemPopulation  = (isset($curSys['population'])  && $curSys['population']  !== '') ? $curSys['population']  : 'None';
-    $siSystemAllegiance  = (isset($curSys['allegiance'])  && $curSys['allegiance']  !== '') ? $curSys['allegiance']  : 'None';
-    $siSystemEconomy     = (isset($curSys['economy'])     && $curSys['economy']     !== '') ? $curSys['economy']     : 'None';
-    $siSystemGovernment  = (isset($curSys['government'])  && $curSys['government']  !== '') ? $curSys['government']  : 'None';
+    $siSystemPopulation  = (isset($curSys['population'])   && $curSys['population']   !== '') ? $curSys['population']   : 'None';
+    $siSystemAllegiance  = (isset($curSys['allegiance'])   && $curSys['allegiance']   !== '') ? $curSys['allegiance']   : 'None';
+    $siSystemEconomy     = (isset($curSys['economy'])      && $curSys['economy']      !== '') ? $curSys['economy']      : 'None';
+    $siSystemGovernment  = (isset($curSys['government'])   && $curSys['government']   !== '') ? $curSys['government']   : 'None';
     $siSystemRulingFaction = (isset($curSys['ruling_faction']) && $curSys['ruling_faction'] !== '') ? $curSys['ruling_faction'] : 'None';
-    $siSystemState       = (isset($curSys['state'])       && $curSys['state']       !== '') ? $curSys['state']       : 'None';
-    $siSystemPower       = (isset($curSys['power'])       && $curSys['power']       !== '') ? $curSys['power']       : 'None';
-    $siSystemSecurity    = (isset($curSys['security'])    && $curSys['security']    !== '') ? $curSys['security']    : 'None';
-    $siSystemPowerState  = (isset($curSys['power_state']) && $curSys['power_state'] !== '') ? $curSys['power_state'] : 'None';
+    $siSystemState       = (isset($curSys['state'])        && $curSys['state']        !== '') ? $curSys['state']        : 'None';
+    $siSystemPower       = (isset($curSys['power'])        && $curSys['power']        !== '') ? $curSys['power']        : 'None';
+    $siSystemSecurity    = (isset($curSys['security'])     && $curSys['security']     !== '') ? $curSys['security']     : 'None';
+    $siSystemPowerState  = (isset($curSys['power_state'])  && $curSys['power_state']  !== '') ? $curSys['power_state']  : 'None';
+
 }
 
 
@@ -237,7 +239,7 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
 
 
     }
-} else {
+    else {
     // get last known coordinates
     $lastCoords = lastKnownSystem();
 
@@ -296,24 +298,10 @@ $rareText = buildRaresMiniLabel((int)$actualNumRes, $settings['rare_range'] ?? 5
 
 $data['si_name'] .= $siSystemDisplayName . $siCrosslinks;
 $data['si_name'] .= '&nbsp;&nbsp;<span style="font-size: 11px;  text-transform: uppercase; vertical-align: middle">';
-
 $data['si_name'] .= formatSiHeaderMeta($siSystemState, $siSystemSecurity, (int)$numVisits);
 $data['si_name'] .= $rareText . $userDists . '</span>';
-
-
-
-/* station info for System.php */
-$__chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_stations'");
-$hasStationsTable = ($__chk && $__chk->num_rows > 0); if ($__chk) { $__chk->close(); }
-$stationExists = 0;
-$systemId = isset($systemId) ? (int)$systemId : (int)($_GET['system_id'] ?? $_GET['id'] ?? 0);
 $data['si_stations'] = renderStationsHtml($mysqli, (int)$siSystemId);
 
-
-$stationResult->close();
-} else {
-    $data['si_stations'] = 'No station data available';
-}
 
 /**
  * detailed system info
@@ -337,7 +325,7 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
             $siSystemEconomy,
             $siSystemRulingFaction
         );
-        
+    }
 
 
 }
