@@ -47,6 +47,8 @@ require_once __DIR__ . '/Traits/QueryTrait.php';
 require_once __DIR__ . '/Traits/FiltersTrait.php';
 require_once __DIR__ . '/Traits/ContentTrait.php';
 require_once __DIR__ . '/Formatters/Table.php';
+require_once __DIR__ . '/Services/NearestSystemsQuery.php';
+
 
 
 /**

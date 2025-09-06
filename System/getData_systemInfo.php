@@ -87,6 +87,8 @@ require_once $ROOT . '/System/Services/SystemInfoDetails.php';
 require_once $ROOT . '/System/Services/SystemInfoStations.php';
 require_once $ROOT . '/System/Services/SystemInfoRares.php';
 require_once $ROOT . '/System/Services/SystemInfoHeader.php';
+require_once $ROOT . '/System/Services/SystemInfoLinks.php';
+
 
 
 
