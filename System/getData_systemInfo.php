@@ -85,6 +85,8 @@ require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
 require_once $ROOT . '/System/Formatters/SystemInfoFormatters.php';
 require_once $ROOT . '/System/Services/SystemInfoDetails.php';
 require_once $ROOT . '/System/Services/SystemInfoStations.php';
+require_once $ROOT . '/System/Services/SystemInfoRares.php';
+
 
 
 
@@ -222,23 +224,15 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     /**
      * get rares closeby, if set to -1 = disabled
      */
-    if (isset($settings['rare_range']) && $settings['rare_range'] == '-1') {
-        $raresCloseby = 0;
-    } else {
-        // sanitize coords and search radius for the rares query
-        $rx = (float)($curSys['x'] ?? 0);
-        $ry = (float)($curSys['y'] ?? 0);
-        $rz = (float)($curSys['z'] ?? 0);
-
-        $range = (float)($settings['rare_range'] ?? 50.0);
-        if ($range <= 0) { $range = 50.0; }
-
-        $minX = $rx - $range; $maxX = $rx + $range;
-        $minY = $ry - $range; $maxY = $ry + $range;
-        $minZ = $rz - $range; $maxZ = $rz + $range;
-
-        $rareResult   = \EDTB\Domain\Rares\RaresRepository::selectNearbyRaresResult($mysqli, $siSystemName, (float)($curSys['x'] ?? 0), (float)($curSys['y'] ?? 0), (float)($curSys['z'] ?? 0), (float)($settings['rare_range'] ?? 50.0));
-        $raresCloseby = $rareResult ? $rareResult->num_rows : 0;
+    list($rareResult, $raresCloseby) = fetchNearbyRares(
+        $mysqli,
+        (string)$siSystemName,
+        (float)($curSys['x'] ?? 0),
+        (float)($curSys['y'] ?? 0),
+        (float)($curSys['z'] ?? 0),
+        ($settings['rare_range'] ?? 50.0)
+    );
+    
 
 
 
@@ -290,69 +284,13 @@ if (isset($settings['dist_systems'])) {
         $i++;
     }
 }
-$userDists .= '</span>';
+list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock(
+    $rareResult,
+    (int)($raresCloseby ?? 0),
+    $settings,
+    $curSys
+);
 
-$cRaresData = '<div class="raresinfo" id="rares">';
-
-/**
- * display rares nearby
- */
-$actualNumRes = 0;
-
-if ($raresCloseby > 0) {
-    $actualNumRes = 0;
-
-    while ($rareObj = $rareResult->fetch_object()) {
-        if ($rareObj->distance <= $settings['rare_range']) {
-            $cRaresData .= '[';
-            $cRaresData .= number_format($rareObj->distance, 1);
-            $cRaresData .= '&nbsp;ly]&nbsp';
-            $cRaresData .= $rareObj->item;
-            $cRaresData .= '&nbsp;(';
-            $cRaresData .= number_format($rareObj->price);
-            $cRaresData .= '&nbsp;CR)';
-            $cRaresData .= "<br><span style='font-weight:400'>";
-            $cRaresData .= "<a href='/System?system_name=" . urlencode($rareObj->system_name) . "'>";
-            $cRaresData .= $rareObj->system_name;
-            $cRaresData .= '</a>&nbsp;(';
-            $cRaresData .= $rareObj->station;
-            $cRaresData .= ')&nbsp;-&nbsp';
-            $cRaresData .= number_format($rareObj->ls_to_star);
-            $cRaresData .= '&nbsp;ls&nbsp';
-            $cRaresData .= '(';
-            $cRaresData .= $rareObj->sc_est_mins;
-            $cRaresData .= '&nbsp;min)&nbsp';
-            $cRaresData .= ($rareObj->needs_permit == '1') ? '' : '&nbsp;-&nbsp;Permit needed';
-            $cRaresData .= '-&nbsp';
-            $cRaresData .= $rareObj->max_landing_pad_size;
-            $cRaresData .= '</span><br><br>';
-            $actualNumRes++;
-        }
-    }
-
-    $rareResult->close();
-} else {
-    $cRaresData .= 'No rares nearby';
-}
-
-$cRaresData .= '</div>';
-
-/**
- * provide crosslinks to screenshot gallery, log page, etc
- */
-$siCrosslinks = buildSystemCrosslinks($siSystemName);
-
-$numVisits = 0;
-try {
-    $ref = new \ReflectionMethod(System::class, 'numVisits');
-    if ($ref->getNumberOfParameters() >= 2) {
-        $numVisits = System::numVisits($mysqli, $siSystemName);
-    } else {
-        $numVisits = System::numVisits($siSystemName);
-    }
-} catch (\Throwable $e) {
-    $numVisits = 0;
-}
 
 $rareText = buildRaresMiniLabel((int)$actualNumRes, $settings['rare_range'] ?? 50.0, $cRaresData, $curSys['x'] ?? null, $curSys['y'] ?? null, $curSys['z'] ?? null);
 
