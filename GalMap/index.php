@@ -7,6 +7,8 @@ require_once $root . '/style/Footer.php';
 $header = new Header();
 $pageTitle = 'Galaxy Map';
 $header->displayHeader();
+echo '<link rel="stylesheet" href="/source/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />' . PHP_EOL;
+echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' . PHP_EOL;
 ?>
 <div class="galmap-wrap">
   <h1 class="galmap-title">Galaxy Map</h1>

@@ -290,7 +290,7 @@
 			container: 'ed3dmap',
 			basePath: '/source/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
-			withHudPanel: false,
+			withHudPanel: true,
 			startAnim: true
 		});
 	});
