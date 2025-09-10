@@ -1778,11 +1778,14 @@ fieldset {
 ::-webkit-scrollbar-corner {
   background-color: #000; }
 
-#wrapper {
+#wrap {
+  display: flex;
+  height: 100%;
   margin-left: auto;
   margin-right: auto;
   margin-top: 0;
-  border-collapse: collapse; }
+  border-collapse: collapse;
+}
 
 #datetime:hover div {
   color: #fffffa; }

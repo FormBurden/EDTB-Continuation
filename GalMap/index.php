@@ -69,7 +69,7 @@ $header->displayHeader();
 <script src="/source/Vendor/three.min.js"></script>
 <!-- IMPORTANT: use the library build, not the old wrapper -->
 <script src="/source/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
-<!-- <link rel="stylesheet" href="/source/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" /> -->
+<link rel="stylesheet" href="/source/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />
 <script src="/GalMap/js/galmap.js"></script>
 <script>
 /* Galaxy Map: default-hide overlays and tooltips, and close on map click */

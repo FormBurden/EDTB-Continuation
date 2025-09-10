@@ -290,15 +290,9 @@
 			container: 'ed3dmap',
 			basePath: '/source/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
-			withHudPanel: true,
+			withHudPanel: false,
 			startAnim: true
 		});
-
-		// Keep HUD under the form (avoid blocking inputs)
-		setTimeout(() => {
-			const hud = $('#ed3dmap .hudPanel');
-			if (hud) hud.style.zIndex = '2';
-		}, 100);
 	});
 
 	// Kick once on load if center is present

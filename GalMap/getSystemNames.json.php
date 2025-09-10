@@ -39,7 +39,7 @@ if (!$source) {
     exit;
 }
 
-$q = trim((string)($_GET['q'] ?? ''));
+$q = trim((string)($_GET['q'] ?? $_GET['term'] ?? ''));
 $limit = (int)($_GET['limit'] ?? 15);
 $exact = isset($_GET['exact']) && $_GET['exact'] !== '0' && $_GET['exact'] !== 'false';
 
