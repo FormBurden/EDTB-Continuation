@@ -2228,25 +2228,25 @@ img {
   left: auto !important;
   z-index: 1003;
 }
-/* --- Map UI default visibility & stacking (Linux parity with Windows) --- */
-.rightpanel-content .input {
-  display: none;
+/* === Map overlay defaults (Windows-parity on Linux) === */
+.rightpanel .input {
+  display: none !important;
 }
 
-/* hide modals by default */
+/* modals closed by default */
 .tooltip {
-  display: none;
+  display: none !important;
 }
 
-/* hide helper tooltips by default */
+/* helper tooltips closed   */
 #map_legend2 {
-  display: none;
+  display: none !important;
 }
 
-/* legend panel starts closed */
+/* legend panel closed      */
 
-/* Keep map surfaces interactable; overlays will re-show via JS when needed */
-.galmap-wrap .map-panel #ed3dmap,
-.entries_inner #container {
+/* Ensure map surfaces receive pointer events */
+#ed3dmap,
+#container {
   position: relative;
 }

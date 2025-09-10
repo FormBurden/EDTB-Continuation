@@ -66,7 +66,6 @@ $header->displayHeader();
   </div>
 </div>
 
-<link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css">
 <script src="/source/Vendor/three.min.js"></script>
 <!-- IMPORTANT: use the library build, not the old wrapper -->
 <script src="/source/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
