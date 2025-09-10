@@ -288,7 +288,7 @@
 
 		Ed3d.init({
 			container: 'ed3dmap',
-			basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
+			basePath: '/source/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
 			startAnim: true

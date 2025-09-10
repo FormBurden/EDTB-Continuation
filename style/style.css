@@ -2228,3 +2228,25 @@ img {
   left: auto !important;
   z-index: 1003;
 }
+/* --- Map UI default visibility & stacking (Linux parity with Windows) --- */
+.rightpanel-content .input {
+  display: none;
+}
+
+/* hide modals by default */
+.tooltip {
+  display: none;
+}
+
+/* hide helper tooltips by default */
+#map_legend2 {
+  display: none;
+}
+
+/* legend panel starts closed */
+
+/* Keep map surfaces interactable; overlays will re-show via JS when needed */
+.galmap-wrap .map-panel #ed3dmap,
+.entries_inner #container {
+  position: relative;
+}

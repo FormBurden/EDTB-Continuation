@@ -311,16 +311,16 @@ fi
 if (( EXCLUDE_LOGS == 0 )); then
 logs_root="$ROOT/logs"
 if [[ -d "$logs_root" ]]; then
-  now_epoch="$(date +%s)"
+  ref_epoch="$(date -d "${timestamp:0:4}-${timestamp:4:2}-${timestamp:6:2} ${timestamp:9:2}:${timestamp:11:2}:${timestamp:13:2}" +%s 2>/dev/null || date +%s)"
   # Scan only first-level directories that look like YYYYMMDD-HHMMSS
   while IFS= read -r -d '' dir; do
     base="$(basename "$dir")"
-    if [[ "$base" =~ ^[0-9]{8}-[0-9]{6}$ ]]; then
+    if [[ "$base" =~ ^[0-9]{8}-[0-9]{6} ]]; then
       y=${base:0:4}; mo=${base:4:2}; da=${base:6:2}
       hh=${base:9:2}; mm=${base:11:2}; ss=${base:13:2}
       # Convert folder timestamp to epoch
       dir_epoch="$(date -d "${y}-${mo}-${da} ${hh}:${mm}:${ss}" +%s 2>/dev/null || echo 0)"
-      diff=$(( now_epoch - dir_epoch ))
+      diff=$(( ref_epoch - dir_epoch ))
       # absolute value
       if (( diff < 0 )); then diff=$(( -diff )); fi
       # Only include if within 120 seconds

@@ -107,7 +107,7 @@
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.001.txt
 ├── .edtb-files.txt
-├── edtb_rares_followup.tar.gz
+├── edtb_system_info_bootstrap.tar.gz
 ├── .edtb-venv
 │   ├── bin
 │   │   ├── activate
