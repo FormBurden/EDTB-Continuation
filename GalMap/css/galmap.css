@@ -165,3 +165,35 @@
 	width: 22px;
 	height: 22px;
 }
+/* ==== ED3D canvas sizing (no HUD override) ==== */
+#ed3d-container {
+	position: relative !important;
+	width: 100% !important;
+	height: calc(100vh - 230px) !important;
+	min-height: 420px !important;
+	overflow: hidden !important;
+	background: #000;
+	/* black background like original */
+}
+/* Inner ED3D wrapper fills the outer container */
+#ed3dmap {
+	position: relative !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+/* Canvas fills the inner wrapper */
+#ed3dmap canvas {
+	width: 100% !important;
+	height: 100% !important;
+	display: block !important;
+}
+
+/* Keep the HUD in the top-right, on top but non-blocking */
+#ed3dmap .hudPanel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 3;
+	pointer-events: auto;
+}
