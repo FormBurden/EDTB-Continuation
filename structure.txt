@@ -100,34 +100,20 @@
 │   ├── Tables.php
 │   └── Vendor
 │       └── MySQL_table_edit
+│           ├── lang
+│           │   └── en.php
+│           └── mte.php
 ├── debug
 │   └── php_lint_datapoint.txt
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.001.txt
+├── .edtb-files.galmap-black.001.txt
 ├── .edtb-files.txt
-├── edtb_system_info_bootstrap.tar.gz
-├── .edtb-venv
-│   ├── bin
-│   │   ├── activate
-│   │   ├── activate.csh
-│   │   ├── activate.fish
-│   │   ├── Activate.ps1
-│   │   ├── jp.py
-│   │   ├── pip
-│   │   ├── pip3
-│   │   ├── pip3.13
-│   │   ├── python -> /usr/bin/python
-│   │   ├── python3 -> python
-│   │   └── python3.13 -> python
-│   ├── .gitignore
-│   ├── include
-│   │   └── python3.13
-│   ├── lib
-│   │   └── python3.13
-│   ├── lib64 -> lib
-│   └── pyvenv.cfg
+├── edtb_galmap_black_postfix_fix2.tar.gz
+├── edtb_issue_galmap_black.tar.gz
+├── edtb_issue_pick_global.tar.gz
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
@@ -145,6 +131,24 @@
 │   ├── MakeGallery.php
 │   └── Vendor
 │       └── spgm
+│           ├── flavors
+│           │   └── default
+│           │       ├── folder.png
+│           │       ├── new.png
+│           │       ├── page_first_not.png
+│           │       ├── page_first.png
+│           │       ├── page_last_not.png
+│           │       ├── page_last.png
+│           │       ├── page_next_not.png
+│           │       ├── page_next.png
+│           │       ├── page_previous_not.png
+│           │       ├── page_previous.png
+│           │       └── spgm.thm
+│           ├── lang
+│           │   └── lang.en
+│           ├── License.txt
+│           ├── README.txt
+│           └── spgm.php
 ├── GalMap
 │   ├── css
 │   │   └── galmap.css
@@ -159,6 +163,36 @@
 │   │   └── GalMapParams.php
 │   └── Vendor
 │       └── ED3D-Galaxy-Map
+│           ├── css
+│           │   └── styles.css
+│           ├── data
+│           │   └── milkyway.json
+│           ├── js
+│           │   ├── components
+│           │   │   ├── action.class.js
+│           │   │   ├── galaxy.class.js
+│           │   │   ├── grid.class.js
+│           │   │   ├── hud.class.js
+│           │   │   ├── route.class.js
+│           │   │   └── system.class.js
+│           │   └── ed3dmap.js
+│           ├── README.md
+│           └── textures
+│               ├── heightmap2.jpg
+│               ├── heightmap7.jpg
+│               └── lensflare
+│                   ├── flare2.png
+│                   ├── flare3.png
+│                   ├── flare.png
+│                   ├── lensflare0.png
+│                   ├── lensflare1.png
+│                   ├── lensflare2.png
+│                   ├── lensflare3.png
+│                   ├── lensflare_white2.png
+│                   ├── lensflare_white.png
+│                   ├── star_grey2.png
+│                   ├── star_grey.png
+│                   └── star_yellow.png
 ├── GalNet
 │   ├── GalnetCache.php
 │   ├── GalnetProvider.php
@@ -194,9 +228,27 @@
 │   │   └── HighchartsSeries.php
 │   ├── Services
 │   │   ├── Fetch
+│   │   │   ├── Bookmarks.php
+│   │   │   ├── POIs.php
+│   │   │   ├── Rares.php
+│   │   │   └── Visited.php
 │   │   └── MapSeriesBuilder.php
 │   └── Vendor
 │       └── Highcharts
+│           └── js
+│               ├── adapters
+│               │   └── standalone-framework.js
+│               ├── highcharts-3d.js
+│               ├── highcharts.js
+│               └── modules
+│                   ├── canvas-tools.js
+│                   ├── data.js
+│                   ├── drilldown.js
+│                   ├── exporting.js
+│                   ├── funnel.js
+│                   ├── heatmap.js
+│                   ├── no-data-to-display.js
+│                   └── solid-gauge.js
 ├── Marvin
 │   ├── apiData.php
 │   ├── GalnetData.php
@@ -271,6 +323,12 @@
 │   │   ├── Game.php
 │   │   ├── Icons.php
 │   │   ├── Safe
+│   │   │   ├── Array.php
+│   │   │   ├── Env.php
+│   │   │   ├── Fs.php
+│   │   │   ├── Log.php
+│   │   │   ├── Time.php
+│   │   │   └── Ui.php
 │   │   └── Text.php
 │   ├── javascript.js
 │   ├── Migrator.php
@@ -278,17 +336,157 @@
 │   ├── System.php
 │   └── Vendor
 │       ├── adamwdraper-Numeral-js-7487acb
+│       │   ├── LICENSE
+│       │   ├── numeral.js
+│       │   └── README.md
 │       ├── clipboard.min.js
 │       ├── codemirror
+│       │   ├── addon
+│       │   │   ├── comment
+│       │   │   │   ├── comment.js
+│       │   │   │   └── continuecomment.js
+│       │   │   ├── dialog
+│       │   │   │   ├── dialog.css
+│       │   │   │   └── dialog.js
+│       │   │   ├── display
+│       │   │   │   ├── autorefresh.js
+│       │   │   │   ├── fullscreen.css
+│       │   │   │   ├── fullscreen.js
+│       │   │   │   ├── panel.js
+│       │   │   │   ├── placeholder.js
+│       │   │   │   └── rulers.js
+│       │   │   ├── edit
+│       │   │   │   ├── closebrackets.js
+│       │   │   │   ├── closetag.js
+│       │   │   │   ├── continuelist.js
+│       │   │   │   ├── matchbrackets.js
+│       │   │   │   ├── matchtags.js
+│       │   │   │   └── trailingspace.js
+│       │   │   ├── fold
+│       │   │   │   ├── brace-fold.js
+│       │   │   │   ├── comment-fold.js
+│       │   │   │   ├── foldcode.js
+│       │   │   │   ├── foldgutter.css
+│       │   │   │   ├── foldgutter.js
+│       │   │   │   ├── indent-fold.js
+│       │   │   │   ├── markdown-fold.js
+│       │   │   │   └── xml-fold.js
+│       │   │   ├── hint
+│       │   │   │   ├── anyword-hint.js
+│       │   │   │   ├── css-hint.js
+│       │   │   │   ├── html-hint.js
+│       │   │   │   ├── javascript-hint.js
+│       │   │   │   ├── show-hint.css
+│       │   │   │   ├── show-hint.js
+│       │   │   │   ├── sql-hint.js
+│       │   │   │   └── xml-hint.js
+│       │   │   ├── lint
+│       │   │   │   ├── coffeescript-lint.js
+│       │   │   │   ├── css-lint.js
+│       │   │   │   ├── html-lint.js
+│       │   │   │   ├── javascript-lint.js
+│       │   │   │   ├── json-lint.js
+│       │   │   │   ├── lint.css
+│       │   │   │   ├── lint.js
+│       │   │   │   └── yaml-lint.js
+│       │   │   ├── merge
+│       │   │   │   ├── merge.css
+│       │   │   │   └── merge.js
+│       │   │   ├── mode
+│       │   │   │   ├── loadmode.js
+│       │   │   │   ├── multiplex.js
+│       │   │   │   ├── multiplex_test.js
+│       │   │   │   ├── overlay.js
+│       │   │   │   └── simple.js
+│       │   │   ├── runmode
+│       │   │   │   ├── colorize.js
+│       │   │   │   ├── runmode.js
+│       │   │   │   ├── runmode.node.js
+│       │   │   │   └── runmode-standalone.js
+│       │   │   ├── scroll
+│       │   │   │   ├── annotatescrollbar.js
+│       │   │   │   ├── scrollpastend.js
+│       │   │   │   ├── simplescrollbars.css
+│       │   │   │   └── simplescrollbars.js
+│       │   │   ├── search
+│       │   │   │   ├── matchesonscrollbar.css
+│       │   │   │   ├── matchesonscrollbar.js
+│       │   │   │   ├── match-highlighter.js
+│       │   │   │   ├── searchcursor.js
+│       │   │   │   └── search.js
+│       │   │   ├── selection
+│       │   │   │   ├── active-line.js
+│       │   │   │   ├── mark-selection.js
+│       │   │   │   └── selection-pointer.js
+│       │   │   ├── tern
+│       │   │   │   ├── tern.css
+│       │   │   │   ├── tern.js
+│       │   │   │   └── worker.js
+│       │   │   └── wrap
+│       │   │       └── hardwrap.js
+│       │   ├── AUTHORS
+│       │   ├── CONTRIBUTING.md
+│       │   ├── lib
+│       │   │   ├── codemirror.css
+│       │   │   └── codemirror.js
+│       │   ├── LICENSE
+│       │   ├── mode
+│       │   │   ├── properties
+│       │   │   │   ├── index.html
+│       │   │   │   └── properties.js
+│       │   │   └── sql
+│       │   │       ├── index.html
+│       │   │       └── sql.js
+│       │   └── README.md
 │       ├── color-thief.js
+│       ├── ED3D-Galaxy-Map -> ../../GalMap/Vendor/ED3D-Galaxy-Map
 │       ├── Highcharts -> /mnt/Unlimited-Gaming/Modding/Elite Dangerous/MyProject/EDTB-Continuation-Clean/Map/Vendor/Highcharts
 │       ├── jquery-2.2.0.min.js
 │       ├── jquery-ui-1.11.4
+│       │   ├── images
+│       │   │   ├── ui-icons_444444_256x240.png
+│       │   │   ├── ui-icons_555555_256x240.png
+│       │   │   ├── ui-icons_777620_256x240.png
+│       │   │   ├── ui-icons_777777_256x240.png
+│       │   │   ├── ui-icons_cc0000_256x240.png
+│       │   │   └── ui-icons_ffffff_256x240.png
+│       │   ├── jquery-ui.min.css
+│       │   ├── jquery-ui.min.js
+│       │   ├── jquery-ui.structure.min.css
+│       │   └── jquery-ui.theme.min.css
 │       ├── markitup
+│       │   ├── jquery.markitup.js
+│       │   ├── sets
+│       │   │   ├── html
+│       │   │   │   └── set.js
+│       │   │   └── templates
+│       │   └── templates
+│       │       ├── preview.css
+│       │       └── preview.html
 │       ├── phpfastcache
+│       │   ├── abstract.php
+│       │   ├── driver.php
+│       │   ├── drivers
+│       │   │   ├── apc.php
+│       │   │   ├── files.php
+│       │   │   ├── predis.php
+│       │   │   ├── redis.php
+│       │   │   └── ssdb.php
+│       │   ├── extensions.php
+│       │   └── phpfastcache.php
 │       ├── Recordmp3js
+│       │   ├── js
+│       │   │   ├── libmp3lame.min.js
+│       │   │   ├── mp3Worker.js
+│       │   │   ├── recorderWorker.js
+│       │   │   └── recordmp3.js
+│       │   ├── LICENSE
+│       │   ├── README.md
+│       │   └── recordmp3.js
 │       ├── three.min.js
 │       ├── timmywil-jquery-panzoom
+│       │   ├── panzoom.js
+│       │   └── pointertouch.js
 │       ├── utility.php
 │       └── wiselinks-1.2.2.min.js
 ├── src
@@ -296,10 +494,15 @@
 │   ├── DB.php
 │   └── Domain
 │       ├── Powers
+│       │   └── PowersRepository.php
 │       ├── Rares
+│       │   └── RaresRepository.php
 │       ├── Stations
+│       │   └── StationsRepository.php
 │       ├── System
+│       │   └── SystemRepository.php
 │       └── Toolbox
+│           └── ToolboxService.php
 ├── structure.txt
 ├── style
 │   ├── colors.css
@@ -351,6 +554,21 @@
 │   │   ├── empire.png
 │   │   ├── external_link.png
 │   │   ├── facilities
+│   │   │   ├── black_market_not.png
+│   │   │   ├── black_market.png
+│   │   │   ├── market_not.png
+│   │   │   ├── market.png
+│   │   │   ├── not.png
+│   │   │   ├── outfitting_not.png
+│   │   │   ├── outfitting.png
+│   │   │   ├── refuel_not.png
+│   │   │   ├── refuel.png
+│   │   │   ├── repair_not.png
+│   │   │   ├── repair.png
+│   │   │   ├── restock_not.png
+│   │   │   ├── restock.png
+│   │   │   ├── shipyard_not.png
+│   │   │   └── shipyard.png
 │   │   ├── federation.png
 │   │   ├── find.png
 │   │   ├── fuel.png
@@ -373,6 +591,22 @@
 │   │   ├── magic.png
 │   │   ├── map_settings.png
 │   │   ├── markItUp
+│   │   │   ├── bold11.png
+│   │   │   ├── bold.png
+│   │   │   ├── clean.png
+│   │   │   ├── image.png
+│   │   │   ├── italic.png
+│   │   │   ├── link.png
+│   │   │   ├── list-bullet.png
+│   │   │   ├── list-item.png
+│   │   │   ├── list-numeric.png
+│   │   │   ├── menu.png
+│   │   │   ├── paragraph.png
+│   │   │   ├── picture.png
+│   │   │   ├── preview.png
+│   │   │   ├── stroke.png
+│   │   │   ├── submenu.png
+│   │   │   └── thumbnail.png
 │   │   ├── minmax.png
 │   │   ├── music.png
 │   │   ├── news.png
@@ -384,7 +618,58 @@
 │   │   ├── plus.png
 │   │   ├── poi.png
 │   │   ├── powers
+│   │   │   ├── Aisling_Duval.jpg
+│   │   │   ├── Archon_Delaine.jpg
+│   │   │   ├── Arissa_Lavigny-Duval.jpg
+│   │   │   ├── Denton_Patreus.jpg
+│   │   │   ├── Edmund_Mahon.jpg
+│   │   │   ├── Felicia_Winters.jpg
+│   │   │   ├── Li_Yong-Rui.jpg
+│   │   │   ├── None.jpg
+│   │   │   ├── Pranav_Antal.jpg
+│   │   │   ├── Zachary_Hudson.jpg
+│   │   │   └── Zemina_Torval.jpg
 │   │   ├── ranks
+│   │   │   ├── combat
+│   │   │   │   ├── rank-1.png
+│   │   │   │   ├── rank-2.png
+│   │   │   │   ├── rank-3.png
+│   │   │   │   ├── rank-4.png
+│   │   │   │   ├── rank-5.png
+│   │   │   │   ├── rank-6.png
+│   │   │   │   ├── rank-7.png
+│   │   │   │   ├── rank-8.png
+│   │   │   │   └── rank-9.png
+│   │   │   ├── cqc
+│   │   │   │   ├── rank-1.png
+│   │   │   │   ├── rank-2.png
+│   │   │   │   ├── rank-3.png
+│   │   │   │   ├── rank-4.png
+│   │   │   │   ├── rank-5.png
+│   │   │   │   ├── rank-6.png
+│   │   │   │   ├── rank-7.png
+│   │   │   │   ├── rank-8.png
+│   │   │   │   └── rank-9.png
+│   │   │   ├── explore
+│   │   │   │   ├── rank-1.png
+│   │   │   │   ├── rank-2.png
+│   │   │   │   ├── rank-3.png
+│   │   │   │   ├── rank-4.png
+│   │   │   │   ├── rank-5.png
+│   │   │   │   ├── rank-6.png
+│   │   │   │   ├── rank-7.png
+│   │   │   │   ├── rank-8.png
+│   │   │   │   └── rank-9.png
+│   │   │   └── trade
+│   │   │       ├── rank-1.png
+│   │   │       ├── rank-2.png
+│   │   │       ├── rank-3.png
+│   │   │       ├── rank-4.png
+│   │   │       ├── rank-5.png
+│   │   │       ├── rank-6.png
+│   │   │       ├── rank-7.png
+│   │   │       ├── rank-8.png
+│   │   │       └── rank-9.png
 │   │   ├── rare.png
 │   │   ├── recording.png
 │   │   ├── record.png
@@ -398,6 +683,12 @@
 │   │   ├── sort_d.png
 │   │   ├── sort.png
 │   │   ├── spaceports
+│   │   │   ├── coriolis.png
+│   │   │   ├── ocellus.png
+│   │   │   ├── orbis.png
+│   │   │   ├── planetary.png
+│   │   │   ├── spaceport.png
+│   │   │   └── unknown.png
 │   │   ├── sql24.png
 │   │   ├── sql.png
 │   │   ├── station.png
@@ -548,4 +839,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-100 directories, 449 files
+138 directories, 702 files

@@ -2173,21 +2173,6 @@ img {
   position: relative;
 }
 
-.rightpanel-icons {
-  position: absolute;
-  right: 14px;
-  top: 8px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  z-index: 1002;
-}
-
-.rightpanel-icons img.elite_emb {
-  width: 22px;
-  height: 22px;
-  opacity: .95;
-}
 /* === EDTB Linux: force settings/about panels to viewport top-right === */
 #settings,
 #about {
@@ -2203,16 +2188,6 @@ img {
 /* === EDTB Linux header: pin header icons to top-right === */
 .rightpanel-top {
   position: relative;
-}
-
-.rightpanel-icons {
-  position: absolute;
-  right: 14px;
-  top: 8px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  z-index: 1002;
 }
 
 .rightpanel-icons img.elite_emb {
@@ -2252,4 +2227,21 @@ img {
 #ed3dmap,
 #container {
   position: relative;
+}
+
+/* === Global: pin header action icons to the top-right === */
+.rightpanel-icons {
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 9999;
+  /* keep above page widgets/maps */
+}
+
+.rightpanel-icons img {
+  width: 22px;
+  height: 22px;
 }

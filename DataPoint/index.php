@@ -52,11 +52,6 @@ $UPPER  = strtoupper($dataTable);
     <!-- Top controls: Rows-per-page + Export + Distance sort + Preset -->
     <?php include __DIR__ . '/partials/controls.php'; ?>
 
-        <div class="right">
-            <a class="dp-button" href="/DataPoint/export.php?table=<?php echo urlencode($dataTable); ?>">Export CSV</a>
-        </div>
-    </div>
-
     <!-- Quick Filters -->
     <?php include __DIR__ . '/partials/quickfilters.php'; ?>
 

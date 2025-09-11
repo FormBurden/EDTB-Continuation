@@ -7,7 +7,7 @@ require_once $root . '/style/Footer.php';
 $header = new Header();
 $pageTitle = 'Galaxy Map';
 $header->displayHeader();
-echo '<link rel="stylesheet" href="/source/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />' . PHP_EOL;
+echo '<link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />' . PHP_EOL;
 echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' . PHP_EOL;
 ?>
 <div class="galmap-wrap">
@@ -68,7 +68,7 @@ echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' .
   </div>
 </div>
 
-<script src="/source/Vendor/three.min.js"></script>
+<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/three.min.js"></script>
 <!-- IMPORTANT: use the library build, not the old wrapper -->
 <script src="/source/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 <link rel="stylesheet" href="/source/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />

@@ -1,0 +1,27 @@
+GalMap/index.php
+GalMap/js/galmap.js
+GalMap/css/galmap.css
+GalMap/getMapPoints.json.php
+GalMap/getSystemNames.json.php
+GalMap/getCurrentSystem.json.php
+GalMap/lib/GalMapParams.php
+
+style/header/head.php
+style/Header.php
+style/Footer.php
+source/javascript.js
+
+# ED3D library (the one actually used by the page)
+GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js
+GalMap/Vendor/ED3D-Galaxy-Map/js/components/hud.class.js
+GalMap/Vendor/ED3D-Galaxy-Map/js/components/system.class.js
+GalMap/Vendor/ED3D-Galaxy-Map/js/components/galaxy.class.js
+GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/OrbitControls.js
+GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/CSS3DRenderer.js
+GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/Projector.js
+GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/FontUtils.js
+GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/helvetiker_regular.typeface.js
+GalMap/Vendor/ED3D-Galaxy-Map/textures/heightmap7.jpg
+
+# Three.js (served path the page uses)
+source/Vendor/three.min.js

@@ -24,7 +24,7 @@ function datapoint_table_whitelist(mysqli $mysqli): array
     if ($res = $mysqli->query("SHOW TABLES")) {
         while ($row = $res->fetch_row()) {
             $t = (string)($row[0] ?? '');
-            if ($t !== '' && strpos($t, 'edtb_') === 0) {
+            if ($t !== '' && (strpos($t, 'edtb_') === 0 || strpos($t, 'user_') === 0)) {
                 $allowed[] = $t;
             }
         }
