@@ -293,6 +293,8 @@
 			withHudPanel: true,
 			startAnim: true
 		});
+		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+
 	});
 
 	// Kick once on load if center is present

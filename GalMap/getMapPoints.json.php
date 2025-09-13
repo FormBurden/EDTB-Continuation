@@ -256,7 +256,7 @@ if ($res = $mysqli->query($sql)) {
 
         $item = [
             'name'       => $name,
-            'coords'     => [ 'x' => $x, 'y' => $y, 'z' => $z ],
+            'coords'     => [ (float)$x, (float)$y, (float)$z ],
             'cat'        => [ $catName ],
             'visited'    => $visited,
             'bookmarked' => $bookmarked,

@@ -108,12 +108,9 @@
 ├── EDTB
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
-├── .edtb-files.001.txt
-├── .edtb-files.galmap-black.001.txt
 ├── .edtb-files.txt
-├── edtb_galmap_black_postfix_fix2.tar.gz
-├── edtb_issue_galmap_black.tar.gz
-├── edtb_issue_pick_global.tar.gz
+├── edtb_issue_pick_test.tar.gz
+├── .edtb-scope.txt
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
@@ -839,4 +836,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-138 directories, 702 files
+138 directories, 699 files

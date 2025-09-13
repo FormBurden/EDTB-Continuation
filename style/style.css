@@ -2348,3 +2348,16 @@ img {
   align-items: center;
   z-index: 2;
 }
+/* --- EDTB Linux: allow full-height layouts --- */
+html,
+body {
+  height: 100%;
+}
+
+#content,
+#wrapper,
+#main,
+.content,
+.container {
+  min-height: 100%;
+}
