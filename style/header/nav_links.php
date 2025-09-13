@@ -8,10 +8,10 @@ $maplink = $settings['default_map'] === 'galaxy_map' ? '/GalMap' : '/Map';
 
 $links = [
         'ED ToolBox--log.png--true' => '/EDToolbox/',
-        'System Information--info.png--true' => '/System',
-        'Galaxy Map--grid.png--true' => '/GalMap',
-        'Neighborhood Map--grid.png--true' => '/Map',
-        'Points of Interest&nbsp;&nbsp;&&nbsp;&nbsp;Bookmarks--poi.png--true' => '/Bookmarks',
+        'System Information--info.png--false' => '/System',
+        'Galaxy Map--grid.png--false' => '/GalMap',
+        'Neighborhood Map--grid.png--false' => '/Map',
+        'Points of Interest&nbsp;&nbsp;&&nbsp;&nbsp;Bookmarks--poi.png--false' => '/Bookmarks',
         'Nearest Systems&nbsp;&nbsp;&&nbsp;&nbsp;Stations--find.png--false' => '/NearestSystems',
         'Data Point--dataview.png--false' => '/DataPoint',
         'Galnet News--news.png--false' => '/GalNet',

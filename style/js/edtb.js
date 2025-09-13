@@ -3,6 +3,20 @@
   ready(function(){
     w.EDTB = w.EDTB || {};
     console.log('[EDTB] edtb.js loaded');
+    // jQuery 3: restore legacy `$(...).load(fn)` shorthand to mean "on load"
+    if (window.jQuery && jQuery.fn && !jQuery.fn.__edtbLoadPatched) {
+      (function ($) {
+        const oldLoad = $.fn.load;
+        $.fn.load = function (a, b, c) {
+          if (typeof a === 'function' && (b === undefined && c === undefined)) {
+            return this.on('load', a);
+          }
+          return oldLoad ? oldLoad.call(this, a, b, c) : this;
+        };
+        $.fn.__edtbLoadPatched = true;
+      })(jQuery);
+    }
+
     // place page bootstrap hooks here as we re-enable features
   });
 })(window, document);

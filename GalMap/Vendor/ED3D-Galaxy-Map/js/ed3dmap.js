@@ -255,8 +255,7 @@ var Ed3d = {
     });
     Ed3d.material.glow_2 = new THREE.SpriteMaterial({
 
-      map: Ed3d.textures.flare_white, transparent: true, size: 1,
-      vertexColors: THREE.VertexColors,
+      map: Ed3d.textures.flare_white, transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       opacity: 0.5

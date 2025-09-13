@@ -384,6 +384,49 @@ tar -C "$TMPDIR" -czf "$TARBALL" .
 rm -rf "$TMPDIR"
 TARBALL_SHA256="$(sha256sum "$TARBALL" | awk '{print $1}')"
 
+# --- BEGIN .edtb-scope.txt append block ---
+SCOPE_FILE="$ROOT/.edtb-scope.txt"
+
+# Current branch (fallback to 'unknown' if git not available)
+BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown')"
+
+# Helper: get the last occurrence of a key prefix (e.g., "commit:", "mode:", "notes:")
+_extract_last_line() {
+  local key="$1"
+  # Prints the last line in the file that starts with the key; empty if not found
+  awk -v k="$key" 'index($0,k)==1{v=$0} END{if (v!="") print v}' "$SCOPE_FILE" 2>/dev/null || true
+}
+
+# Carry-forward values if they exist; otherwise set sensible defaults
+COMMIT_LINE="$(_extract_last_line 'commit:')"
+MODE_LINE="$(_extract_last_line 'mode:')"
+NOTES_LINE="$(_extract_last_line 'notes:')"
+
+if [[ -z "${COMMIT_LINE}" ]]; then
+  # Default to the current repo commit (short) on first use
+  COMMIT_LINE="commit: $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo 'UNKNOWN')"
+fi
+if [[ -z "${MODE_LINE}" ]]; then
+  MODE_LINE="mode: BUGFIX"
+fi
+if [[ -z "${NOTES_LINE}" ]]; then
+  NOTES_LINE="notes: | Reference checksum for correct bundle and files."
+fi
+
+# Append a new block to .edtb-scope.txt
+{
+  echo "bundle: $(basename "$TARBALL")"
+  echo "bundle checksum: ${TARBALL_SHA256}"
+  echo "branch: ${BRANCH}"
+  echo "${COMMIT_LINE}"
+  echo "${MODE_LINE}"
+  echo "SOURCES: files_only"
+  echo "db_migrations: none"
+  echo "${NOTES_LINE}"
+  echo
+} >> "$SCOPE_FILE"
+# --- END .edtb-scope.txt append block ---
+
 
 echo "Bundle created: ${TARBALL}" | redact_host
 echo "SHA256: ${TARBALL_SHA256}"

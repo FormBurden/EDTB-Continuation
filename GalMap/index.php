@@ -9,6 +9,9 @@ $pageTitle = 'Galaxy Map';
 $header->displayHeader();
 echo '<link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />' . PHP_EOL;
 echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' . PHP_EOL;
+echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/FontUtils.js"></script>' . PHP_EOL;
+echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/helvetiker_regular.typeface.js"></script>' . PHP_EOL;
+echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/TextGeometry.js"></script>' . PHP_EOL;
 ?>
 <div class="galmap-wrap">
   <h1 class="galmap-title">Galaxy Map</h1>
@@ -46,9 +49,9 @@ echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' .
 
     <!-- Center coords (auto-filled from suggestions or exact lookup) -->
     <div class="row coords">
-      <label>X</label><input type="number" id="centerX" name="centerX" step="0.0001" placeholder="X">
-      <label>Y</label><input type="number" id="centerY" name="centerY" step="0.0001" placeholder="Y">
-      <label>Z</label><input type="number" id="centerZ" name="centerZ" step="0.0001" placeholder="Z">
+    <label>X</label><input type="number" id="centerX" name="centerX" step="0.00001" placeholder="X">
+      <label>Y</label><input type="number" id="centerY" name="centerY" step="0.00001" placeholder="Y">
+      <label>Z</label><input type="number" id="centerZ" name="centerZ" step="0.00001" placeholder="Z">
     </div>
   </form>
 
@@ -71,11 +74,12 @@ echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' .
 </div>
 
 <script src="/source/Vendor/three.min.js"></script>
-<script src="/source/Vendor/markitup/jquery.markitup.js"></script>
-<script src="/source/Vendor/markitup/sets/html/set.js"></script>
-<!-- IMPORTANT: use the library build, not the old wrapper -->
+<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/FontUtils.js"></script>
+<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/helvetiker_regular.typeface.js"></script>
+<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/TextGeometry.js"></script>
 <script src="/GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 <script src="/GalMap/js/galmap.js"></script>
+
 <script>
 /* Galaxy Map: default-hide overlays and tooltips, and close on map click */
 $(function () {
