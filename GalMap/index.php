@@ -71,6 +71,8 @@ echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' .
 </div>
 
 <script src="/source/Vendor/three.min.js"></script>
+<script src="/source/Vendor/markitup/jquery.markitup.js"></script>
+<script src="/source/Vendor/markitup/sets/html/set.js"></script>
 <!-- IMPORTANT: use the library build, not the old wrapper -->
 <script src="/GalMap/Vendor/ED3D-Galaxy-Map/js/ed3dmap.js"></script>
 <script src="/GalMap/js/galmap.js"></script>

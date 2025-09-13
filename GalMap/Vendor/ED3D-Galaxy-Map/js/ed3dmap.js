@@ -18,7 +18,7 @@ var lensFlareSel;
 var Ed3d = {
 
   'container'   : null,
-  'basePath'    : './',
+  'basePath': '../',
   'jsonPath'    : null,
   'jsonContainer' : null,
 
@@ -405,7 +405,7 @@ var Ed3d = {
   'addObjToCategories' : function(index, catList) {
 
     $.each(catList, function(keyArr, idCat) {
-      Ed3d.catObjs[idCat].push(index);
+      (Ed3d.catObjs[idCat] || (Ed3d.catObjs[idCat] = [])).push(index);
     });
   },
 

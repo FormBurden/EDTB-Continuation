@@ -24,7 +24,18 @@ $title = isset($this->pageTitle) && $this->pageTitle !== ''
         crossorigin="anonymous"></script>
 <script>window.jQuery || document.write('<script src="/style/js/jquery.min.js"><\/script>')</script>
 
+<!-- Legacy front-end deps expected by inline EDTB code -->
+<script src="/source/Vendor/wiselinks-1.2.2.min.js"></script>
+<script src="/source/Vendor/markitup/jquery.markitup.js"></script>
+<script src="/source/Vendor/markitup/sets/html/set.js"></script>
+
+
+<!-- Original global helpers (defines get_cs, get_data, make_gallery, etc.) -->
+<script src="/source/javascript.js"></script>
+
+<!-- Project bootstrap (must come last) -->
 <script src="/style/js/edtb.js"></script>
+
 
 </head>
 
