@@ -296,6 +296,48 @@ list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock(
     $settings,
     $curSys
 );
+// [System Info computed segments]
+
+// Crosslinks icons (gallery/log/map/info) — parity with legacy System::crosslinks()
+// Signature: System::crosslinks($system, $showScreens=true, $showSystem=false, $showLogs=true, $showMap=true)
+list($siCrosslinks) = buildSystemLinksAndDists((string)$siSystemName, $curSys, $settings);
+
+// Determine a system id we can use for stations/visits
+$stationSystemId = (isset($siSystemId) && (int)$siSystemId > 0)
+    ? (int)$siSystemId
+    : (\EDTB\Domain\System\SystemRepository::findIdByName($mysqli, (string)$siSystemName) ?? -1);
+
+// Build Stations column HTML and compute existence count
+$stationExists = 0;
+$data['si_stations'] = '';
+
+if ($stationSystemId > 0) {
+    $__res = \EDTB\Domain\Stations\StationsRepository::selectResultBySystemId($mysqli, $stationSystemId);
+    if ($__res) {
+        $stationExists = $__res->num_rows;
+
+        while ($__st = $__res->fetch_object()) {
+            $stName = (string)($__st->name ?? '');
+            $ls     = trim((string)($__st->ls_from_star ?? ''));
+            $lsText = $ls !== '' ? ' <span class="small">(' . $ls . ' Ls)</span>' : '';
+            $data['si_stations'] .= '<div class="station">' . htmlspecialchars($stName) . $lsText . '</div>';
+        }
+        $__res->close();
+    }
+
+    // Visits for header meta
+    $escName = $mysqli->real_escape_string((string)$siSystemName);
+    $resNV = $mysqli->query(
+        "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_name = '" . $escName . "'"
+    );
+    $rowNV = $resNV->fetch_object();
+    $resNV->close();
+    $numVisits = (int)($rowNV->c ?? 0);
+
+    
+} else {
+    $numVisits = 0;
+}
 
 $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemDisplayName,

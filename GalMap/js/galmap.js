@@ -284,7 +284,7 @@
 		const qs = buildQueryFromForm();
 
 		// Update Results panel & legend first (fast)
-		void updateResults(qs);
+		await updateResults(qs);
 
 		// Init ED3D map
 		if (!window.Ed3d) {
@@ -293,33 +293,43 @@
 		}
 		if (mapEl) mapEl.innerHTML = '';
 
+		const rc = window.__galmapResolvedCenter;
+		const playerPos = (rc && Number.isFinite(Number(rc.x)) && Number.isFinite(Number(rc.y)) && Number.isFinite(Number(rc.z)))
+			? [Number(rc.x), Number(rc.y), Number(rc.z)]
+			: null;
+
 		Ed3d.init({
 			container: 'ed3dmap',
 			basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
-			startAnim: true
+			startAnim: true,
+			playerPos: playerPos
 		});
-		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
-	});
+
 	// After ED3D init, push the resolved center into controls so HUD/grid match
-	(function applyResolvedCenter() {
+	(function waitForControlsAndCenter() {
 		const rc = window.__galmapResolvedCenter;
-		if (!rc || !window.controls) return;
+		// Wait until ED3D has created OrbitControls (done inside launchMap)
+		if (!rc || !window.controls || !controls.target) {
+			setTimeout(waitForControlsAndCenter, 50);
+			return;
+		}
 		const x = Number(rc.x), y = Number(rc.y), z = Number(rc.z);
 		if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
 			try {
-				// OrbitControls standard uses `target`; ED3D’s HUD sometimes reads `center`
+				// OrbitControls uses `target`; some vendor bits may also read `center`
 				controls.target.set(x, y, z);
 				if (controls.center && typeof controls.center.set === 'function') {
 					controls.center.set(x, y, z);
 				}
-			} catch (_) {/* ignore */ }
+			} catch (_) { /* no-op */ }
 		}
 	})();
+	
   
 	// Kick once on load if center is present
-	document.addEventListener('DOMContentLoaded', async () => {
+		document.addEventListener('DOMContentLoaded', (async () => {
 		const hasCenter = ($id('center_system')?.value || '').trim().length > 0 ||
 			($id('centerX')?.value ?? '') !== '';
 		if (hasCenter) {

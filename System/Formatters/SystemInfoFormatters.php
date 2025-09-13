@@ -3,129 +3,100 @@ declare(strict_types=1);
 
 /**
  * System Information page formatters extracted from System/getData_systemInfo.php
- * Keep these helpers presentation-only; no DB or global side effects here.
+ * Presentation-only helpers (no DB access).
  */
+
 /**
- * Build the facilities array from a station object.
- * Keys match icon filenames in /style/img/facilities/.
+ * Format the mini meta after the system name: [ STATE - SECURITY - Visits:N ]
  */
-function facilitiesFromStation(object $stationObj): array
+function formatSiHeaderMeta(string $state, string $security, int $numVisits): string
 {
-    return [
-        'shipyard'     => (int)$stationObj->shipyard,
-        'outfitting'   => (int)$stationObj->outfitting,
-        'market'       => (int)$stationObj->commodities_market,
-        'black_market' => (int)$stationObj->black_market,
-        'refuel'       => (int)$stationObj->refuel,
-        'repair'       => (int)$stationObj->repair,
-        'restock'      => (int)$stationObj->rearm,
-    ];
+    $state    = trim($state) === '' ? 'Unknown' : strtoupper($state);
+    $security = trim($security) === '' ? 'Unknown' : strtoupper($security);
+    return '[ ' . $state . ' - ' . $security . ' - Visits: ' . (int)$numVisits . ' ]';
 }
 
 /**
- * Return the facilities icon strip HTML for a station.
+ * Build a simple station title; if you later want a wiki/external link, wire it here.
+ */
+function buildStationTitleWithWiki(int $stationId, string $fullTitle): string
+{
+    // Keep plain text title for now (legacy sometimes linked to local station page)
+    return htmlspecialchars($fullTitle, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Combine primary/secondary economies into a display string like "Industrial / Military".
+ */
+function buildEconomiesText(object $stationObj): string
+{
+    $primary   = trim((string)($stationObj->economies ?? ''));
+    $secondary = trim((string)($stationObj->secondary_economy ?? ''));
+    if ($primary !== '' && $secondary !== '' && strcasecmp($primary, $secondary) !== 0) {
+        return $primary . ' / ' . $secondary;
+    }
+    return $primary !== '' ? $primary : $secondary;
+}
+
+/**
+ * Facilities strip: expects an associative array of booleans keyed by facility name.
+ * Uses /style/img/facilities/{key}.png icon filenames.
  */
 function buildFacilitiesHtml(array $facilities): string
 {
-    // Load icon map (filenames only) and build the row of icons for “true” facilities.
-    $iconMap = require __DIR__ . '/../Lookups/FacilitiesIconMap.php';
+    // Map facility key -> icon filename (fallback: {key}.png)
+    $iconMapPath = __DIR__ . '/../Lookups/FacilitiesIconMap.php';
+    $iconMap = file_exists($iconMapPath) ? require $iconMapPath : [];
 
     $html = [];
     foreach ($facilities as $key => $enabled) {
         if (!$enabled) {
             continue;
         }
-        $file = $iconMap[$key]; // no guards — mapping must be complete
-        $alt  = ucfirst(str_replace('_', ' ', $key));
-        $html[] = '<img src="/style/img/facilities/' . $file . '" class="icon" alt="' . $alt . '">';
+        $file = $iconMap[$key] ?? ($key . '.png');
+        $alt  = ucfirst(str_replace('_',' ', (string)$key));
+        $html[] = '<img src="/style/img/facilities/' . htmlspecialchars($file) . '" class="icon" title="' . htmlspecialchars($alt) . '" alt="' . htmlspecialchars($alt) . '">';
     }
 
-    return implode("\n", $html);
-}
-
-
-/**
- * Build the bracketed "State / Security / Visits" segment for the header.
- */
-function formatSiHeaderMeta($state, $security, int $numVisits): string
-{
-    $__parts = [];
-
-    if (!empty($state) && $state !== 'None') {
-        $__parts[] = 'State: ' . $state;
-    }
-    if (!empty($security) && $security !== 'None') {
-        $__parts[] = 'Security: ' . $security;
-    }
-    if ($numVisits > 0) {
-        $__parts[] = 'Visits: ' . $numVisits;
-    }
-
-    return count($__parts) ? '[ ' . implode(' - ', $__parts) . ' ]' : '';
+    return $html ? '<span class="facilities">' . implode('&nbsp;', $html) . '</span>' : '';
 }
 
 /**
- * Build the clickable station title with an inline Wikipedia trigger.
+ * Human-readable allowed ships / landing pad sizes text.
  */
-function buildStationTitleWithWiki(int $stationId, string $title): string
+function buildPadSizeText(string $maxLandingPadSize): string
 {
-    $wikiQuery = $title;
-
-    $out  = '<span class="wp" onclick="get_wikipedia(\'' . addslashes($wikiQuery) . '\', \'' . $stationId . '\')">';
-    $out .= '<a href="javascript:void(0)" title="Ask Wikipedia about ' . htmlspecialchars($wikiQuery, ENT_QUOTES) . '" style="font-weight: inherit">'
-         .  htmlspecialchars($title, ENT_QUOTES)
-         .  '</a></span>';
-
-    return $out;
-}
-
-/**
- * Build the system crosslinks strip and add the "Map this system" link if not mapped.
- */
-function buildSystemCrosslinks(string $systemName): string
-{
-    $out = \EDTB\source\System::crosslinks($systemName);
-
-    if (!\EDTB\source\System::isMapped($systemName)) {
-        $out .= '<a href="/SystemMap/?system=' . urlencode($systemName) . '" style="color: inherit" title="Map this system">';
-        $out .= '<img src="/style/img/grid_g.png" class="icon" style="margin-left: 5px; margin-right: 0">';
-        $out .= '</a>';
+    $s = strtoupper($maxLandingPadSize);
+    if ($s === 'L' || $s === 'LARGE') {
+        return 'Large pads';
     }
-
-    return $out;
-}
-
-/**
- * Build the little "[ Nearby rares within X ly: N ]" toggle label + hidden list.
- */
-function buildRaresMiniLabel(int $actualNumRes, $rareRange, string $cRaresData, $x, $y, $z): string
-{
-    if ($actualNumRes > 0 && validCoordinates($x, $y, $z)) {
-        $out  = '&nbsp;&nbsp;<span onclick="$(\'#rares\').fadeToggle(\'fast\')">';
-        $out .= '<a href="javascript:void(0)" title="Click to toggle rares list">[ Nearby rares within ' . $rareRange . ' ly: ' . $actualNumRes . ' ]</a>';
-        $out .= $cRaresData . '</span>';
-        return $out;
+    if ($s === 'M' || $s === 'MEDIUM') {
+        return 'Medium pads';
+    }
+    if ($s === 'S' || $s === 'SMALL') {
+        return 'Small pads';
     }
     return '';
 }
 
 /**
- * Build the three commodity lines (Import / Export / Prohibited) for a station.
- * (Safe to include even if not used yet.)
+ * Import/Export/Prohibited summary lines.
  */
-function buildCommodityLines($stationObj): string
+function buildCommoditiesText(object $stationObj): string
 {
-    $import = empty($stationObj->import_commodities)
-        ? ''
-        : '<strong>Import commodities:</strong> ' . $stationObj->import_commodities . '<br>';
+    $import = trim((string)($stationObj->import_commodities ?? ''));
+    $export = trim((string)($stationObj->export_commodities ?? ''));
+    $proh   = trim((string)($stationObj->prohibited_commodities ?? ''));
 
-    $export = empty($stationObj->export_commodities)
-        ? ''
-        : '<strong>Export commodities:</strong> ' . $stationObj->export_commodities . '<br>';
-
-    $prohibited = empty($stationObj->prohibited_commodities)
-        ? ''
-        : '<strong>Prohibited commodities:</strong> ' . $stationObj->prohibited_commodities . '<br>';
-
-    return $import . $export . $prohibited;
+    $out = '';
+    if ($import !== '') {
+        $out .= '<strong>Import commodities:</strong> ' . htmlspecialchars($import) . '<br>';
+    }
+    if ($export !== '') {
+        $out .= '<strong>Export commodities:</strong> ' . htmlspecialchars($export) . '<br>';
+    }
+    if ($proh !== '') {
+        $out .= '<strong>Prohibited commodities:</strong> ' . htmlspecialchars($proh) . '<br>';
+    }
+    return $out;
 }
