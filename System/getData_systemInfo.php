@@ -159,6 +159,18 @@ if ($hasSystemId || $hasSystemName) {
     $curX = $curSys['x'] ?? null;
     $curY = $curSys['y'] ?? null;
     $curZ = $curSys['z'] ?? null;
+    // Resolve current system coordinates for header distance/meta
+    $escName = $mysqli->real_escape_string((string)$siSystemName);
+    $__sysRes = $mysqli->query(
+        "SELECT x, y, z FROM systems WHERE name = '" . $escName . "' LIMIT 1"
+    );
+    $__sysRow = $__sysRes ? $__sysRes->fetch_object() : null;
+    if ($__sysRes) { $__sysRes->close(); }
+    $curSys = (object)[
+        'si_system_coordx' => isset($__sysRow->x) ? (float)$__sysRow->x : 0.0,
+        'si_system_coordy' => isset($__sysRow->y) ? (float)$__sysRow->y : 0.0,
+        'si_system_coordz' => isset($__sysRow->z) ? (float)$__sysRow->z : 0.0,
+    ];
 
     $sx = (float)$systemObj->si_system_coordx;
     $sy = (float)$systemObj->si_system_coordy;

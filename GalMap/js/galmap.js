@@ -65,12 +65,6 @@
 		const url = `/GalMap/getMapPoints.json.php?${qs.toString()}`;
 		const res = await fetch(url, { cache: 'no-store' });
 		const data = await res.json();
-		// Remember server-resolved center for camera/HUD sync after ED3D.init
-		if (data && data.resolved_center && Number.isFinite(data.resolved_center.x) &&
-			Number.isFinite(data.resolved_center.y) && Number.isFinite(data.resolved_center.z)) {
-			window.__galmapResolvedCenter = data.resolved_center;
-		}
-
 
 		const sys = Array.isArray(data?.systems) ? data.systems : [];
 		const countEl = $id('results-count');
@@ -284,7 +278,7 @@
 		const qs = buildQueryFromForm();
 
 		// Update Results panel & legend first (fast)
-		await updateResults(qs);
+		void updateResults(qs);
 
 		// Init ED3D map
 		if (!window.Ed3d) {
@@ -293,43 +287,33 @@
 		}
 		if (mapEl) mapEl.innerHTML = '';
 
-		const rc = window.__galmapResolvedCenter;
-		const playerPos = (rc && Number.isFinite(Number(rc.x)) && Number.isFinite(Number(rc.y)) && Number.isFinite(Number(rc.z)))
-			? [Number(rc.x), Number(rc.y), Number(rc.z)]
-			: null;
-
 		Ed3d.init({
 			container: 'ed3dmap',
 			basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
-			startAnim: true,
-			playerPos: playerPos
+			startAnim: true
 		});
-
+		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+	});
 	// After ED3D init, push the resolved center into controls so HUD/grid match
-	(function waitForControlsAndCenter() {
+	(function applyResolvedCenter() {
 		const rc = window.__galmapResolvedCenter;
-		// Wait until ED3D has created OrbitControls (done inside launchMap)
-		if (!rc || !window.controls || !controls.target) {
-			setTimeout(waitForControlsAndCenter, 50);
-			return;
-		}
+		if (!rc || !window.controls) return;
 		const x = Number(rc.x), y = Number(rc.y), z = Number(rc.z);
 		if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
 			try {
-				// OrbitControls uses `target`; some vendor bits may also read `center`
+				// OrbitControls standard uses `target`; ED3D’s HUD sometimes reads `center`
 				controls.target.set(x, y, z);
 				if (controls.center && typeof controls.center.set === 'function') {
 					controls.center.set(x, y, z);
 				}
-			} catch (_) { /* no-op */ }
+			} catch (_) {/* ignore */ }
 		}
 	})();
-	
   
 	// Kick once on load if center is present
-		document.addEventListener('DOMContentLoaded', (async () => {
+	document.addEventListener('DOMContentLoaded', async () => {
 		const hasCenter = ($id('center_system')?.value || '').trim().length > 0 ||
 			($id('centerX')?.value ?? '') !== '';
 		if (hasCenter) {

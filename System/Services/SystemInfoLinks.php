@@ -19,7 +19,7 @@ function buildSystemLinksAndDists(
 
     // INARA
     $links .= '<a href="https://inara.cz/galaxy-system/?search=' . $q . '" target="_blank" title="INARA">';
-    $links .= '<img src="/style/img/inara.png" class="extlink" alt="INARA">';
+    $links .= '<img src="/style/img/external_link.png" class="extlink" alt="INARA">';
     $links .= '</a>';
 
     // EDDB
@@ -29,7 +29,7 @@ function buildSystemLinksAndDists(
 
     // EDSM
     $links .= '&nbsp;<a href="https://www.edsm.net/en/system?systemName=' . $q . '" target="_blank" title="EDSM">';
-    $links .= '<img src="/style/img/edsm.png" class="extlink" alt="EDSM">';
+    $links .= '<img src="/style/img/external_link.png" class="extlink" alt="EDSM">';
     $links .= '</a>';
 
     // Map this system (internal)

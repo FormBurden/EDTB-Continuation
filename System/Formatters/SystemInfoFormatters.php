@@ -100,3 +100,41 @@ function buildCommoditiesText(object $stationObj): string
     }
     return $out;
 }
+// === System Info: "Rares" mini label used by System/Services/SystemInfoRares.php ===
+// Accepts flexible args so the caller can pass either an array of rows and/or a count.
+// Expected usage is consistent with the legacy UI: show the rare icon + compact text.
+function buildRaresMiniLabel(...$args): string
+{
+    $raresList = [];
+    $nearbyCount = 0;
+
+    foreach ($args as $a) {
+        if (is_array($a) && empty($raresList)) {
+            $raresList = $a;
+            continue;
+        }
+        if (is_int($a)) {
+            $nearbyCount = $a;
+            continue;
+        }
+    }
+
+    $total = is_array($raresList) ? count($raresList) : 0;
+    if ($total <= 0 && $nearbyCount <= 0) {
+        return '';
+    }
+
+    $parts = [];
+    if ($total > 0) {
+        $parts[] = $total . ' rare' . ($total === 1 ? '' : 's');
+    }
+    if ($nearbyCount > 0) {
+        $parts[] = $nearbyCount . ' nearby';
+    }
+
+    $text = implode(' • ', $parts);
+
+    return '<span class="rareMiniLabel"><img src="/style/img/rare.png" class="icon" alt="Rare"> '
+         . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+         . '</span>';
+}
