@@ -9,8 +9,16 @@ global $settings, $api;
             </a>
 
             <!-- page title and search systems & stations -->
-            <div class="rightpanel-title">
-            <div id="pageTitle"><?= $this->pageTitle?></div>
+                        <!-- page title -->
+            <div class="edtb-page-title" id="pageTitle">
+                <?= htmlspecialchars($this->pageTitle, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+
+            <!-- commander name -->
+            <div class="rightpanel-cmdr">
+                CMDR <?= htmlspecialchars($settings['edtb_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+            </div>
+
             </div>
             <!-- settings & about -->
             <div class="rightpanel-icons">

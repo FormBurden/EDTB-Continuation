@@ -101,3 +101,18 @@
 #systeminfo {
     height:30px;
 }
+/* ===== Nearest Systems narrow layout ===== */
+#nscontent.ns-wrap {
+    grid-template-columns: 1fr;
+}
+
+.ns-left {
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+.ns-powers {
+    grid-column: 1 / -1;
+}

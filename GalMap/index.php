@@ -5,13 +5,10 @@ require_once $root . '/style/Header.php';
 require_once $root . '/style/Footer.php';
 
 $header = new Header();
-$pageTitle = 'Galaxy Map';
+$header->pageTitle = 'Galaxy Map';
 $header->displayHeader();
 echo '<link rel="stylesheet" href="/GalMap/Vendor/ED3D-Galaxy-Map/css/styles.css" type="text/css" />' . PHP_EOL;
 echo '<link rel="stylesheet" href="/GalMap/css/galmap.css" type="text/css" />' . PHP_EOL;
-echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/FontUtils.js"></script>' . PHP_EOL;
-echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/helvetiker_regular.typeface.js"></script>' . PHP_EOL;
-echo '<script src="/GalMap/Vendor/ED3D-Galaxy-Map/vendor/three-js/TextGeometry.js"></script>' . PHP_EOL;
 ?>
 <div class="galmap-wrap">
   <h1 class="galmap-title">Galaxy Map</h1>

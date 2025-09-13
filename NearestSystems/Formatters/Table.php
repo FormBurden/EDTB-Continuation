@@ -1,11 +1,11 @@
 <?php
 class NearestSystemsTableFormatter
 {
-    public static function tableOpen(): string
+    public static function tableOpen($stations): string
     {
-        return '<table class="system_table">';
+        $cls = 'system_table' . ($stations !== false ? ' with-stations' : ' without-stations');
+        return '<table class="' . $cls . '">';
     }
-
     public static function header($stations): string
     {
         $out = '<tr><th>System</th>';
