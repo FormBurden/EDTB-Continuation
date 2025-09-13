@@ -490,9 +490,9 @@ function animate(time) {
   fromy = $('#cury').html();
   fromz = $('#curz').html();
 
-  $('#cx').html(Math.round(controls.center.x));
-  $('#cy').html(Math.round(controls.center.y));
-  $('#cz').html(Math.round(-controls.center.z)); // Reverse z coord
+  $('#cx').html(Math.round(controls.target.x));
+  $('#cy').html(Math.round(controls.target.y));
+  $('#cz').html(Math.round(-controls.target.z)); // Reverse z coord  
 
   $('#distcur').html(Ed3d.calcDistCur(controls.target, fromx, fromy, fromz));
   $('#distsol').html(Ed3d.calcDistSol(controls.target));

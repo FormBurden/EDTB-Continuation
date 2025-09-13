@@ -297,7 +297,6 @@ list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock(
     $curSys
 );
 
-
 $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemDisplayName,
     (string)$siCrosslinks,

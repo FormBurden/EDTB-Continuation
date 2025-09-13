@@ -119,7 +119,7 @@ var Grid = {
       var posX = Math.ceil(controls.target.x/this.size)*this.size;
       var posZ = Math.ceil(controls.target.z/this.size)*this.size;
 
-      var textCoords = posX+' : '+this.obj.position.y+' : '+(-posZ);
+      var textCoords = posX + ' : ' + controls.target.y + ' : ' + (-posZ);
 
       //-- If same coords as previously, return.
       if(this.coordTxt == textCoords) return;

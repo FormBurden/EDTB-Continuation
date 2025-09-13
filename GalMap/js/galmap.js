@@ -65,6 +65,12 @@
 		const url = `/GalMap/getMapPoints.json.php?${qs.toString()}`;
 		const res = await fetch(url, { cache: 'no-store' });
 		const data = await res.json();
+		// Remember server-resolved center for camera/HUD sync after ED3D.init
+		if (data && data.resolved_center && Number.isFinite(data.resolved_center.x) &&
+			Number.isFinite(data.resolved_center.y) && Number.isFinite(data.resolved_center.z)) {
+			window.__galmapResolvedCenter = data.resolved_center;
+		}
+
 
 		const sys = Array.isArray(data?.systems) ? data.systems : [];
 		const countEl = $id('results-count');
@@ -191,6 +197,7 @@
 	const csInput = $id('center_system');
 	const mapEl = $id('ed3dmap');
 	const cx = $id('centerX'), cy = $id('centerY'), cz = $id('centerZ');
+	const view2d = $id('view2d');
 
 	// Suggest while typing
 	if (csInput) {
@@ -294,9 +301,23 @@
 			startAnim: true
 		});
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
-
 	});
-
+	// After ED3D init, push the resolved center into controls so HUD/grid match
+	(function applyResolvedCenter() {
+		const rc = window.__galmapResolvedCenter;
+		if (!rc || !window.controls) return;
+		const x = Number(rc.x), y = Number(rc.y), z = Number(rc.z);
+		if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
+			try {
+				// OrbitControls standard uses `target`; ED3D’s HUD sometimes reads `center`
+				controls.target.set(x, y, z);
+				if (controls.center && typeof controls.center.set === 'function') {
+					controls.center.set(x, y, z);
+				}
+			} catch (_) {/* ignore */ }
+		}
+	})();
+  
 	// Kick once on load if center is present
 	document.addEventListener('DOMContentLoaded', async () => {
 		const hasCenter = ($id('center_system')?.value || '').trim().length > 0 ||

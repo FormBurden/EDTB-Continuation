@@ -109,8 +109,9 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_issue_pick_test.tar.gz
+├── edtb_galmap_center_zeros.tar.gz
 ├── .edtb-scope.txt
+├── edtb_system_info_ui_01.tar.gz
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
@@ -836,4 +837,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-138 directories, 699 files
+138 directories, 700 files
