@@ -387,4 +387,25 @@ if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'u
 
 
 }
-header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); exit;
+/* --- Polish pass: hide empty meta bracket and populate si_detailed (phase 1) --- */
+
+// Remove the bracket when it's effectively empty: [ NONE - NONE - Visits: 0 ]
+$data['si_name'] = preg_replace(
+    '/\s*\[\s*NONE\s*-\s*NONE\s*-\s*Visits:\s*0\s*\]\s*/',
+    '',
+    $data['si_name']
+);
+
+// Add a simple detailed panel with coordinates (expand in next pass)
+$cx = htmlspecialchars((string)($curSys['x'] ?? ''));
+$cy = htmlspecialchars((string)($curSys['y'] ?? ''));
+$cz = htmlspecialchars((string)($curSys['z'] ?? ''));
+
+$data['si_detailed'] =
+    '<div class="si-detailed">' .
+        '<ul>' .
+            '<li><strong>Coordinates:</strong> x=' . $cx . ', y=' . $cy . ', z=' . $cz . '</li>' .
+        '</ul>' .
+    '</div>';
+
+    header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;

@@ -8,6 +8,7 @@
 /.edtb-files.txt
 /logs
 /.edtb-scope.txt
+/__INIT__
 
 # --- EDSM / ED data (downloads, extracts, caches, dumps) ---
 /data/dumps/

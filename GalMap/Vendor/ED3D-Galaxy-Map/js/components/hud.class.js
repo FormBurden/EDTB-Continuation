@@ -353,11 +353,16 @@ var HUD = {
 
   'setInfoPanel' : function(index, point) {
 
-	fromx = $('#curx').html();
-	fromy = $('#cury').html();
-	fromz = $('#curz').html();
+  // Distance from player position (provided via Ed3d.init -> playerPos)
+  var pos = Ed3d.playerPos;
+  var fromx = Number(pos && pos[0]);
+  var fromy = Number(pos && pos[1]);
+  var fromz = Number(pos && pos[2]);
 
-	var distance = Math.round(Math.sqrt(Math.pow((point.x-(fromx)),2)+Math.pow((point.y-(fromy)),2)+Math.pow((point.z-(fromz)), 1)));
+  var dx = point.x - fromx;
+  var dy = point.y - fromy;
+  var dz = point.z - fromz;
+  var distance = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz));
 
     $('#systemDetails').html(
       '<h2><a class="hud" href="'+encodeURI('/System?system_name='+replaceAll(point.name, " ", "+")+'')+'">'+point.name+'</a></h2>'+

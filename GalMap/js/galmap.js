@@ -94,9 +94,12 @@
 		const rc = data?.resolved_center;
 		let cxn = Number($id('centerX')?.value), cyn = Number($id('centerY')?.value), czn = Number($id('centerZ')?.value);
 		if (rc && isFinite(rc.x) && isFinite(rc.y) && isFinite(rc.z)) {
+			// Make it visible to the HUD/applyResolvedCenter hook
+			window.__galmapResolvedCenter = { x: Number(rc.x), y: Number(rc.y), z: Number(rc.z) };
 			cxn = Number(rc.x); cyn = Number(rc.y); czn = Number(rc.z);
 		}
 		const haveCenter = isFiniteNum(cxn) && isFiniteNum(cyn) && isFiniteNum(czn);
+
 
 		const html = sys.slice(0, 50).map((s) => {
 			const c = (s && s.coords) ? s.coords : {};
@@ -299,8 +302,10 @@
 			basePath: '/GalMap/Vendor/ED3D-Galaxy-Map/',
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
-			startAnim: true
+			startAnim: true,
+			playerPos: [Number(cx?.value), Number(cy?.value), Number(cz?.value)]
 		});
+	
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
 	});
 	// After ED3D init, push the resolved center into controls so HUD/grid match
