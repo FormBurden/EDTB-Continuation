@@ -99,21 +99,28 @@
 		const haveCenter = isFiniteNum(cxn) && isFiniteNum(cyn) && isFiniteNum(czn);
 
 		const html = sys.slice(0, 50).map((s) => {
-			const c = Array.isArray(s.coords) ? s.coords : [];
+			const c = (s && s.coords) ? s.coords : {};
+			const x = Number(c.x), y = Number(c.y), z = Number(c.z);
 			const bm = s.bookmarked ? ' ★' : '';
 			const vi = s.visited ? ' ✓' : '';
 			const cat = Array.isArray(s.cat) && s.cat.length ? ` <span class="result-cat">(${s.cat[0]})</span>` : '';
 			let distTxt = '';
-			if (haveCenter && c.length === 3 && c.every(isFiniteNum)) {
-				const dx = c[0] - cxn, dy = c[1] - cyn, dz = c[2] - czn;
+
+			if (haveCenter && isFiniteNum(x) && isFiniteNum(y) && isFiniteNum(z)) {
+				const dx = x - cxn, dy = y - cyn, dz = z - czn;
 				const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
 				if (isFiniteNum(d)) distTxt = ` — ${d.toFixed(1)} ly`;
 			} else if (isFiniteNum(s.dist)) {
 				distTxt = ` — ${Number(s.dist).toFixed(1)} ly`;
 			}
-			const dxAttr = c.length === 3 ? ` data-x="${c[0]}" data-y="${c[1]}" data-z="${c[2]}"` : '';
+
+			const dxAttr = (isFiniteNum(x) && isFiniteNum(y) && isFiniteNum(z))
+				? ` data-x="${x}" data-y="${y}" data-z="${z}"`
+				: '';
+
 			return `<div class="result-item" data-name="${s.name}"${dxAttr}>${s.name}${bm}${vi}${cat}${distTxt}</div>`;
 		}).join('');
+	
 
 		listEl.innerHTML = html;
 	}

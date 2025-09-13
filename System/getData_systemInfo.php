@@ -166,7 +166,7 @@ if ($hasSystemId || $hasSystemName) {
     );
     $__sysRow = $__sysRes ? $__sysRes->fetch_object() : null;
     if ($__sysRes) { $__sysRes->close(); }
-    $curSys = (object)[
+    $curSys = [
         'si_system_coordx' => isset($__sysRow->x) ? (float)$__sysRow->x : 0.0,
         'si_system_coordy' => isset($__sysRow->y) ? (float)$__sysRow->y : 0.0,
         'si_system_coordz' => isset($__sysRow->z) ? (float)$__sysRow->z : 0.0,
@@ -190,7 +190,7 @@ if ($hasSystemId || $hasSystemName) {
     }
 
     // Always set siDistAdd and update curSys coords for downstream use
-    $siDistAdd = (($curSys['name'] ?? 'Current') . ': ' . number_format($dist1, 1) . ' ly' . $adds . ' - ');
+    $siDistAdd = (($curSys['name'] ?? 'Current') . ': ' . number_format($dist1, 1) . ' ly' . $adds);
     $curSys['x'] = $sx;
     $curSys['y'] = $sy;
     $curSys['z'] = $sz;
@@ -293,11 +293,10 @@ if (isset($settings['dist_systems'])) {
 
 
         $userDist = sqrt((($udCoordx - $distSysCoordx) ** 2) + (($udCoordy - $distSysCoordy) ** 2) + (($udCoordz - $distSysCoordz) ** 2));
+        // prepend separator before each user-defined distance entry (so no dangling dash if list is empty)
+        $userDists .= ' - ';
         $userDists .= '<a href="/System?system_id=' . $distSysId . '">' . $distSysDisplayName . '</a>: ' . number_format($userDist, 1) . ' ly' . $add3;
 
-        if ($i != $numDists) {
-            $userDists .= ' - ';
-        }
 
         $i++;
     }
@@ -330,10 +329,14 @@ if ($stationSystemId > 0) {
 
         while ($__st = $__res->fetch_object()) {
             $stName = (string)($__st->name ?? '');
+            // strip legacy $EXT_PANEL_*; prefixes (e.g., "$EXT_PANEL_ColonisationShip; Bugrov Expedition")
+            $stName = preg_replace('/^\$EXT_PANEL_[^;]*;\s*/', '', $stName);
+        
             $ls     = trim((string)($__st->ls_from_star ?? ''));
             $lsText = $ls !== '' ? ' <span class="small">(' . $ls . ' Ls)</span>' : '';
             $data['si_stations'] .= '<div class="station">' . htmlspecialchars($stName) . $lsText . '</div>';
         }
+        
         $__res->close();
     }
 
