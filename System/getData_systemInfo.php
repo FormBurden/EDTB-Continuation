@@ -286,6 +286,8 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     }
 
     $raresCloseby = 0;
+    $rareResult = false;
+
 
 
 /**
@@ -316,8 +318,7 @@ if (isset($settings['dist_systems'])) {
         $i++;
     }
 }
-list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock($mysqli, $siSystemName, $curSys, $settings);
-
+list($cRaresData, $actualNumRes, $rareText) = renderNearbyRaresHtml($mysqli, (string)$siSystemName, $curSys, $settings, $rareResult, (int)$raresCloseby);
 // [System Info computed segments]
 
 // Crosslinks icons (gallery/log/map/info) — parity with legacy System::crosslinks()

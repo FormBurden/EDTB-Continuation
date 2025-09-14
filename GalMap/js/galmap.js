@@ -338,11 +338,11 @@
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
 			startAnim: true,
-			// Use the center fields as the player position so HUD distance works
-			playerPos: [Number(cx?.value), Number(cy?.value), Number(cz?.value)]
+			// IMPORTANT: ED3D scene uses Z-flip, so pass ED3D-space here
+			playerPos: [Number(cx?.value), Number(cy?.value), -Number(cz?.value)]
 		});
 
-		// Re-center to the EXACT resolved center once ED3D (camera/controls) is ready — no offsets
+		// Re-center to the EXACT resolved center once camera/controls exist (no offsets)
 		(function centerAfterInit() {
 			const rc = window.__galmapResolvedCenter;
 			if (!rc || !Number.isFinite(+rc.x) || !Number.isFinite(+rc.y) || !Number.isFinite(+rc.z)) return;
@@ -350,7 +350,6 @@
 			let tries = 0, maxTries = 80;
 			(function tick() {
 				if (window.controls && window.camera && window.THREE) {
-					// centerMapTo handles the Z flip internally; no extra offsets applied
 					centerMapTo(rc.x, rc.y, rc.z, /*smooth=*/false);
 				} else if (tries++ < maxTries) {
 					setTimeout(tick, 50);
@@ -359,24 +358,6 @@
 		})();
 
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
-
-
-		// Re-center to the EXACT resolved_center once ED3D has created camera/controls
-		(function centerAfterInit() {
-			const rc = window.__galmapResolvedCenter;
-			if (!rc || !Number.isFinite(+rc.x) || !Number.isFinite(+rc.y) || !Number.isFinite(+rc.z)) return;
-
-			let tries = 0, maxTries = 80;
-			(function tick() {
-				if (window.controls && window.camera && window.THREE) {
-					// no magic offsets — star is at the center, keep current zoom distance
-					centerMapTo(rc.x, rc.y, rc.z, /*smooth=*/false);
-				} else if (tries++ < maxTries) {
-					setTimeout(tick, 50);
-				}
-			})();
-		})();
-
   
 		// Kick once on load if center is present
 		document.addEventListener('DOMContentLoaded', async () => {
