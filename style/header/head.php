@@ -35,7 +35,24 @@ $title = isset($this->pageTitle) && $this->pageTitle !== ''
 
 <!-- Project bootstrap (must come last) -->
 <script src="/style/js/edtb.js"></script>
-<script src="/EDToolbox/js/edtoolbox.loader.js?v=2"></script>
+<script>
+// Force normal navigation for ED ToolBox from any tab (bypass SPA interceptors)
+(function () {
+  function isEdtbxLink(a) {
+    if (!a) return false;
+    var href = a.getAttribute('href') || '';
+    return href.indexOf('/EDToolbox') !== -1 || a.dataset.hardNav === '1' || a.id === 'nav-edtoolbox';
+  }
+  // Capture phase so we run before bubble-phase SPA handlers
+  document.addEventListener('click', function (ev) {
+    var a = ev.target && ev.target.closest && ev.target.closest('a');
+    if (!isEdtbxLink(a)) return;
+    // Let the browser perform default navigation; block JS routers from hijacking
+    ev.stopImmediatePropagation();
+    // Do NOT call preventDefault(); default navigation should proceed.
+  }, true);
+})();
+</script>
 
 
 

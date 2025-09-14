@@ -70,6 +70,9 @@ $header->pageTitle = 'Settings';
  * display the header
  */
 $header->displayHeader();
+echo '<style>#wrap>.leftpanel{-webkit-column-count:1!important;column-count:1!important;-webkit-column-gap:0!important;column-gap:0!important;-webkit-column-rule:none!important;column-rule:none!important}.settings_panel{display:none!important}</style>';
+
+
 
 $catId = $_GET['cat_id'] ?? '2';
 ?>
@@ -108,7 +111,7 @@ $catId = $_GET['cat_id'] ?? '2';
                     echo '</ul><br><ul class="pagination" style="margin-top:-25px">';
                 }
 
-                echo '<li' . $active . '><a data-replace="true" data-target=".rightpanel" class="mtelink" href="/Admin?cat_id=' . $id . '">' . $name . '</a></li>';
+                echo '<li' . $active . '><a href="/Admin?cat_id=' . $id . '">' . $name . '</a></li>';
                 $i++;
             }
             $result->close();
@@ -129,7 +132,7 @@ $catId = $_GET['cat_id'] ?? '2';
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
             ?>
-            <form method="post" id="settings_form" action="/Admin">
+            <form method="post" id="settings_form" action="/Admin/index.php?do">
                 <table style="max-width: 720px; margin-bottom: 15px">
                     <tr>
                         <td class="heading">Edit <?= $currentCategory ?></td>
@@ -241,12 +244,8 @@ $catId = $_GET['cat_id'] ?? '2';
                     ?>
                     <tr>
                         <td class="<?= $lclass ?>">
-                            <a href="#" data-replace="true" data-target=".entries">
-                                <div class="button"
-                                     onclick="update_data('settings_form', '/Admin/index.php?do', true);$('#notify').fadeToggle('fast')">
-                                    Submit changes
-                                </div>
-                            </a>
+                        <button type="submit" class="button" form="settings_form" style="cursor:pointer">Submit changes</button>
+
                         </td>
                     </tr>
                 </table>

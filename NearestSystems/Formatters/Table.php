@@ -8,34 +8,47 @@ class NearestSystemsTableFormatter
     }
     public static function header($stations): string
     {
-        $out = '<tr><th>System</th>';
+        // Order matches the original: Distance first, then System, then details
+        $out = '<tr><th class="col-distance">Distance</th><th>System</th>';
         if ($stations !== false) {
             $out .= '<th>Station</th><th>LS From Star</th><th>Pad</th><th>Type</th>';
         }
-        $out .= '<th>Allegiance</th><th>Gov</th><th>Sec</th><th>Eco</th><th>Pop</th></tr>';
+        $out .= '<th>Allegiance</th><th>Pop</th><th>Eco</th><th>Gov</th><th>Sec</th></tr>';
         return $out;
     }
+
 
     public static function row($row, $stations): string
     {
-        $out  = '<tr>';
-        $out .= '<td>' . $row->system . '</td>';
+        $out = '<tr>';
+
+        // Distance (ly), 2 decimals
+        $dist = isset($row->distance) ? (float)$row->distance : 0.0;
+        $out .= '<td class="col-distance">' . number_format($dist, 2) . '</td>';
+
+        // System (link to System page)
+        $sys = $row->system ?? '';
+        $out .= '<td>' . ($sys !== '' 
+            ? '<a href="/System?system_name=' . rawurlencode($sys) . '">' . htmlspecialchars($sys, ENT_QUOTES) . '</a>'
+            : '') . '</td>';
 
         if ($stations !== false) {
-            $out .= '<td>' . $row->station_name . '</td>';
-            $out .= '<td>' . $row->ls_from_star . '</td>';
-            $out .= '<td>' . $row->max_landing_pad_size . '</td>';
-            $out .= '<td>' . $row->type . '</td>';
+            $out .= '<td>' . htmlspecialchars($row->station_name ?? '', ENT_QUOTES) . '</td>';
+            $out .= '<td class="col-ls">' . (isset($row->ls_from_star) && $row->ls_from_star !== '' ? (int)$row->ls_from_star : '') . '</td>';
+            $out .= '<td class="col-pad">' . htmlspecialchars($row->max_landing_pad_size ?? '', ENT_QUOTES) . '</td>';
+            $out .= '<td>' . htmlspecialchars($row->type ?? '', ENT_QUOTES) . '</td>';
         }
 
-        $out .= '<td>' . ($row->allegiance ?? '') . '</td>';
-        $out .= '<td>' . ($row->government ?? '') . '</td>';
-        $out .= '<td>' . ($row->security ?? '') . '</td>';
-        $out .= '<td>' . ($row->economy ?? '') . '</td>';
-        $out .= '<td>' . number_format((int)($row->population ?? 0)) . '</td>';
+        $out .= '<td>' . htmlspecialchars($row->allegiance ?? '', ENT_QUOTES) . '</td>';
+        $out .= '<td class="col-pop">' . number_format((int)($row->population ?? 0)) . '</td>';
+        $out .= '<td>' . htmlspecialchars($row->economy ?? '', ENT_QUOTES) . '</td>';
+        $out .= '<td>' . htmlspecialchars($row->government ?? '', ENT_QUOTES) . '</td>';
+        $out .= '<td>' . htmlspecialchars($row->security ?? '', ENT_QUOTES) . '</td>';
+
         $out .= '</tr>';
         return $out;
     }
+
 
     public static function tableClose(): string
     {

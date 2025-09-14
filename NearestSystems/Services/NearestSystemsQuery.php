@@ -67,8 +67,8 @@ class NearestSystemsQuery
                         edtb_systems.x AS coordx,
                         edtb_systems.y AS coordy,
                         edtb_systems.z AS coordz,
-                        edtb_systems.population,
-                        edtb_systems.government,
+                        (SQRT(POW(edtb_systems.x - {$this->useX}, 2) + POW(edtb_systems.y - {$this->useY}, 2) + POW(edtb_systems.z - {$this->useZ}, 2))) AS distance,
+                        edtb_systems.population, 
                         edtb_systems.security,
                         edtb_systems.economy
                     FROM edtb_stations
@@ -91,6 +91,7 @@ class NearestSystemsQuery
                         edtb_systems.x AS coordx,
                         edtb_systems.y AS coordy,
                         edtb_systems.z AS coordz,
+                        (SQRT(POW(edtb_systems.x - {$this->useX}, 2) + POW(edtb_systems.y - {$this->useY}, 2) + POW(edtb_systems.z - {$this->useZ}, 2))) AS distance,
                         edtb_systems.allegiance AS allegiance,
                         edtb_systems.government,
                         edtb_systems.security,

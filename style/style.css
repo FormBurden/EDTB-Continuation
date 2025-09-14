@@ -2407,3 +2407,22 @@ body {
 .leftpanel .links_link.topmar {
   margin-top: 8px;
 }
+/* === Nearest Systems table tweaks === */
+.system_table .col-distance,
+.system_table .col-ls,
+.system_table .col-pop {
+  text-align: right;
+}
+
+/* Keep a compact width similar to original */
+.system_table .col-distance {
+  width: 90px;
+}
+
+.system_table .col-ls {
+  width: 110px;
+}
+
+.system_table .col-pad {
+  width: 60px;
+}

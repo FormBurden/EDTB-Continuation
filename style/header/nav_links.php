@@ -37,12 +37,13 @@ foreach ($links as $name => $linkHref) {
     $class .= ' topmar';
 
     if ($name === 'ED ToolBox') {
-        echo '<a' . $aclass . $onclick . ' href="' .  $linkHref . '" title="' . htmlspecialchars($name) . '">';
+        echo '<a id="nav-edtoolbox" class="links_link topmar" href="/EDToolbox/" data-hard-nav="1">';
         echo '<div id="link_' . $i . '" class="' . $class . '">';
-        echo '<img src="/style/img/' . $pic . '" alt="pic" class="icon"' . $styling . '>';
+        echo '<img src="/style/img/' . $pic . '" alt="pic" class="icon"' . $styling . '>' . 'ED TOOLBOX';
         echo '</div>';
         echo '</a>';
     } else {
+
         echo '<a' . $aclass . $onclick . ' href="' .  $linkHref . '">';
         echo '<div id="link_' . $i . '" class="' . $class . '">';
         echo '<img src="/style/img/' . $pic . '" alt="pic" class="icon">' . $name;
