@@ -1,34 +1,4 @@
 <?php
-/**
- * Settings
- *
- * No description
- *
- * @package EDTB\Admin
- * @author Mauri Kujala <contact@edtb.xyz>
- * @copyright Copyright (C) 2016, Mauri Kujala
- * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU Public License version 2
- */
-
-/*
-* ED ToolBox, a companion web app for the video game Elite Dangerous
-* (C) 1984 - 2016 Frontier Developments Plc.
-* ED ToolBox or its creator are not affiliated with Frontier Developments Plc.
-*
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
-*/
 
 if (isset($_GET['do'])) {
     /** @require configs */
@@ -38,7 +8,15 @@ if (isset($_GET['do'])) {
     /** @require MySQL */
     require_once __DIR__ . '/../style/Theme.php';
 
-    $data = json_decode($_REQUEST['input']);
+    require_once __DIR__ . '/setData.php';
+
+    // Keep user on same tab after save
+    $catId = $_POST['cat_id'] ?? ($_GET['cat_id'] ?? '2');
+
+    header('Location: /Admin?cat_id=' . urlencode($catId));
+    exit;
+
+    $data = isset($_REQUEST['input']) ? (json_decode((string)$_REQUEST['input'], true) ?: []) : $_POST;
 
     foreach ($data as $var => $value) {
         $escVal = $mysqli->real_escape_string($value);
@@ -52,7 +30,10 @@ if (isset($_GET['do'])) {
         $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
     }
 
+    $catId = $_POST['cat_id'] ?? ($_GET['cat_id'] ?? '2');
+    header('Location: /Admin?cat_id=' . urlencode($catId));
     exit;
+
 }
 
 /** @require Theme class */
@@ -132,7 +113,10 @@ $catId = $_GET['cat_id'] ?? '2';
 
             $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
             ?>
-            <form method="post" id="settings_form" action="/Admin/index.php?do">
+            <form method="post" id="settings_form" action="/Admin/index.php?do" onsubmit="document.getElementById('settings_input').value = JSON.stringify(Object.fromEntries(new FormData(this)));">
+            <input type="hidden" name="input" id="settings_input">
+            <input type="hidden" name="cat_id" value="<?= htmlspecialchars($catId ?? ($_GET['cat_id'] ?? '2'), ENT_QUOTES) ?>">
+
                 <table style="max-width: 720px; margin-bottom: 15px">
                     <tr>
                         <td class="heading">Edit <?= $currentCategory ?></td>

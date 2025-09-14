@@ -41,7 +41,7 @@ function buildSystemDetailsHtml(
     $rows = [];
     if (!empty($siSystemAllegiance))    { $rows[] = '<strong>Allegiance:</strong> ' . $siSystemAllegiance; }
     if (!empty($siSystemGovernment))    { $rows[] = '<strong>Government:</strong> ' . $siSystemGovernment; }
-    if (is_numeric($siSystemPopulation)) { $rows[] = '<strong>Population:</strong> ' . number_format((int)$siSystemPopulation); }
+    $rows[] = '<strong>Population:</strong> ' . (is_numeric($siSystemPopulation) ? number_format((int)$siSystemPopulation) : '0');
     if (!empty($siSystemEconomy))       { $rows[] = '<strong>Economy:</strong> '    . $siSystemEconomy; }
     if (!empty($siSystemRulingFaction)) { $rows[] = '<strong>Faction:</strong> '    . $siSystemRulingFaction; }
 

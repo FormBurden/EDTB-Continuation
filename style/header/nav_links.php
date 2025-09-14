@@ -38,7 +38,7 @@ foreach ($links as $name => $linkHref) {
 
     if ($name === 'ED ToolBox') {
         echo '<a id="nav-edtoolbox" class="links_link topmar" href="/EDToolbox/" data-hard-nav="1">';
-        echo '<div id="link_' . $i . '" class="' . $class . '">';
+        echo '<div id="link_' . $i . '" class="links_link topmar">';
         echo '<img src="/style/img/' . $pic . '" alt="pic" class="icon"' . $styling . '>' . 'ED TOOLBOX';
         echo '</div>';
         echo '</a>';

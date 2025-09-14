@@ -43,16 +43,17 @@ $title = isset($this->pageTitle) && $this->pageTitle !== ''
     var href = a.getAttribute('href') || '';
     return href.indexOf('/EDToolbox') !== -1 || a.dataset.hardNav === '1' || a.id === 'nav-edtoolbox';
   }
-  // Capture phase so we run before bubble-phase SPA handlers
+  // Capture phase; we *actively* navigate to defeat earlier preventDefault() calls
   document.addEventListener('click', function (ev) {
     var a = ev.target && ev.target.closest && ev.target.closest('a');
     if (!isEdtbxLink(a)) return;
-    // Let the browser perform default navigation; block JS routers from hijacking
-    ev.stopImmediatePropagation();
-    // Do NOT call preventDefault(); default navigation should proceed.
+    ev.preventDefault();                  // cancel any SPA/PJAX hijack
+    ev.stopImmediatePropagation();        // block other handlers (cap/bubble)
+    try { window.location.assign(a.href); } catch (_e) { window.location.href = a.getAttribute('href'); }
   }, true);
 })();
 </script>
+
 
 
 
