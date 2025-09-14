@@ -52,10 +52,10 @@ if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
 
 }
 ?>
-<script src="../source/Vendor/Highcharts/js/highcharts.js"></script>
-<script src="../source/Vendor/Highcharts/js/highcharts-3d.js"></script>
-<script src="../source/Vendor/Highcharts/js/modules/exporting.js"></script>
-<script src="getMapPoints.js.php<?php echo (isset($_GET['mode']) && $_GET['mode'] === '2d') ? '?mode=2d&' : '?'; ?>maxdistance=<?php echo (int)($settings['maxdistance'] ?? 50); ?>"></script>
+<script src="/Map/Vendor/Highcharts/js/highcharts.js"></script>
+<script src="/Map/Vendor/Highcharts/js/highcharts-3d.js"></script>
+<script src="/Map/Vendor/Highcharts/js/modules/exporting.js"></script>
+<script src="/Map/getMapPoints.js.php<?php echo (isset($_GET['mode']) && $_GET['mode'] === '2d') ? '?mode=2d&' : '?'; ?>maxdistance=<?php echo (int)($settings['maxdistance'] ?? 50); ?>"></script>
 <script>
 /* Neighborhood Map: default-hide overlays and tooltips, and close on chart click */
 $(function () {

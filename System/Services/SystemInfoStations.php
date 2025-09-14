@@ -100,12 +100,18 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
         $hasOutf     = (int)($st->outfitting ?? 0) === 1;
         $hasShipyard = (int)($st->shipyard ?? 0) === 1;
 
-        $commodBits = [];
-        if ($hasMarket)   { $commodBits[] = 'Commodities'; }
-        if ($hasOutf)     { $commodBits[] = 'Outfitting'; }
-        if ($hasShipyard) { $commodBits[] = 'Shipyard'; }
-        $commodText = empty($commodBits) ? 'No market' : implode(', ', $commodBits);
-        $commodHtml = '<span class="si-commodities">' . $commodText . '</span>';
+                $commodHtml = buildCommoditiesText($st);
+
+        $sellingShips = trim((string)($st->selling_ships ?? ($st->ships_sold ?? '')));
+        $sellingShipsHtml = $sellingShips !== ''
+            ? '<div class="si-selling"><strong>Selling ships:</strong> ' . htmlspecialchars($sellingShips, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+            : '';
+
+        $sellingModules = trim((string)($st->selling_modules ?? ($st->modules_sold ?? '')));
+        $sellingModulesHtml = $sellingModules !== ''
+            ? '<div class="si-selling-modules">' . htmlspecialchars($sellingModules, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+            : '';
+
 
         // Build card
         $html .= '<div class="systeminfo_station">';
@@ -124,6 +130,9 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
 
         $html .= $facHtml . '<br>';
         $html .= $commodHtml;
+        $html .= $sellingShipsHtml;
+        $html .= $sellingModulesHtml;
+
 
         $html .= '</div>'; // .systeminfo_station_info
         $html .= '</div>'; // .systeminfo_station

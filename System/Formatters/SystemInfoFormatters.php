@@ -13,7 +13,7 @@ function formatSiHeaderMeta(string $state, string $security, int $numVisits): st
 {
     $sec = formatSecurityLabel($security); // HIGH/MEDIUM/LOW/ANARCHY/NONE
     $st  = si_label_or_none($state);       // maps '', 'unknown', 'null', 'none' => 'NONE'
-    return '[ ' . $sec . ' - ' . $st . ' - Visits: ' . (int)$numVisits . ' ]';
+    return '[ STATE: ' . $st . ' - SECURITY: ' . $sec . ' - VISITS: ' . (int)$numVisits . ' ]';
 }
 
 
