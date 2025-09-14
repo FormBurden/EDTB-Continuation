@@ -30,7 +30,7 @@ function render_powers_links($mysqli, $powerParams, $currentPower, $hasTable)
         $href   = '/NearestSystems/?power=' . rawurlencode($name) . $cleanParams;
         $title  = htmlspecialchars($name, ENT_QUOTES);
 
-        echo '<a data-replace="true" data-target="#nscontent" href="', $href, '" title="', $title, '">', $title, '</a><br>';
+        echo '<a href="', $href, '" title="', $title, '">', $title, '</a><br>';
     }
 
     $result->close();

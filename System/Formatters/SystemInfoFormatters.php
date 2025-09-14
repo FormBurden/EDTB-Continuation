@@ -138,3 +138,35 @@ function buildRaresMiniLabel(...$args): string
          . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
          . '</span>';
 }
+// --- System Info header meta helpers ---
+if (!function_exists('si_label_or_none')) {
+    function si_label_or_none($v): string {
+        $s = strtoupper(trim((string)$v));
+        if ($s === '' || $s === 'UNKNOWN' || $s === 'NULL') return 'NONE';
+        return $s;
+    }
+}
+if (!function_exists('formatSecurityLabel')) {
+    function formatSecurityLabel($security): string {
+        // Accept strings ("High", "Anarchy", etc.) or ints (1/2/3…)
+        if (is_numeric($security)) {
+            $n = (int)$security;
+            return $n >= 3 ? 'HIGH' : ($n === 2 ? 'MEDIUM' : ($n === 1 ? 'LOW' : 'NONE'));
+        }
+        $s = strtolower(trim((string)$security));
+        if ($s === '' || $s === 'unknown' || $s === 'null') return 'NONE';
+        if ($s === 'med' || $s === 'medium') return 'MEDIUM';
+        if ($s === 'high') return 'HIGH';
+        if ($s === 'low') return 'LOW';
+        if ($s === 'anarchy') return 'ANARCHY';
+        return strtoupper($s);
+    }
+}
+if (!function_exists('buildSystemHeaderMeta')) {
+    function buildSystemHeaderMeta($security, $state, int $visits): string {
+        $sec = formatSecurityLabel($security);
+        $st  = si_label_or_none($state);
+        return "[ {$sec} - {$st} - Visits: {$visits} ]";
+    }
+}
+

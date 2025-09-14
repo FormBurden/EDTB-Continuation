@@ -19,7 +19,7 @@ final class SystemRepository
         }
 
         // Keep field aliases that downstream code already uses (si_system_coordx/y/z)
-        $baseFields = "id, name, allegiance, economy, government, ruling_faction, state, security, power, power_state, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
+        $baseFields = "id, name, allegiance, economy, government, state, security, power, power_state, ruling_faction, x AS si_system_coordx, y AS si_system_coordy, z AS si_system_coordz, simbad_ref";
         $fields = $hasPopulationCol ? ("population, " . $baseFields) : $baseFields;
 
         $systemId = (int)$systemId;

@@ -226,5 +226,22 @@ $data['current_system'] = [
     'y' => isset($curSys['y']) ? (float)$curSys['y'] : null,
     'z' => isset($curSys['z']) ? (float)$curSys['z'] : null,
 ];
+/** Journal state for UI (last processed ED journal info) */
+$__root    = __DIR__ . '/../source';
+$__dataDir = rtrim((string)($settings['data_dir'] ?? ($__root . '/../data')), DIRECTORY_SEPARATOR);
+$__stateFile = $__dataDir . '/journal_state.json';
+
+if (is_file($__stateFile)) {
+    $__state = json_decode(@file_get_contents($__stateFile), true) ?: [];
+    $data['journal'] = [
+        'last_system' => (string)($__state['last_system'] ?? ''),
+        'last_ts'     => (string)($__state['last_ts'] ?? ''),
+        'file'        => (string)($__state['file'] ?? ''),
+        'offset'      => isset($__state['offset']) ? (int)$__state['offset'] : null,
+    ];
+}
+
 echo json_encode($data);
+
+
 

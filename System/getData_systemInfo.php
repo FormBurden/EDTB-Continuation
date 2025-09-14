@@ -235,6 +235,8 @@ $escSiSysName = $mysqli->real_escape_string($siSystemName);
  * get coordinates for distance calculations
  * and rares nearby
  */
+$rareResult = false;
+$raresCloseby = 0;
 if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
     $add3 = '';
     $udCoordx = $curSys['x'];
@@ -270,7 +272,10 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
         $udCoordz = $curZ;
 
         // Also set the system name/display from current system when none was requested
-        $siSystemName        = (string)($curSys['name'] ?? '');
+        if (trim((string)$siSystemName) === '') {
+            $siSystemName        = (string)($curSys['name'] ?? '');
+            $siSystemDisplayName = $siSystemName;
+        }        
         $siSystemDisplayName = $siSystemName;
 
         $add3 = ''; // known origin
@@ -319,6 +324,7 @@ if (isset($settings['dist_systems'])) {
     }
 }
 list($cRaresData, $actualNumRes, $rareText) = renderNearbyRaresHtml($mysqli, (string)$siSystemName, $curSys, $settings, $rareResult, (int)$raresCloseby);
+
 // [System Info computed segments]
 
 // Crosslinks icons (gallery/log/map/info) — parity with legacy System::crosslinks()
@@ -340,21 +346,17 @@ if ($stationSystemId > 0) {
     $stationExists = $data['si_stations'] !== '' ? 1 : 0;
 }
 
+// Visits for header meta
+$escName = $mysqli->real_escape_string((string)$siSystemName);
+$resNV = $mysqli->query(
+    "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_name = '" . $escName . "'"
+);
+$rowNV = $resNV ? $resNV->fetch_object() : null;
+if ($resNV) { $resNV->close(); }
+$numVisits = isset($rowNV->c) ? (int)$rowNV->c : 0;
+$headerMeta = buildSystemHeaderMeta($curSys['security'] ?? null, $curSys['state'] ?? null, (int)$numVisits);
+$headerMeta .= ''; // keep as string; ensures non-null even if helpers change
 
-//     // Visits for header meta
-//     $escName = $mysqli->real_escape_string((string)$siSystemName);
-//     $resNV = $mysqli->query(
-//         "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_name = '" . $escName . "'"
-//     );
-//     $rowNV = $resNV->fetch_object();
-//     $resNV->close();
-//     $numVisits = (int)($rowNV->c ?? 0);
-
-    
-// } else {
-//     $numVisits = 0;
-// }
-$numVisits = isset($numVisits) ? (int)$numVisits : 0;
 $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemDisplayName,
     (string)$siCrosslinks,

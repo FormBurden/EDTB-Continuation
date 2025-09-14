@@ -5,6 +5,22 @@
  */
 
 use EDTB\Log\MakeLog;
+/** Bootstrap config, helpers, DB, and current system */
+require_once __DIR__ . '/../source/config.inc.php';
+require_once __DIR__ . '/../source/functions.php';
+require_once __DIR__ . '/../source/Helpers/Common.php';
+require_once __DIR__ . '/../source/Helpers/Safe/Log.php';
+require_once __DIR__ . '/../source/MySQL.php';
+require_once __DIR__ . '/../source/curSys.php';
+
+/** Class used below */
+require_once __DIR__ . '/MakeLog.php';
+
+/** Keep DB current with latest ED Journal entries (fast incremental) */
+require_once __DIR__ . '/../source/Journal/Parser.php';
+\EDTB\Journal\Parser::ingest();
+
+
 
 // Compose into $data['log_data']
 $logdata = '';
