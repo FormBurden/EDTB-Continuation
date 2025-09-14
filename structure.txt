@@ -37,6 +37,10 @@
 │   │   ├── powerPlay.json.gz
 │   │   ├── stations.json.gz
 │   │   └── systemsPopulated.json.gz
+│   ├── edsm
+│   │   ├── sol_50ly.tsv
+│   │   ├── systemsWithCoordinates.json
+│   │   └── systemsWithCoordinates.json.gz
 │   ├── EDTB
 │   │   └── screenshots
 │   ├── edtb-units.txt
@@ -294,7 +298,8 @@
 │   ├── import_edsm.py
 │   ├── import_systems.php
 │   ├── ingest
-│   │   └── backfill_system_info.php
+│   │   ├── backfill_system_info.php
+│   │   └── edsm_radius_extract.py
 │   ├── ingest_journal.php
 │   ├── install_dev_arch.sh
 │   ├── nowplaying-loop.sh
@@ -846,4 +851,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-142 directories, 705 files
+143 directories, 709 files
