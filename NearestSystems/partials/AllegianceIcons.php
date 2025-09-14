@@ -11,10 +11,10 @@ function render_allegiance_icons($allegianceParams)
 
     // Plain anchors; no Wiselinks data-*; no inline onclick on <img>
     $icons = [
-        ['href' => $base . 'Alliance'    . $params, 'title' => 'Alliance',    'src' => '/style/img/allegiances/alliance.png'],
-        ['href' => $base . 'Empire'      . $params, 'title' => 'Empire',      'src' => '/style/img/allegiances/empire.png'],
-        ['href' => $base . 'Federation'  . $params, 'title' => 'Federation',  'src' => '/style/img/allegiances/federation.png'],
-        ['href' => $base . 'Independent' . $params, 'title' => 'Independent', 'src' => '/style/img/allegiances/independent.png'],
+        ['href' => $base . 'Alliance'    . $params, 'title' => 'Alliance',    'src' => '/style/img/alliance.png'],
+        ['href' => $base . 'Empire'      . $params, 'title' => 'Empire',      'src' => '/style/img/empire.png'],
+        ['href' => $base . 'Federation'  . $params, 'title' => 'Federation',  'src' => '/style/img/federation.png'],
+        ['href' => $base . 'Independent' . $params, 'title' => 'Independent', 'src' => '/style/img/elite.png'],
     ];
 
     echo '<div class="ns-allegiances" style="display:flex;gap:10px;align-items:center;">' . PHP_EOL;
@@ -30,5 +30,6 @@ function render_allegiance_icons($allegianceParams)
 
     echo '</div>' . PHP_EOL;
 }
+
 
 

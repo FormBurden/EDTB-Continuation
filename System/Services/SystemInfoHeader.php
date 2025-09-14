@@ -19,6 +19,6 @@ function renderSystemHeaderHtml(
     $out .= '&nbsp;&nbsp;<span style="font-size: 11px;  text-transform: uppercase; vertical-align: middle">';
     // formatSiHeaderMeta() is defined in System/Formatters/SystemInfoFormatters.php (already required by the controller)
     $out .= formatSiHeaderMeta($siSystemState, $siSystemSecurity, (int)$numVisits);
-    $out .= $rareText . $userDists . '</span>';
+    $out .= ($rareText !== '' ? '&nbsp;|&nbsp;' . $rareText : '') . $userDists . '</span>';
     return $out;
 }

@@ -132,6 +132,7 @@ $settings['edtb_version']     = $settings['edtb_version']     ?? 'DEV';
 $settings['cmdr_name']        = $settings['cmdr_name']        ?? 'CMDR';
 $settings['game_time']        = $settings['game_time']        ?? '00:00:00';
 $settings['agent'] = $settings['agent'] ?? 'EDTB-Continuation/DEV (+https://github.com/FormBurden/EDTB-Continuation)';
+$settings['log_range'] = $settings['log_range'] ?? 0; // 0=current system, -1=all, N=radius cube
 
 if (!defined('GALNET_FEED')) {
     // Frontier GalNet JSON (newest first, 12 items)
