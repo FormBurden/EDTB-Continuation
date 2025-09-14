@@ -76,7 +76,12 @@
 │       ├── 20250903_0012_add_systems_permit_and_updated.sql
 │       ├── 20250903_0013_create_user_visited_systems.sql
 │       ├── 20250903_create_user_bookmarks
+│       │   ├── 0002_add_comment_column.sql
+│       │   └── 0003_add_added_on_column.sql
 │       ├── 20250903_create_user_poi_categories.sql
+│       ├── 20250903_create_user_poi_patch
+│       │   ├── 0001_add_text_column.sql
+│       │   └── 0002_add_poi_name_column.sql
 │       ├── 20250903_create_user_poi.sql
 │       └── 20250906_0001_create_user_system_map.sql
 ├── DataPoint
@@ -109,7 +114,7 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_journal_wiring_cfg_lr.tar.gz
+├── edtb_neighborhood_map_htmlspecialchars_fix.tar.gz
 ├── .edtb-scope.txt
 ├── EDToolbox
 │   ├── css
@@ -626,6 +631,7 @@
 │   │   │   ├── Edmund_Mahon.jpg
 │   │   │   ├── Felicia_Winters.jpg
 │   │   │   ├── Li_Yong-Rui.jpg
+│   │   │   ├── none.jpg
 │   │   │   ├── None.jpg
 │   │   │   ├── Pranav_Antal.jpg
 │   │   │   ├── Zachary_Hudson.jpg
@@ -840,4 +846,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-139 directories, 702 files
+141 directories, 706 files

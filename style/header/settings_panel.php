@@ -14,7 +14,6 @@
 
 <script>
 (function () {
-  // Fill the Logs link with the CURRENT system so Log/index.php won’t warn
   function setLogsHref(systemName) {
     var a = document.getElementById('sp-logs');
     if (!a || !systemName) return;

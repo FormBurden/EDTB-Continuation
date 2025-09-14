@@ -116,3 +116,15 @@
 .ns-powers {
     grid-column: 1 / -1;
 }
+/* Left nav responsiveness */
+@media (max-width: 1280px) {
+    .leftpanel .links_link {
+        height: 32px;
+        font-size: 13px;
+    }
+
+    .leftpanel .links_link .icon {
+        width: 16px;
+        height: 16px;
+    }
+}

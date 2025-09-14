@@ -226,7 +226,7 @@ a {
   margin-top: 0;
   display: block;
   height: 100%;
-  width: 350px;
+  width: 334px;
   position: fixed;
   z-index: 150 !important;
   background: #404040 url(/style/img/back.jpg) repeat-x;
@@ -2339,4 +2339,71 @@ body {
   min-height: 100%;
   position: relative;
   top: 60px
+}
+/* === LEFT NAV: 1-to-1 parity === */
+.leftpanel {
+  padding: 8px 8px 14px 8px;
+  /* tight like original */
+}
+
+/* anchor should behave as a full-width block click target */
+.leftpanel a {
+  display: block;
+  text-decoration: none;
+}
+
+/* the bar itself */
+.leftpanel .links_link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  /* row height like original */
+  margin: 6px 6px;
+  /* outer gutter */
+  padding: 0 10px;
+  /* inner left/right padding */
+  background: rgba(12, 12, 12, .55);
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+  color: #e0e0e0;
+  text-transform: uppercase;
+  letter-spacing: .35px;
+  font-size: 14px;
+  line-height: 1;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* first row (ED TOOLBOX) can be slightly bolder like original */
+.leftpanel .links_link.edtb {
+  font-weight: 600;
+}
+
+/* icon sizing and vertical alignment */
+.leftpanel .links_link .icon {
+  width: 18px;
+  height: 18px;
+  margin: 0 2px 0 0;
+  opacity: .9;
+}
+
+/* hover and active match */
+.leftpanel .links_link:hover {
+  background: rgba(38, 38, 38, .75);
+  border-color: #3a3a3a;
+  color: #fff;
+}
+
+.leftpanel .links_link.active {
+  background: rgba(54, 54, 54, .90);
+  border-color: #4a4a4a;
+  color: #fff;
+}
+
+/* a little space between groups that used “topmar” */
+.leftpanel .links_link.topmar {
+  margin-top: 8px;
 }

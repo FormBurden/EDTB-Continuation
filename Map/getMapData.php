@@ -99,7 +99,7 @@ $count = $result->num_rows;
 
 if ($count > 0) {
     $obja = $result->fetch_object();
-    $text = htmlspecialchars($obja->text);
+    $text = htmlspecialchars((string)$obja->text);
     $visit = $obja->visit;
     $visitOg = $obja->visit;
 

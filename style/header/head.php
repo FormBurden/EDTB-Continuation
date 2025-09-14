@@ -35,6 +35,8 @@ $title = isset($this->pageTitle) && $this->pageTitle !== ''
 
 <!-- Project bootstrap (must come last) -->
 <script src="/style/js/edtb.js"></script>
+<script src="/EDToolbox/js/edtoolbox.loader.js"></script>
+
 
 
 </head>
