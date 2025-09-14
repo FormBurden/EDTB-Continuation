@@ -155,29 +155,111 @@ function names_within_radius_db($mysqli, $cx, $cy, $cz, $radiusLy, $limit) {
     return $names;
 }
 
-function names_within_radius_edsm($mysqli, $cx, $cy, $cz, $radiusLy, $limit) {
-    $url = "https://www.edsm.net/api-v1/sphere-systems?showCoordinates=1&x={$cx}&y={$cy}&z={$cz}&radius={$radiusLy}";
+function names_within_radius_edsm($mysqli, $cx, $cy, $cz, $radiusLy, $limit, $centerName = null) {
+    // Some EDSM deployments return the literal number 0 instead of [] when there are no results.
+    // We'll try three strategies in order:
+    //   1) sphere by systemName
+    //   2) sphere by coordinates
+    //   3) cube by coordinates (then filter to a sphere)
+    $r  = (float)$radiusLy;
+    $cx = (float)$cx; $cy = (float)$cy; $cz = (float)$cz;
+
+    // Helper to parse responses that might be "0", [], or a proper array
+    $parseList = function ($json) {
+        if ($json === null || $json === '' ) return array();
+        $arr = json_decode($json, true);
+        if ($arr === 0) return array();               // literal 0
+        if ($arr === null) return array();            // bad JSON
+        if (is_array($arr)) return $arr;              // ok (might be [])
+        return array();                                // anything else
+    };
+
+    // 1) Try name-based sphere
+    if ($centerName !== null && $centerName !== '') {
+        $url = "https://www.edsm.net/api-v1/sphere-systems?showCoordinates=1&showId=1&minRadius=0&systemName="
+             . rawurlencode($centerName) . "&radius={$r}";
+        $resp = http_get($url);
+        $arr  = $parseList($resp);
+        if (!empty($arr)) {
+            $names = array();
+            foreach ($arr as $sys) {
+                $n = isset($sys['name']) ? (string)$sys['name'] : '';
+                if ($n === '') continue;
+                $names[] = $n;
+                if (!empty($sys['coords'])) {
+                    $x = isset($sys['coords']['x']) ? (float)$sys['coords']['x'] : null;
+                    $y = isset($sys['coords']['y']) ? (float)$sys['coords']['y'] : null;
+                    $z = isset($sys['coords']['z']) ? (float)$sys['coords']['z'] : null;
+                    upsert_coords($mysqli, $n, $x, $y, $z);
+                }
+            }
+            if ($limit > 0 && count($names) > $limit) {
+                $names = array_slice($names, 0, $limit);
+            }
+            return $names;
+        }
+    }
+
+    // 2) Try sphere by explicit coordinates
+    $url = "https://www.edsm.net/api-v1/sphere-systems?showCoordinates=1&showId=1&minRadius=0"
+         . "&x={$cx}&y={$cy}&z={$cz}&radius={$r}";
     $resp = http_get($url);
-    if (!$resp) return array();
-    $arr = json_decode($resp, true);
-    if (!is_array($arr)) return array();
+    $arr  = $parseList($resp);
+    if (!empty($arr)) {
+        $names = array();
+        foreach ($arr as $sys) {
+            $n = isset($sys['name']) ? (string)$sys['name'] : '';
+            if ($n === '') continue;
+            $names[] = $n;
+            if (!empty($sys['coords'])) {
+                $x = isset($sys['coords']['x']) ? (float)$sys['coords']['x'] : null;
+                $y = isset($sys['coords']['y']) ? (float)$sys['coords']['y'] : null;
+                $z = isset($sys['coords']['z']) ? (float)$sys['coords']['z'] : null;
+                upsert_coords($mysqli, $n, $x, $y, $z);
+            }
+        }
+        if ($limit > 0 && count($names) > $limit) {
+            $names = array_slice($names, 0, $limit);
+        }
+        return $names;
+    }
+
+    // 3) Fallback: cube by coordinates, then filter to a sphere on our side
+    // Use size = 2r so the cube fully encloses the desired sphere.
+    $size = $r * 2.0;
+    $url  = "https://www.edsm.net/api-v1/cube-systems?showCoordinates=1&showId=1"
+          . "&x={$cx}&y={$cy}&z={$cz}&size={$size}";
+    $resp = http_get($url);
+    $arr  = $parseList($resp);
+    if (empty($arr)) return array();
+
     $names = array();
+    $r2 = $r * $r;
     foreach ($arr as $sys) {
         $n = isset($sys['name']) ? (string)$sys['name'] : '';
         if ($n === '') continue;
-        $names[] = $n;
-        if (!empty($sys['coords'])) {
-            $x = isset($sys['coords']['x']) ? (float)$sys['coords']['x'] : null;
-            $y = isset($sys['coords']['y']) ? (float)$sys['coords']['y'] : null;
-            $z = isset($sys['coords']['z']) ? (float)$sys['coords']['z'] : null;
-            upsert_coords($mysqli, $n, $x, $y, $z); // cache coords locally
+
+        $x = isset($sys['coords']['x']) ? (float)$sys['coords']['x'] : null;
+        $y = isset($sys['coords']['y']) ? (float)$sys['coords']['y'] : null;
+        $z = isset($sys['coords']['z']) ? (float)$sys['coords']['z'] : null;
+
+        // Must have coords to distance-filter; skip otherwise
+        if ($x === null || $y === null || $z === null) continue;
+
+        $d2 = ($x - $cx)*($x - $cx) + ($y - $cy)*($y - $cy) + ($z - $cz)*($z - $cz);
+        if ($d2 <= $r2) {
+            $names[] = $n;
+            upsert_coords($mysqli, $n, $x, $y, $z); // cache locally
         }
     }
+
     if ($limit > 0 && count($names) > $limit) {
         $names = array_slice($names, 0, $limit);
     }
     return $names;
 }
+
+
 
 // ---------------- args ----------------
 $argvCopy = $argv;
@@ -229,10 +311,16 @@ if ($within > 0.0) {
     ensure_columns($mysqli, 'systems');
 
     // center coords: try DB then EDSM
+    // center coords: prefer EDSM if DB has 0/0/0 or is missing
     $coords = get_center_coords_db($mysqli, $center);
-    if (!$coords) {
+    if (
+        !$coords ||
+        ((float)$coords[0] == 0.0 && (float)$coords[1] == 0.0 && (float)$coords[2] == 0.0)
+    ) {
         $coords = get_center_coords_edsm($center);
-        if ($coords) upsert_coords($mysqli, $center, $coords[0], $coords[1], $coords[2]);
+        if ($coords) {
+            upsert_coords($mysqli, $center, $coords[0], $coords[1], $coords[2]); // cache for next time
+        }
     }
     if (!$coords) {
         fwrite(STDERR, "[ERR] Could not resolve center coords for '{$center}'.\n");
@@ -240,15 +328,16 @@ if ($within > 0.0) {
     }
     $cx = $coords[0]; $cy = $coords[1]; $cz = $coords[2];
 
+
     if ($source === 'edsm') {
-        $radNames = names_within_radius_edsm($mysqli, $cx, $cy, $cz, $within, $limit);
+        $radNames = names_within_radius_edsm($mysqli, $cx, $cy, $cz, $within, $limit, $center);
         echo "[INFO] (EDSM) Selected ".count($radNames)." systems within {$within} ly of {$center}.\n";
     } else {
         $radNames = names_within_radius_db($mysqli, $cx, $cy, $cz, $within, $limit);
         echo "[INFO] (DB) Selected ".count($radNames)." systems within {$within} ly of {$center}.\n";
         // fallback: if DB is too sparse, try EDSM automatically
         if (count($radNames) <= 3) {
-            $radNames = names_within_radius_edsm($mysqli, $cx, $cy, $cz, $within, $limit);
+            $radNames = names_within_radius_edsm($mysqli, $cx, $cy, $cz, $within, $limit, $center);
             echo "[INFO] (Fallback: EDSM) Selected ".count($radNames)." systems within {$within} ly of {$center}.\n";
         }
     }

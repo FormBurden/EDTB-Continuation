@@ -1,5 +1,5 @@
 <?php
-// EDToolbox/partial.php — Commander's Log wired UI (uses /SystemMap/bodies/* thumbs)
+// EDToolbox/partial.php — Commander's Log content (no includes here)
 ?>
 <main id="edtbx-root" class="edtbx edtbx--log" data-request="0">
 
@@ -26,8 +26,9 @@
     <div class="edtbx-log-dts">24 Jan 3301, 19:32</div>
   </header>
 
-  <!-- Results under chips (mirrors original list area) -->
+  <!-- Status + Results under chips -->
   <section class="edtbx-log-results">
+    <div id="edtbx-logstatus" class="edtbx-logstatus"></div>
     <ul id="edtbx-loglist" class="edtbx-loglist"></ul>
   </section>
 
@@ -35,7 +36,6 @@
   <section class="edtbx-catalog">
     <h2 class="edtbx-strip-title"><span>Earth-like</span></h2>
     <ul class="edtbx-strip planets-earthlike">
-      <!-- ELW variants in /SystemMap/bodies (0,1)… cycle to fill -->
       <li class="planet"><img src="/SystemMap/bodies/earth-like_world_0.png" alt="Earth-like 0"></li>
       <li class="planet"><img src="/SystemMap/bodies/earth-like_world_1.png" alt="Earth-like 1"></li>
       <li class="planet"><img src="/SystemMap/bodies/earth-like_world_0.png" alt="Earth-like 0"></li>
@@ -51,7 +51,6 @@
   <section class="edtbx-catalog">
     <h2 class="edtbx-strip-title"><span>Water</span></h2>
     <ul class="edtbx-strip planets-water">
-      <!-- Water variants available: 0,2,3,4 — repeat to fill -->
       <li class="planet"><img src="/SystemMap/bodies/water_world_0.png" alt="Water world 0"></li>
       <li class="planet"><img src="/SystemMap/bodies/water_world_2.png" alt="Water world 2"></li>
       <li class="planet"><img src="/SystemMap/bodies/water_world_3.png" alt="Water world 3"></li>
@@ -76,5 +75,3 @@
   </section>
 
 </main>
-<link rel="stylesheet" href="/EDToolbox/css/edtoolbox.css">
-<script src="/EDToolbox/js/edtoolbox.js" defer></script>

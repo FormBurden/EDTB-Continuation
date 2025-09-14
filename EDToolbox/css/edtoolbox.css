@@ -1,13 +1,4 @@
-/* EDToolbox/css/edtoolbox.css — scoped + wrapper reset so page matches dark theme */
-
-/* ---- Wrapper reset: make the container transparent when EDToolBox is active ---- */
-#content:has(> .edtbx),
-#container:has(> .edtbx),
-body:has(#edtbx-root),
-.edtbx-page {
-	background: transparent !important;
-	box-shadow: none !important;
-}
+/* EDToolbox/css/edtoolbox.css — scoped, no wrapper/background overrides */
 
 /* Keep text/links consistent with the app */
 .edtbx {
@@ -182,7 +173,7 @@ body:has(#edtbx-root),
 	border-radius: 4px;
 }
 
-/* Planets: real images */
+/* Planets */
 .edtbx-strip .planet {
 	width: 100%;
 }

@@ -15,6 +15,8 @@ READ_STDIN=0
 EXCLUDE_LOGS=0
 NO_NETWORK=0
 CAPTURE_SEC=""
+PROBES_STDIN=0
+PROBES_FILE=""
 TMPDIR="${TMPDIR:-$(mktemp -d -t edtb_bundle_XXXXXX)}"
 
 
@@ -39,6 +41,8 @@ Options:
   --no-logs           Exclude logs directory from the bundle
   --no-network        Do not attach to Firefox DevTools; skip console/network/DOM/perf capture
   --capture-sec N     Override Firefox capture window (seconds), e.g. --capture-sec 10
+  --probes-stdin      Read probe commands from STDIN and run them; output saved to curls.txt
+  --probes-file FILE  Read probe commands from FILE and run them; output saved to curls.txt
 
 USAGE
 }
@@ -57,6 +61,8 @@ while [[ $# -gt 0 ]]; do
     --dry-run) DRY_RUN=1;;
     --no-logs) EXCLUDE_LOGS=1;;
     --help) usage; exit 0;;
+    --probes-stdin) PROBES_STDIN=1;;
+    --probes-file) shift; [[ $# -gt 0 ]] || die "--probes-file requires a path"; PROBES_FILE="$1";;
       --capture-sec)
         CAPTURE_SEC="$2"
         shift
@@ -293,6 +299,73 @@ Sections:
 EOF
 }
 
+# --- BEGIN probes-to-curls.txt ---
+# If either --probes-file or --probes-stdin was provided, run the probes and
+# capture combined stdout/stderr to $TMPDIR/curls.txt (redacting hostname).
+if [[ -n "${PROBES_FILE:-}" || "${PROBES_STDIN:-0}" -eq 1 ]]; then
+  PROBE_TMP="$TMPDIR/.probes.sh"
+  if [[ -n "${PROBES_FILE:-}" ]]; then
+    cp -a -- "$PROBES_FILE" "$PROBE_TMP"
+  else
+    # Read the heredoc passed after --probes-stdin into a temp script
+    cat > "$PROBE_TMP"
+  fi
+  chmod +x "$PROBE_TMP" || true
+  {
+    echo "### curls.txt — probe run $(date -Iseconds)"
+    echo "### working dir: $ROOT"
+    echo
+    set -x
+    bash -Eeuo pipefail "$PROBE_TMP"
+  } 2>&1 | redact_host > "$TMPDIR/curls.txt" || true
+fi
+# --- END probes-to-curls.txt ---
+# --- BEGIN format curls.txt with URL headers and spacing ---
+# If a raw curls.txt exists and we still have the probe script, rebuild curls.txt
+# so that each probe prints its URL and is separated by a blank line.
+if [[ -f "$TMPDIR/curls.txt" && -f "${PROBE_TMP:-}" ]]; then
+  CURLS_FMT="$TMPDIR/curls.formatted.txt"
+  {
+    echo "### curls.txt — probe run $(date -Iseconds)"
+    echo "### working dir: $ROOT"
+    echo
+  } > "$CURLS_FMT"
+
+  # Read probes line-by-line and execute them; print URL header for curl lines.
+  # Comments and blank lines are skipped.
+  while IFS= read -r _probe_line || [[ -n "$_probe_line" ]]; do
+  # Skip comments/blank
+  [[ -z "$_probe_line" ]] && continue
+  [[ "$_probe_line" =~ ^[[:space:]]*# ]] && continue
+
+  # Extract the first URL token if present (avoid complex [[ =~ ]] quoting)
+  _url_header="$(printf '%s\n' "$_probe_line" | grep -oE 'https?://[^[:space:]]+' | head -n1 || true)"
+  # Trim common trailing punctuation/quotes if they got pulled in
+  _url_header="${_url_header%\"}"
+  _url_header="${_url_header%\'}"
+  _url_header="${_url_header%)}"
+  _url_header="${_url_header%;}"
+
+  if [[ "$_probe_line" == *curl* ]]; then
+    printf '## CMD: %s\n' "$_probe_line" >> "$CURLS_FMT"
+    printf '## URL: %s\n' "${_url_header:-<unknown>}" >> "$CURLS_FMT"
+  fi
+
+
+  # Execute the line and append output
+  bash -Eeuo pipefail -c "$_probe_line" 2>&1 | redact_host >> "$CURLS_FMT" || true
+
+  # Ensure a blank line between probes
+  echo >> "$CURLS_FMT"
+done < "$PROBE_TMP"
+
+
+  # Replace original curls.txt
+  mv -f "$CURLS_FMT" "$TMPDIR/curls.txt"
+fi
+# --- END format curls.txt with URL headers and spacing ---
+#
+
 info "Creating bundle: ${BUNDLE_NAME}.tar.gz"
 generate_env
 generate_structure
@@ -426,6 +499,63 @@ fi
   echo
 } >> "$SCOPE_FILE"
 # --- END .edtb-scope.txt append block ---
+
+# --- BEGIN normalize last scope block missing files placement ---
+# Rebuild ONLY the last scope block (from last 'bundle:' to EOF) so that:
+#  - any existing 'missing files:' sections in that block are removed
+#  - the current MISSING list is inserted exactly once immediately before 'notes:'
+if [[ -f "${SCOPE_FILE:-}" && ${#MISSING[@]} -gt 0 ]]; then
+  __last_bundle_line="$(grep -n '^bundle:' "$SCOPE_FILE" | tail -n1 | cut -d: -f1 || true)"
+  if [[ -n "$__last_bundle_line" ]]; then
+    __head_tmp="${SCOPE_FILE}.head.$$"
+    __tail_tmp="${SCOPE_FILE}.tail.$$"
+    __rebuilt="${SCOPE_FILE}.rebuilt.$$"
+
+    # Split into head (everything before last bundle) and tail (last block)
+    awk -v start="$__last_bundle_line" 'NR < start { print }' "$SCOPE_FILE" > "$__head_tmp"
+    awk -v start="$__last_bundle_line" 'NR >= start { print }' "$SCOPE_FILE" > "$__tail_tmp"
+
+    __skip_bullets=0
+    __inserted=0
+    : > "$__rebuilt"
+
+    while IFS= read -r __line || [[ -n "$__line" ]]; do
+      # If we're skipping bullet lines that belong to a prior 'missing files:' section
+      if [[ $__skip_bullets -eq 1 ]]; then
+        if [[ "$__line" == "  - "* ]]; then
+          continue
+        else
+          __skip_bullets=0
+          # fall through to process the first non-bullet after the section
+        fi
+      fi
+
+      # Eat any existing 'missing files:' section(s) in the tail
+      if [[ "$__line" == "missing files:" ]]; then
+        __skip_bullets=1
+        continue
+      fi
+
+      # Right before 'notes:', inject our clean 'missing files:' section (once)
+      if [[ $__inserted -eq 0 && "$__line" == notes:\ * ]]; then
+        echo "missing files:" >> "$__rebuilt"
+        for __m in "${MISSING[@]}"; do
+          [[ -z "$__m" || "$__m" =~ ^[[:space:]]*# ]] && continue
+          echo "  - $__m" >> "$__rebuilt"
+        done
+        __inserted=1
+      fi
+
+      echo "$__line" >> "$__rebuilt"
+    done < "$__tail_tmp"
+
+    # Stitch head + rebuilt tail back together
+    cat "$__head_tmp" "$__rebuilt" > "${SCOPE_FILE}.new"
+    mv -f "${SCOPE_FILE}.new" "$SCOPE_FILE"
+    rm -f "$__head_tmp" "$__tail_tmp" "$__rebuilt"
+  fi
+fi
+# --- END normalize last scope block missing files placement ---
 
 
 echo "Bundle created: ${TARBALL}" | redact_host

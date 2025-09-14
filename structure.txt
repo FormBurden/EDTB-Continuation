@@ -114,15 +114,13 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_neighborhood_map_htmlspecialchars_fix.tar.gz
 ├── .edtb-scope.txt
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
 │   ├── index.php
 │   ├── js
-│   │   ├── edtoolbox.js
-│   │   └── edtoolbox.loader.js
+│   │   └── edtoolbox.js
 │   ├── partial.php
 │   └── README.txt
 ├── .env
@@ -295,6 +293,8 @@
 │   ├── edtb-user-units.sh
 │   ├── import_edsm.py
 │   ├── import_systems.php
+│   ├── ingest
+│   │   └── backfill_system_info.php
 │   ├── ingest_journal.php
 │   ├── install_dev_arch.sh
 │   ├── nowplaying-loop.sh
@@ -846,4 +846,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-141 directories, 706 files
+142 directories, 705 files
