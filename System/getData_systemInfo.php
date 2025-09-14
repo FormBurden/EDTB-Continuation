@@ -354,8 +354,6 @@ $resNV = $mysqli->query(
 $rowNV = $resNV ? $resNV->fetch_object() : null;
 if ($resNV) { $resNV->close(); }
 $numVisits = isset($rowNV->c) ? (int)$rowNV->c : 0;
-$headerMeta = buildSystemHeaderMeta($curSys['security'] ?? null, $curSys['state'] ?? null, (int)$numVisits);
-$headerMeta .= ''; // keep as string; ensures non-null even if helpers change
 
 $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemDisplayName,
@@ -385,12 +383,4 @@ if ($siSystemName === '' && $stationExists == 0) {
         $siSystemRulingFaction
     );
 }
-// Remove the bracket when it's effectively empty: [ NONE - NONE - Visits: 0 ]
-$data['si_name'] = preg_replace(
-    '/\s*\[\s*[^]]*Visits:\s*0\s*\]\s*/',
-    '',
-    $data['si_name']
-);
-
-
 header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;

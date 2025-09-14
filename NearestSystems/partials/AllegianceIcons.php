@@ -5,26 +5,30 @@
  */
 function render_allegiance_icons($allegianceParams)
 {
+    // $allegianceParams is a string starting with '&' (preserved GET params) or empty
+    $params = (string)$allegianceParams;
+    $base   = '/NearestSystems/?allegiance=';
+
+    // Plain anchors; no Wiselinks data-*; no inline onclick on <img>
     $icons = [
-        'Empire'      => 'empire.png',
-        'Alliance'    => 'alliance.png',
-        'Federation'  => 'federation.png',
-        'Independent' => 'system.png',
+        ['href' => $base . 'Alliance'    . $params, 'title' => 'Alliance',    'src' => '/style/img/allegiances/alliance.png'],
+        ['href' => $base . 'Empire'      . $params, 'title' => 'Empire',      'src' => '/style/img/allegiances/empire.png'],
+        ['href' => $base . 'Federation'  . $params, 'title' => 'Federation',  'src' => '/style/img/allegiances/federation.png'],
+        ['href' => $base . 'Independent' . $params, 'title' => 'Independent', 'src' => '/style/img/allegiances/independent.png'],
     ];
 
-    $i = 0;
-    $total = count($icons);
+    echo '<div class="ns-allegiances" style="display:flex;gap:10px;align-items:center;">' . PHP_EOL;
 
-    foreach ($icons as $name => $file) {
-        $href  = '/NearestSystems/?allegiance=' . rawurlencode($name) . $allegianceParams;
-        $title = htmlspecialchars($name, ENT_QUOTES);
+    foreach ($icons as $icon) {
+        $href  = $icon['href'];
+        $title = $icon['title'];
+        $src   = $icon['src'];
 
-        echo '<a data-replace="true" data-target="#nscontent" href="', $href, '" title="', $title, '">';
-        echo '<img src="/style/img/', $file, '" class="allegiance_icon" alt="', $title, '"/>';
-        echo '</a>';
-
-        if (++$i < $total) {
-            echo '&nbsp;';
-        }
+        echo '<a href="' . htmlspecialchars($href, ENT_QUOTES) . '" title="' . htmlspecialchars($title, ENT_QUOTES) . '">'
+           . '<img src="' . htmlspecialchars($src, ENT_QUOTES) . '" alt="' . htmlspecialchars($title, ENT_QUOTES) . '"></a>' . PHP_EOL;
     }
+
+    echo '</div>' . PHP_EOL;
 }
+
+

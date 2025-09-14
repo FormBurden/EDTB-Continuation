@@ -54,8 +54,7 @@ require_once __DIR__ . '/../source/config.inc.php';
 require_once __DIR__ . '/../source/functions.php';
 /** @require current system (journal-backed) */
 require_once __DIR__ . '/../source/curSys.php';
-/** @require api update */
-require_once __DIR__ . '/../action/updateAPIdata.php';
+
 
 
 
@@ -176,20 +175,28 @@ if (isset($api['ship']) && $settings['show_ship_status'] === 'true') {
     }
 }
 
-/**
- * write to cache if changed
- */
-$cmdrRanksFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/cmdr_ranks_status.html';
-$data['cmdr_ranks_update'] = 'false';
-$cmdrRankCache = file_get_contents($cmdrRanksFile);
+$cacheDir = rtrim($_SERVER['DOCUMENT_ROOT'] . '/cache', '/');
+if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0775, true);
+}
 
-$cmdrBalanceFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/cmdr_balance_status.html';
+$cmdrRanksFile   = $cacheDir . '/cmdr_ranks_status.html';
+$cmdrBalanceFile = $cacheDir . '/cmdr_balance_status.html';
+$shipStatusFile  = $cacheDir . '/ship_status.html';
+
+$data['cmdr_ranks_update']   = 'false';
 $data['cmdr_balance_update'] = 'false';
-$cmdrBalanceCache = file_get_contents($cmdrBalanceFile);
+$data['ship_status_update']  = 'false';
 
-$shipStatusFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/ship_status.html';
-$data['ship_status_update'] = 'false';
-$shipStatusCache = file_get_contents($shipStatusFile);
+/* Cold start: ensure files exist so reads below don’t warn */
+if (!file_exists($cmdrRanksFile))   { file_put_contents($cmdrRanksFile,   ''); }
+if (!file_exists($cmdrBalanceFile)) { file_put_contents($cmdrBalanceFile, ''); }
+if (!file_exists($shipStatusFile))  { file_put_contents($shipStatusFile,  ''); }
+
+$cmdrRankCache    = file_get_contents($cmdrRanksFile);
+$cmdrBalanceCache = file_get_contents($cmdrBalanceFile);
+$shipStatusCache  = file_get_contents($shipStatusFile);
+
 
 if ($forceUpdate === 'true') {
     $data['cmdr_ranks_update'] = 'true';

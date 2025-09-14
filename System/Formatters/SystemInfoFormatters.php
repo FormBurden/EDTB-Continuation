@@ -11,10 +11,11 @@ declare(strict_types=1);
  */
 function formatSiHeaderMeta(string $state, string $security, int $numVisits): string
 {
-    $state    = trim($state) === '' ? 'Unknown' : strtoupper($state);
-    $security = trim($security) === '' ? 'Unknown' : strtoupper($security);
-    return '[ ' . $state . ' - ' . $security . ' - Visits: ' . (int)$numVisits . ' ]';
+    $sec = formatSecurityLabel($security); // HIGH/MEDIUM/LOW/ANARCHY/NONE
+    $st  = si_label_or_none($state);       // maps '', 'unknown', 'null', 'none' => 'NONE'
+    return '[ ' . $sec . ' - ' . $st . ' - Visits: ' . (int)$numVisits . ' ]';
 }
+
 
 /**
  * Build a simple station title; if you later want a wiki/external link, wire it here.
@@ -160,13 +161,6 @@ if (!function_exists('formatSecurityLabel')) {
         if ($s === 'low') return 'LOW';
         if ($s === 'anarchy') return 'ANARCHY';
         return strtoupper($s);
-    }
-}
-if (!function_exists('buildSystemHeaderMeta')) {
-    function buildSystemHeaderMeta($security, $state, int $visits): string {
-        $sec = formatSecurityLabel($security);
-        $st  = si_label_or_none($state);
-        return "[ {$sec} - {$st} - Visits: {$visits} ]";
     }
 }
 

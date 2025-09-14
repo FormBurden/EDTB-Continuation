@@ -21,6 +21,7 @@ require_once __DIR__ . '/../source/Journal/Parser.php';
 \EDTB\Journal\Parser::ingest();
 
 
+$LOG_RANGE = isset($settings['log_range']) ? (int)$settings['log_range'] : 0;
 
 // Compose into $data['log_data']
 $logdata = '';
@@ -42,7 +43,7 @@ if (!empty($curSys['name'])) {
     $escCursysName = $mysqli->real_escape_string($curSys['name']);
 
     // 1) System logs (range logic copied from the original design)
-    if ((int)$settings['log_range'] === 0) {
+    if ($LOG_RANGE === 0) {
         // Only logs for current system
         $query =
             "SELECT SQL_CACHE
@@ -62,7 +63,7 @@ if (!empty($curSys['name'])) {
              LEFT JOIN edtb_stations ON user_log.station_id  = edtb_stations.id
              WHERE user_log.system_name = '$escCursysName'
              ORDER BY -user_log.pinned ASC, user_log.weight, user_log.stardate $ssort";
-    } elseif ((int)$settings['log_range'] === -1) {
+    } elseif ($LOG_RANGE === -1) {
         // All logs (no range limit)
         $query =
             "SELECT SQL_CACHE
@@ -90,7 +91,7 @@ if (!empty($curSys['name'])) {
              ORDER BY -user_log.pinned ASC, user_log.weight, user_log.stardate $ssort";
     } else {
         // Logs within configured cube “radius” around last known (plus always current system)
-        $R = (int)$settings['log_range'];
+        $R = $LOG_RANGE;
         $query =
             "SELECT SQL_CACHE
                 user_log.id,
