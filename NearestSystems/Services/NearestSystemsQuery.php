@@ -118,11 +118,8 @@ class NearestSystemsQuery
         $distance = isset($get['distance']) ? round(abs((float)$get['distance'])) : 50;
         $distance = $distance > 0 ? (int)$distance : 50;
 
-        $sql .= " AND (3959 * acos(least(1, ("
-              . "sin(radians({$this->useY})) * sin(radians(edtb_systems.y)) + "
-              . "cos(radians({$this->useY})) * cos(radians(edtb_systems.y)) * "
-              . "cos(radians(edtb_systems.x - {$this->useX}))"
-              . ")))) <= {$distance}";
+        $sql .= " AND (SQRT(POW(edtb_systems.x - {$this->useX}, 2) + POW(edtb_systems.y - {$this->useY}, 2) + POW(edtb_systems.z - {$this->useZ}, 2)) <= {$distance})";
+
 
         // Allegiance filters
         if (!empty($get['system_allegiance']) && $get['system_allegiance'] !== '0') {

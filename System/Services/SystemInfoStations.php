@@ -5,7 +5,7 @@ use EDTB\Domain\Stations\StationsRepository;
 
 /**
  * Render the Stations section for System Information.
- * Presentation-only; mirrors legacy classes for CSS parity.
+ * Presentation-only; uses the same class hooks as the original CSS.
  */
 function renderStationsHtml(\mysqli $mysqli, int $systemId): string
 {
@@ -16,62 +16,114 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
         return $html;
     }
 
-    if ((int)$stationResult->num_rows === 0) {
-        $stationResult->close();
-        return $html;
-    }
-
     while ($st = $stationResult->fetch_object()) {
         $stationId = (int)($st->id ?? 0);
-        $sNameFull = (string)($st->name ?? '');
-        $sName     = buildStationTitleWithWiki($stationId, $sNameFull);
+        $nameFull  = (string)($st->name ?? '');
 
+        // Station title (inline: INARA link)
+        $safeName  = htmlspecialchars($nameFull, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $hrefInara = 'https://inara.cz/galaxy-station/?search=' . rawurlencode($nameFull);
+        $titleHtml = '<span class="si-station">' . $safeName . '</span>'
+                   . '<span class="si-links" style="margin-left:6px; vertical-align: middle;">'
+                   . '<a href="' . $hrefInara . '" target="_blank" title="INARA" class="external">INARA</a>'
+                   . '</span>';
+
+        // Meta
         $type        = (string)($st->type ?? '');
         $isPlanetary = (string)($st->is_planetary ?? '0');
         $allegiance  = (string)($st->allegiance ?? '');
         $government  = (string)($st->government ?? '');
-        $economies   = buildEconomiesText($st);
 
-        $lsFromStar  = (int)($st->ls_from_star ?? 0);
-        $lsText      = $lsFromStar > 0 ? number_format($lsFromStar) . ' Ls - ' : '';
-        $padText     = buildPadSizeText((string)($st->max_landing_pad_size ?? ''));
+        // Economies (primary [+ secondary])
+        $primary   = (string)($st->economy ?? ($st->primary_economy ?? ''));
+        $secondary = (string)($st->second_economy ?? ($st->secondary_economy ?? ''));
+        $econBits  = [];
+        if ($primary !== '')   { $econBits[] = htmlspecialchars($primary, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+        if ($secondary !== '') { $econBits[] = htmlspecialchars($secondary, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+        $economies = implode(' + ', $econBits);
 
-        // Icons
-        $iconStation = getStationIcon($type, $isPlanetary, 'margin-right: 6px; vertical-align: -3px;');
-        $allegIcon   = getAllegianceIcon($allegiance);
+        // Distance (Ls) — repo aliases to distance_to_arrival when needed
+        $lsFromStar = (int)($st->distance_to_arrival ?? ($st->ls_from_star ?? 0));
+        $lsText     = $lsFromStar > 0 ? number_format($lsFromStar) . ' Ls - ' : '';
 
-        // Station card
-        $html .= '<div class="systeminfo_station" style="background-image: url(/style/img/allegiance/' . htmlspecialchars($allegIcon) . '); background-repeat: no-repeat; background-position: right 0 bottom -2px">';
+        // Pad size text "(L|M|S)"
+        $padRaw  = strtoupper(trim((string)($st->max_landing_pad_size ?? '')));
+        $padText = ($padRaw === 'L' || $padRaw === 'M' || $padRaw === 'S') ? '<span class="si-pad">(' . $padRaw . ')</span>' : '';
 
-        // Header row
-        $html .= '<div class="heading">';
-        $html .= $iconStation . $sName;
-        $html .= '<span style="font-weight: 400; font-size: 10px">&nbsp;[ ' . htmlspecialchars($type) . ' - ' . htmlspecialchars($allegiance) . ' - ' . htmlspecialchars($government) . ' - ' . htmlspecialchars($economies) . ' ]</span>';
-        $html .= '<span class="right"><span style="color: #ccc; font-size: 10px">' . $lsText . $padText . '</span></span>';
-        $html .= '</div>';
+        // Station type icon (with planetary overlay class)
+        $t   = strtolower(trim($type));
+        if ($t === '') { $t = 'unknown'; }
+        $cls = 'sticon sticon-' . preg_replace('/[^a-z0-9_-]/', '-', $t);
+        if ($isPlanetary === '1' || $isPlanetary === 'y' || $isPlanetary === 'Y' || $isPlanetary === 'true') {
+            $cls .= ' sticon-planetary';
+        }
+        $typeIcon = '<div class="' . $cls . '"></div>';
 
-        // Body
-        $html .= '<div class="systeminfo_station_info">';
-
-        // Facilities
-        $facilities = [
-            'shipyard'     => (int)($st->shipyard ?? 0),
-            'outfitting'   => (int)($st->outfitting ?? 0),
-            'market'       => (int)($st->market ?? 0),
-            'black_market' => (int)($st->black_market ?? 0),
-            'refuel'       => (int)($st->refuel ?? 0),
-            'repair'       => (int)($st->repair ?? 0),
-            'restock'      => (int)($st->restock ?? 0),
-            'contacts'     => (int)($st->contacts ?? 0),
-            'vista_genomics' => (int)($st->vista_genomics ?? 0),
-            'universal_cartographics' => (int)($st->universal_cartographics ?? 0),
-            'interstellar_factors' => (int)($st->interstellar_factors ?? 0),
+        // Facilities row (icons) — unavailable ones are dimmed with .si-off for layout parity
+        $facMap = [
+            'market'                  => 'Commodities',
+            'blackmarket'             => 'Black Market',
+            'outfitting'              => 'Outfitting',
+            'shipyard'                => 'Shipyard',
+            'refuel'                  => 'Refuel',
+            'repair'                  => 'Repair',
+            'rearm'                   => 'Restock',
+            'restock'                 => 'Restock',
+            'universal_cartographics' => 'Universal Cartographics',
+            'contacts'                => 'Contacts',
+            'interstellar_factors'    => 'Interstellar Factors',
         ];
-        $html .= buildFacilitiesHtml($facilities);
-        $html .= '<br>';
+        $facVals = [
+            'market'                  => (int)($st->market ?? 0),
+            'blackmarket'             => (int)($st->blackmarket ?? 0),
+            'outfitting'              => (int)($st->outfitting ?? 0),
+            'shipyard'                => (int)($st->shipyard ?? 0),
+            'refuel'                  => (int)($st->refuel ?? 0),
+            'repair'                  => (int)($st->repair ?? 0),
+            'rearm'                   => (int)($st->rearm ?? 0),
+            'restock'                 => (int)($st->restock ?? ($st->rearm ?? 0)), // legacy alias
+            'universal_cartographics' => (int)($st->universal_cartographics ?? 0),
+            'contacts'                => (int)($st->contacts ?? 0),
+            'interstellar_factors'    => (int)($st->interstellar_factors ?? 0),
+        ];
+        $facHtml = '<div class="si-facilities">';
+        foreach ($facMap as $key => $label) {
+            $on    = (int)($facVals[$key] ?? 0) === 1;
+            $fcls  = 'si-facility si-facility-' . $key . ($on ? '' : ' si-off');
+            $title = htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $facHtml .= '<span class="' . $fcls . '" title="' . $title . '"></span>';
+        }
+        $facHtml .= '</div>';
 
-        // Commodities summary
-        $html .= buildCommoditiesText($st);
+        // Commodities summary line
+        $hasMarket   = (int)($st->market ?? 0) === 1;
+        $hasOutf     = (int)($st->outfitting ?? 0) === 1;
+        $hasShipyard = (int)($st->shipyard ?? 0) === 1;
+
+        $commodBits = [];
+        if ($hasMarket)   { $commodBits[] = 'Commodities'; }
+        if ($hasOutf)     { $commodBits[] = 'Outfitting'; }
+        if ($hasShipyard) { $commodBits[] = 'Shipyard'; }
+        $commodText = empty($commodBits) ? 'No market' : implode(', ', $commodBits);
+        $commodHtml = '<span class="si-commodities">' . $commodText . '</span>';
+
+        // Build card
+        $html .= '<div class="systeminfo_station">';
+        $html .= $typeIcon;
+        $html .= '<div class="systeminfo_station_info">';
+        $html .= '<div class="si-title">' . $titleHtml . ' ' . $padText . ' <span class="si-dim">' . $lsText . '</span></div>';
+
+        $metaBits = array_filter([
+            $allegiance !== '' ? htmlspecialchars($allegiance, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : null,
+            $government !== '' ? htmlspecialchars($government, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : null,
+            $economies !== '' ? $economies : null,
+        ]);
+        if (!empty($metaBits)) {
+            $html .= '<div class="si-meta">' . implode(' &middot; ', $metaBits) . '</div>';
+        }
+
+        $html .= $facHtml . '<br>';
+        $html .= $commodHtml;
 
         $html .= '</div>'; // .systeminfo_station_info
         $html .= '</div>'; // .systeminfo_station

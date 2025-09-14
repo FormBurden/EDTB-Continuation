@@ -257,23 +257,36 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
 
 
     }
-    else {
+    
     // get last known coordinates
-    $lastCoords = lastKnownSystem();
+    // Prefer your journal-backed current system; fall back to lastKnown
+    $curX = $curSys['x'] ?? null;
+    $curY = $curSys['y'] ?? null;
+    $curZ = $curSys['z'] ?? null;
 
-    $lastCoordx = $lastCoords['x'] ?? null;
-    $lastCoordy = $lastCoords['y'] ?? null;
-    $lastCoordz = $lastCoords['z'] ?? null;
+    if (validCoordinates($curX, $curY, $curZ)) {
+        $udCoordx = $curX;
+        $udCoordy = $curY;
+        $udCoordz = $curZ;
 
-    $udCoordx = $lastCoordx;
-    $udCoordy = $lastCoordy;
-    $udCoordz = $lastCoordz;
+        // Also set the system name/display from current system when none was requested
+        $siSystemName        = (string)($curSys['name'] ?? '');
+        $siSystemDisplayName = $siSystemName;
 
-    $add3 = ' *';
+        $add3 = ''; // known origin
+    } else {
+        // get last known coordinates (legacy fallback)
+        $lastCoords = lastKnownSystem();
 
+        $udCoordx = $lastCoords['x'] ?? null;
+        $udCoordy = $lastCoords['y'] ?? null;
+        $udCoordz = $lastCoords['z'] ?? null;
+
+        $add3 = ' *'; // unknown origin marker
+    }
 
     $raresCloseby = 0;
-}
+
 
 /**
  * get distances to user defined systems
@@ -303,12 +316,8 @@ if (isset($settings['dist_systems'])) {
         $i++;
     }
 }
-list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock(
-    $rareResult,
-    (int)($raresCloseby ?? 0),
-    $settings,
-    $curSys
-);
+list($cRaresData, $actualNumRes, $rareText) = renderRaresBlock($mysqli, $siSystemName, $curSys, $settings);
+
 // [System Info computed segments]
 
 // Crosslinks icons (gallery/log/map/info) — parity with legacy System::crosslinks()
@@ -375,9 +384,10 @@ if ($siSystemName === '' && $stationExists == 0) {
 }
 // Remove the bracket when it's effectively empty: [ NONE - NONE - Visits: 0 ]
 $data['si_name'] = preg_replace(
-    '/\s*\[\s*NONE\s*-\s*NONE\s*-\s*Visits:\s*0\s*\]\s*/',
+    '/\s*\[\s*[^]]*Visits:\s*0\s*\]\s*/',
     '',
     $data['si_name']
 );
+
 
 header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;

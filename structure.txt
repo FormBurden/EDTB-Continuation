@@ -109,9 +109,7 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_galmap_center_zeros.tar.gz
 ├── .edtb-scope.txt
-├── edtb_system_info_ui_01.tar.gz
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
@@ -211,6 +209,7 @@
 │   └── refresh.sh
 ├── .gitignore
 ├── index.php
+├── __INIT__
 ├── Log
 │   ├── add_log.php
 │   ├── getData_logs.php
@@ -290,6 +289,7 @@
 │   ├── edtb-user-units.sh
 │   ├── import_edsm.py
 │   ├── import_systems.php
+│   ├── ingest_journal.php
 │   ├── install_dev_arch.sh
 │   ├── nowplaying-loop.sh
 │   └── screenshot-mirror.sh
@@ -329,6 +329,8 @@
 │   │   │   └── Ui.php
 │   │   └── Text.php
 │   ├── javascript.js
+│   ├── Journal
+│   │   └── Parser.php
 │   ├── Migrator.php
 │   ├── MySQL.php
 │   ├── System.php
@@ -837,4 +839,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-138 directories, 700 files
+139 directories, 701 files

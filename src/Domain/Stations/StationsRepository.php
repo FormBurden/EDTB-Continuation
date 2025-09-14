@@ -6,93 +6,84 @@ namespace EDTB\Domain\Stations;
 final class StationsRepository
 {
     /**
-     * Returns an array of stdClass station rows for the given system.
-     * We use SELECT * to preserve whatever fields downstream currently expect.
-     * No new guards; behavior mirrors the old inline query.
+     * Return a mysqli_result for stations belonging to a given system id.
+     * Callers should iterate with fetch_object() for 1:1 rendering.
+     *
+     * @return \mysqli_result|false
+     */
+    public static function selectResultBySystemId(\mysqli $mysqli, int $systemId)
+    {
+        // Preferred/legacy table name
+        $tbl = 'edtb_stations';
+
+        // Try to normalize "distance_to_arrival" for ordering if schema varies.
+        $hasDistArr = self::columnExists($mysqli, $tbl, 'distance_to_arrival');
+        $hasDistStar = self::columnExists($mysqli, $tbl, 'distance_to_star');
+        $hasLsFromStar = self::columnExists($mysqli, $tbl, 'ls_from_star');
+
+        $select = "`{$tbl}`.*";
+        if ($hasDistArr) {
+            $select .= ", `{$tbl}`.`distance_to_arrival` AS `distance_to_arrival`";
+        } elseif ($hasDistStar) {
+            $select .= ", `{$tbl}`.`distance_to_star` AS `distance_to_arrival`";
+        } elseif ($hasLsFromStar) {
+            $select .= ", `{$tbl}`.`ls_from_star` AS `distance_to_arrival`";
+        }
+
+        // Station display name column
+        $nameCol = self::firstExistingColumn($mysqli, $tbl, ['name','station','station_name','label']) ?? 'name';
+
+        // System id column candidates
+        $sidCol = self::firstExistingColumn($mysqli, $tbl, ['system_id','sys_id','systemId','systemid','id_system']) ?? 'system_id';
+
+        // ORDER: known distance first, ASC; then by station name (collation for stable sort)
+        $order = 'ORDER BY '
+               . 'CASE WHEN `distance_to_arrival` IS NULL THEN 1 ELSE 0 END ASC, '
+               . '`distance_to_arrival` ASC, '
+               . "`{$nameCol}` COLLATE utf8mb4_unicode_ci ASC";
+
+        $sql = 'SELECT ' . $select . " FROM `{$tbl}` "
+             . "WHERE `{$sidCol}` = " . (int)$systemId . ' '
+             . $order;
+
+        return $mysqli->query($sql);
+    }
+
+    /**
+     * Convenience wrapper returning array<\stdClass>.
      */
     public static function findBySystemId(\mysqli $mysqli, int $systemId): array
     {
-        $systemId = (int)$systemId;
-
-        // Keep ordering stable for UI; old code typically sorts by name or distance.
-        $sql = "SELECT * FROM edtb_stations WHERE system_id = '$systemId' ORDER BY name ASC";
-
-        $res = $mysqli->query($sql);
-        if (!$res) {
-            return [];
-        }
-
         $rows = [];
-        while ($obj = $res->fetch_object()) {
-            $rows[] = $obj;
+        $res = self::selectResultBySystemId($mysqli, $systemId);
+        if ($res instanceof \mysqli_result) {
+            while ($obj = $res->fetch_object()) {
+                $rows[] = $obj;
+            }
+            $res->close();
         }
-        $res->close();
-
         return $rows;
     }
-	    /**
-     * Returns the raw mysqli_result for stations in a system.
-     * Kept to match existing call sites that iterate with fetch_object().
-     * Mirrors the previous inline behavior (logs on error, returns the result as-is).
-     */
-    public static function selectResultBySystemId(\mysqli $mysqli, int $systemId): \mysqli_result|false
+
+    // ---- helpers -----------------------------------------------------------
+
+    private static function columnExists(\mysqli $mysqli, string $table, string $column): bool
     {
-        $systemId = (int)$systemId;
-
-        $sql = "  SELECT SQL_CACHE *
-                  FROM edtb_stations
-                  WHERE system_id = '$systemId'
-                  ORDER BY -ls_from_star DESC, name";
-
-        $res = $mysqli->query($sql) or write_log($mysqli->error, __FILE__, __LINE__);
-        return $res; // may be false on error (same as old inline code)
+        $esc = $mysqli->real_escape_string($column);
+        $sql = "SHOW COLUMNS FROM `{$table}` LIKE '{$esc}'";
+        $res = $mysqli->query($sql);
+        $ok = ($res && $res->num_rows > 0);
+        if ($res) { $res->close(); }
+        return $ok;
     }
-        /**
-     * Returns the same $modCat structure the page used to build, but fetched here.
-     * Keys are category_name; values are arrays of ['group_name','class','price','rating'] with stable $i order.
-     * Mirrors the old inline foreach-per-id behavior (one query per id), no guards added.
-     */
-    public static function modulesByIds(\mysqli $mysqli, array $ids): array
+
+    private static function firstExistingColumn(\mysqli $mysqli, string $table, array $candidates): ?string
     {
-        $modCat = [];
-        $i = 0;
-
-        foreach ($ids as $mods) {
-            // match prior behavior (string id used directly in WHERE),
-            // keeping minimal change to logic and ordering
-            $mods = $mysqli->real_escape_string((string)$mods);
-
-            $query = "  SELECT SQL_CACHE class, rating, price, group_name, category_name
-                        FROM edtb_modules
-                        WHERE id = '$mods'
-                        LIMIT 1";
-
-            $result = $mysqli->query($query) or write_log($mysqli->error, __FILE__, __LINE__);
-
-            if ($result && $result->num_rows > 0) {
-                $modulesObj = $result->fetch_object();
-
-                $modsName         = $modulesObj->group_name;
-                $modsCategoryName = $modulesObj->category_name;
-                $modsClass        = $modulesObj->class;
-                $modsRating       = $modulesObj->rating;
-                $modsPrice        = $modulesObj->price;
-
-                $modCat[$modsCategoryName][$i] = [];
-                $modCat[$modsCategoryName][$i]['group_name'] = $modsName;
-                $modCat[$modsCategoryName][$i]['class']      = $modsClass;
-                $modCat[$modsCategoryName][$i]['price']      = $modsPrice;
-                $modCat[$modsCategoryName][$i]['rating']     = $modsRating;
-                $i++;
-            }
-
-            if ($result) {
-                $result->close();
+        foreach ($candidates as $c) {
+            if (self::columnExists($mysqli, $table, $c)) {
+                return $c;
             }
         }
-
-        return $modCat;
+        return null;
     }
-
-
 }

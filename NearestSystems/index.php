@@ -34,6 +34,9 @@
 */
 
 /** @require NearestSystems class */
+require_once __DIR__ . '/../source/config.inc.php';
+require_once __DIR__ . '/../source/functions.php';
+require_once __DIR__ . '/../source/curSys.php';
 require_once __DIR__ . '/NearestSystems.php';
 require_once __DIR__ . '/../style/Header.php';
 require_once __DIR__ . '/../style/Footer.php';

@@ -193,6 +193,41 @@
 
 		return params;
 	}
+	// Center the ED3D view on x,y,z with NO hard-coded offsets.
+	// We only preserve the current camera radius/orientation so the star is dead-center.
+	function centerMapTo(x, y, z, smooth = false) {
+		try {
+			if (!window.controls || !window.camera || !window.THREE) return;
+
+			const tgt = new THREE.Vector3(Number(x), Number(y), -Number(z));
+			const curTarget = (controls.target && controls.target.clone)
+				? controls.target.clone()
+				: (controls.center && controls.center.clone ? controls.center.clone() : new THREE.Vector3(0, 0, 0));
+
+			const curPos = camera.position.clone();
+			const offset = curPos.sub(curTarget);      // preserve current radius/view
+			const destPos = tgt.clone().add(offset);   // no extra offsets, just re-center
+
+			const applyTarget = () => {
+				if (controls.target && controls.target.copy) controls.target.copy(tgt);
+				if (controls.center && controls.center.set) controls.center.set(tgt.x, tgt.y, tgt.z);
+				controls.update && controls.update();
+			};
+
+			if (smooth && window.TWEEN && TWEEN.Tween) {
+				const from = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+				const to = { x: destPos.x, y: destPos.y, z: destPos.z };
+				new TWEEN.Tween(from, { override: true }).to(to, 600)
+					.onUpdate(() => { camera.position.set(from.x, from.y, from.z); controls.update && controls.update(); })
+					.onComplete(() => { applyTarget(); })
+					.start();
+			} else {
+				camera.position.copy(destPos);
+				applyTarget();
+			}
+		} catch (e) { console.error('centerMapTo failed', e); }
+	}
+
 
 	// ---------------------------------------------------------------------------
 	// Main wiring
@@ -288,7 +323,7 @@
 		const qs = buildQueryFromForm();
 
 		// Update Results panel & legend first (fast)
-		void updateResults(qs);
+		await updateResults(qs);
 
 		// Init ED3D map
 		if (!window.Ed3d) {
@@ -303,43 +338,55 @@
 			jsonPath: `/GalMap/getMapPoints.json.php?${qs.toString()}`,
 			withHudPanel: true,
 			startAnim: true,
+			// Use the center fields as the player position so HUD distance works
 			playerPos: [Number(cx?.value), Number(cy?.value), Number(cz?.value)]
 		});
 
-		// Ensure the camera/controls target the resolved center immediately after init
-		setTimeout(() => applyResolvedCenter(), 0);
+		// Re-center to the EXACT resolved center once ED3D (camera/controls) is ready — no offsets
+		(function centerAfterInit() {
+			const rc = window.__galmapResolvedCenter;
+			if (!rc || !Number.isFinite(+rc.x) || !Number.isFinite(+rc.y) || !Number.isFinite(+rc.z)) return;
+
+			let tries = 0, maxTries = 80;
+			(function tick() {
+				if (window.controls && window.camera && window.THREE) {
+					// centerMapTo handles the Z flip internally; no extra offsets applied
+					centerMapTo(rc.x, rc.y, rc.z, /*smooth=*/false);
+				} else if (tries++ < maxTries) {
+					setTimeout(tick, 50);
+				}
+			})();
+		})();
 
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
 
-	});
-	// Push the resolved center into controls & camera so initial zoom goes to the right cluster
-	function applyResolvedCenter() {
-		const rc = window.__galmapResolvedCenter;
-		if (!rc) return;
-		const x = Number(rc.x), y = Number(rc.y), z = Number(rc.z);
 
-		// Center the orbital target on the resolved center
-		controls.target.set(x, y, z);
-		if (controls.center && typeof controls.center.set === 'function') {
-			controls.center.set(x, y, z);
-		}
+		// Re-center to the EXACT resolved_center once ED3D has created camera/controls
+		(function centerAfterInit() {
+			const rc = window.__galmapResolvedCenter;
+			if (!rc || !Number.isFinite(+rc.x) || !Number.isFinite(+rc.y) || !Number.isFinite(+rc.z)) return;
 
-		// Nudge the camera to a sensible offset relative to center (matches vendor's 3D view)
-		if (typeof camera !== 'undefined' && camera && camera.position) {
-			camera.position.set(x - 100, y + 500, z + 500);
-		}
+			let tries = 0, maxTries = 80;
+			(function tick() {
+				if (window.controls && window.camera && window.THREE) {
+					// no magic offsets — star is at the center, keep current zoom distance
+					centerMapTo(rc.x, rc.y, rc.z, /*smooth=*/false);
+				} else if (tries++ < maxTries) {
+					setTimeout(tick, 50);
+				}
+			})();
+		})();
 
-		controls.update();
-	}
   
-	// Kick once on load if center is present
-	document.addEventListener('DOMContentLoaded', async () => {
-		const hasCenter = ($id('center_system')?.value || '').trim().length > 0 ||
-			($id('centerX')?.value ?? '') !== '';
-		if (hasCenter) {
-			await maybeAutofill();
-			form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-		}
-	});
+		// Kick once on load if center is present
+		document.addEventListener('DOMContentLoaded', async () => {
+			const hasCenter = ($id('center_system')?.value || '').trim().length > 0 ||
+				($id('centerX')?.value ?? '') !== '';
+			if (hasCenter) {
+				await maybeAutofill();
+				form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+			}
+		});
+	})
 })();
   

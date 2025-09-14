@@ -6,15 +6,10 @@ namespace EDTB\Domain\Rares;
 final class RaresRepository
 {
     /**
-     * Return a mysqli_result for nearby rares (or false if table missing or query fails),
-     * so the page can continue using fetch_object() and num_rows exactly as before.
+     * Return nearby rares as a raw mysqli_result (or false on failure),
+     * preserving legacy call patterns that iterate with fetch_object().
      *
-     * We replicate the original SQL including:
-     *  - distance calculation,
-     *  - left join to edtb_systems,
-     *  - bounding box on x/y/z within +/- $range,
-     *  - ORDER BY to show the current system first, then ascending distance,
-     *  - LIMIT 10.
+     * @return \mysqli_result|false
      */
     public static function selectNearbyRaresResult(
         \mysqli $mysqli,
@@ -23,49 +18,87 @@ final class RaresRepository
         float $cy,
         float $cz,
         float $range
-    ): \mysqli_result|false {
-        // Fresh DBs may not have edtb_rares yet; mirror original table-existence check
-        $chk = $mysqli->query("SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'edtb_rares'");
-        if (!$chk) {
-            // same failure semantics as before: return false so caller sets $raresCloseby = 0
-            return false;
-        }
-        $has = $chk->num_rows > 0;
-        $chk->close();
-        if (!$has) {
-            return false;
-        }
+    ) {
+        $raresTable = 'edtb_rares';
+        $systemsTable = 'edtb_systems';
 
         $escName = $mysqli->real_escape_string($systemName);
 
-        // Build the exact same SQL the page had (SQL_CACHE kept as-is)
-        $sql = '  SELECT SQL_CACHE
-                    sqrt(
-                        pow((edtb_systems.x-(' . $cx . ')),2)
-                      + pow((edtb_systems.y-(' . $cy . ')),2)
-                      + pow((edtb_systems.z-(' . $cz . ')),2)
-                    ) AS distance,
-                                        sqrt(
-                        pow((edtb_systems.x-(' . $cx . ')),2)
-                      + pow((edtb_systems.y-(' . $cy . ')),2)
-                      + pow((edtb_systems.z-(' . $cz . ')),2)
-                    ) AS distance,
-                    edtb_rares.item, edtb_rares.system_name, edtb_rares.station,
-                    edtb_rares.ls_to_star,
-                    edtb_systems.x, edtb_systems.y, edtb_systems.z
+        // Distance in LY between joined system and current coords
+        $distanceExpr = sprintf(
+            'SQRT( POW(`%s`.`x` - %.6f, 2) + POW(`%s`.`y` - %.6f, 2) + POW(`%s`.`z` - %.6f, 2) )',
+            $systemsTable, $cx, $systemsTable, $cy, $systemsTable, $cz
+        );
 
-                    FROM edtb_rares
-                    LEFT JOIN edtb_systems ON edtb_rares.system_name = edtb_systems.name COLLATE utf8mb4_unicode_ci
-                    WHERE
-                    edtb_systems.x BETWEEN ' . ($cx - $range) . ' AND ' . ($cx + $range) . '
-                    AND edtb_systems.y BETWEEN ' . ($cy - $range) . ' AND ' . ($cy + $range) . '
-                    AND edtb_systems.z BETWEEN ' . ($cz - $range) . ' AND ' . ($cz + $range) . '
-                    ORDER BY
-                    edtb_rares.system_name = \'' . $escName . '\' COLLATE utf8mb4_unicode_ci DESC,
-                    distance ASC
-                    LIMIT 10';
+        // Column variants (kept minimal and deterministic for parity)
+        $rareNameCol = self::firstExistingColumn($mysqli, $raresTable, ['rare','rare_name','name','label']) ?? 'rare';
+        $rareSysCol  = self::firstExistingColumn($mysqli, $raresTable, ['system_name','system','sys_name']) ?? 'system_name';
+        $rareStatCol = self::firstExistingColumn($mysqli, $raresTable, ['station','station_name','market']) ?? 'station';
+        $priceCol    = self::firstExistingColumn($mysqli, $raresTable, ['price','avg_price','gal_price']); // optional
 
-        $res = $mysqli->query($sql) or write_log($mysqli->error, __FILE__, __LINE__);
-        return $res; // may be false, caller handles num_rows vs. 0
+        $select = [
+            "`{$raresTable}`.*",
+            "{$distanceExpr} AS `distance`",
+            "`{$systemsTable}`.`name` AS `__joined_system_name`"
+        ];
+        if ($priceCol !== null) {
+            $select[] = "`{$raresTable}`.`{$priceCol}` AS `price`";
+        }
+        $selectSql = implode(', ', $select);
+
+        $predicates = [
+            sprintf("`%s`.`x` BETWEEN %.6f AND %.6f", $systemsTable, $cx - $range, $cx + $range),
+            sprintf("`%s`.`y` BETWEEN %.6f AND %.6f", $systemsTable, $cy - $range, $cy + $range),
+            sprintf("`%s`.`z` BETWEEN %.6f AND %.6f", $systemsTable, $cz - $range, $cz + $range),
+        ];
+        $whereSql = implode(' AND ', $predicates);
+
+        $sql = sprintf(
+            'SELECT %s FROM `%s` ' .
+            'LEFT JOIN `%s` ON `%s`.`%s` = `%s`.`name` COLLATE utf8mb4_unicode_ci ' .
+            'WHERE %s ' .
+            'ORDER BY `%s`.`%s` = \'%s\' COLLATE utf8mb4_unicode_ci DESC, `distance` ASC ' .
+            'LIMIT 10',
+            $selectSql,
+            $raresTable,
+            $systemsTable, $raresTable, $rareSysCol, $systemsTable,
+            $whereSql,
+            $raresTable, $rareSysCol, $escName
+        );
+
+        $res = $mysqli->query($sql);
+        if (!$res && function_exists('write_log')) {
+            write_log($mysqli->error, __FILE__, __LINE__);
+        }
+        return $res;
+    }
+
+    /**
+     * Compatibility alias used in some older call sites.
+     */
+    public static function selectNearby(
+        \mysqli $mysqli,
+        string $systemName,
+        float $cx,
+        float $cy,
+        float $cz,
+        float $range
+    ) {
+        return self::selectNearbyRaresResult($mysqli, $systemName, $cx, $cy, $cz, $range);
+    }
+
+    // ---- helpers -----------------------------------------------------------
+
+    private static function firstExistingColumn(\mysqli $mysqli, string $table, array $candidates): ?string
+    {
+        foreach ($candidates as $c) {
+            $esc = $mysqli->real_escape_string($c);
+            $sql = "SHOW COLUMNS FROM `{$table}` LIKE '{$esc}'";
+            $res = $mysqli->query($sql);
+            $ok = ($res && $res->num_rows > 0);
+            if ($res) { $res->close(); }
+            if ($ok) { return $c; }
+        }
+        return null;
     }
 }
