@@ -305,24 +305,32 @@
 			startAnim: true,
 			playerPos: [Number(cx?.value), Number(cy?.value), Number(cz?.value)]
 		});
-	
+
+		// Ensure the camera/controls target the resolved center immediately after init
+		setTimeout(() => applyResolvedCenter(), 0);
+
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+
 	});
-	// After ED3D init, push the resolved center into controls so HUD/grid match
-	(function applyResolvedCenter() {
+	// Push the resolved center into controls & camera so initial zoom goes to the right cluster
+	function applyResolvedCenter() {
 		const rc = window.__galmapResolvedCenter;
-		if (!rc || !window.controls) return;
+		if (!rc) return;
 		const x = Number(rc.x), y = Number(rc.y), z = Number(rc.z);
-		if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
-			try {
-				// OrbitControls standard uses `target`; ED3D’s HUD sometimes reads `center`
-				controls.target.set(x, y, z);
-				if (controls.center && typeof controls.center.set === 'function') {
-					controls.center.set(x, y, z);
-				}
-			} catch (_) {/* ignore */ }
+
+		// Center the orbital target on the resolved center
+		controls.target.set(x, y, z);
+		if (controls.center && typeof controls.center.set === 'function') {
+			controls.center.set(x, y, z);
 		}
-	})();
+
+		// Nudge the camera to a sensible offset relative to center (matches vendor's 3D view)
+		if (typeof camera !== 'undefined' && camera && camera.position) {
+			camera.position.set(x - 100, y + 500, z + 500);
+		}
+
+		controls.update();
+	}
   
 	// Kick once on load if center is present
 	document.addEventListener('DOMContentLoaded', async () => {

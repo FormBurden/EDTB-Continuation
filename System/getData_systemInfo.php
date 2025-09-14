@@ -82,12 +82,14 @@ require_once $ROOT . '/source/curSys.php';
 require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
 require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';
+require_once $ROOT . '/src/Domain/Powers/PowersRepository.php';
 require_once $ROOT . '/System/Formatters/SystemInfoFormatters.php';
 require_once $ROOT . '/System/Services/SystemInfoDetails.php';
 require_once $ROOT . '/System/Services/SystemInfoStations.php';
 require_once $ROOT . '/System/Services/SystemInfoRares.php';
 require_once $ROOT . '/System/Services/SystemInfoHeader.php';
 require_once $ROOT . '/System/Services/SystemInfoLinks.php';
+
 
 
 
@@ -323,37 +325,26 @@ $stationExists = 0;
 $data['si_stations'] = '';
 
 if ($stationSystemId > 0) {
-    $__res = \EDTB\Domain\Stations\StationsRepository::selectResultBySystemId($mysqli, $stationSystemId);
-    if ($__res) {
-        $stationExists = $__res->num_rows;
-
-        while ($__st = $__res->fetch_object()) {
-            $stName = (string)($__st->name ?? '');
-            // strip legacy $EXT_PANEL_*; prefixes (e.g., "$EXT_PANEL_ColonisationShip; Bugrov Expedition")
-            $stName = preg_replace('/^\$EXT_PANEL_[^;]*;\s*/', '', $stName);
-        
-            $ls     = trim((string)($__st->ls_from_star ?? ''));
-            $lsText = $ls !== '' ? ' <span class="small">(' . $ls . ' Ls)</span>' : '';
-            $data['si_stations'] .= '<div class="station">' . htmlspecialchars($stName) . $lsText . '</div>';
-        }
-        
-        $__res->close();
-    }
-
-    // Visits for header meta
-    $escName = $mysqli->real_escape_string((string)$siSystemName);
-    $resNV = $mysqli->query(
-        "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_name = '" . $escName . "'"
-    );
-    $rowNV = $resNV->fetch_object();
-    $resNV->close();
-    $numVisits = (int)($rowNV->c ?? 0);
-
-    
-} else {
-    $numVisits = 0;
+    // 1:1 station cards (icons, facilities, pad sizes, commodities)
+    $data['si_stations'] = renderStationsHtml($mysqli, (int)$stationSystemId);
+    $stationExists = $data['si_stations'] !== '' ? 1 : 0;
 }
 
+
+//     // Visits for header meta
+//     $escName = $mysqli->real_escape_string((string)$siSystemName);
+//     $resNV = $mysqli->query(
+//         "SELECT COUNT(*) AS c FROM user_visited_systems WHERE system_name = '" . $escName . "'"
+//     );
+//     $rowNV = $resNV->fetch_object();
+//     $resNV->close();
+//     $numVisits = (int)($rowNV->c ?? 0);
+
+    
+// } else {
+//     $numVisits = 0;
+// }
+$numVisits = isset($numVisits) ? (int)$numVisits : 0;
 $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemDisplayName,
     (string)$siCrosslinks,
@@ -367,28 +358,21 @@ $data['si_name'] .= renderSystemHeaderHtml(
 $getSystemId   = $_GET['system_id']   ?? 'undefined';
 $getSystemName = $_GET['system_name'] ?? 'undefined';
 
-if ($stationExists == 0 && $getSystemId === 'undefined' && $getSystemName === 'undefined') {
-    $data['si_detailed'] = 'No data available for this system';
+if ($siSystemName === '' && $stationExists == 0) {
+    $data['si_detailed'] = '<div class="light">No data available for this system</div>';
 } else {
-    if ($siSystemPower !== 'None' && $siSystemPowerState !== 'None') {
-        $escSystemPower = $mysqli->real_escape_string($siSystemPower);
-
-        $data['si_detailed'] .= buildSystemDetailsHtml(
-            $mysqli,
-            $siSystemPower,
-            $siSystemPowerState,
-            $siSystemPopulation,
-            $siSystemAllegiance,
-            $siSystemGovernment,
-            $siSystemEconomy,
-            $siSystemRulingFaction
-        );
-    }
-
-
+    // Always render details; power image/state are handled inside the renderer if present
+    $data['si_detailed'] .= buildSystemDetailsHtml(
+        $mysqli,
+        $siSystemPower,
+        $siSystemPowerState,
+        $siSystemPopulation,
+        $siSystemAllegiance,
+        $siSystemGovernment,
+        $siSystemEconomy,
+        $siSystemRulingFaction
+    );
 }
-/* --- Polish pass: hide empty meta bracket and populate si_detailed (phase 1) --- */
-
 // Remove the bracket when it's effectively empty: [ NONE - NONE - Visits: 0 ]
 $data['si_name'] = preg_replace(
     '/\s*\[\s*NONE\s*-\s*NONE\s*-\s*Visits:\s*0\s*\]\s*/',
@@ -396,16 +380,4 @@ $data['si_name'] = preg_replace(
     $data['si_name']
 );
 
-// Add a simple detailed panel with coordinates (expand in next pass)
-$cx = htmlspecialchars((string)($curSys['x'] ?? ''));
-$cy = htmlspecialchars((string)($curSys['y'] ?? ''));
-$cz = htmlspecialchars((string)($curSys['z'] ?? ''));
-
-$data['si_detailed'] =
-    '<div class="si-detailed">' .
-        '<ul>' .
-            '<li><strong>Coordinates:</strong> x=' . $cx . ', y=' . $cy . ', z=' . $cz . '</li>' .
-        '</ul>' .
-    '</div>';
-
-    header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;
+header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;

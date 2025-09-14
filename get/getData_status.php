@@ -48,12 +48,16 @@ if (isset($_GET['force_update'])) {
     $forceUpdate = $_GET['force_update'] === 'true' ? 'true' : 'false';
 }
 
-/** @require api update */
-require_once __DIR__ . '/../action/updateAPIdata.php';
 /** @require config */
 require_once __DIR__ . '/../source/config.inc.php';
 /** @require functions */
 require_once __DIR__ . '/../source/functions.php';
+/** @require current system (journal-backed) */
+require_once __DIR__ . '/../source/curSys.php';
+/** @require api update */
+require_once __DIR__ . '/../action/updateAPIdata.php';
+
+
 
 /**
  * show user status
@@ -216,4 +220,11 @@ if ($forceUpdate === 'true') {
         $data['ship_status_update'] = 'true';
     }
 }
+$data['current_system'] = [
+    'name' => (string)($curSys['name'] ?? ''),
+    'x' => isset($curSys['x']) ? (float)$curSys['x'] : null,
+    'y' => isset($curSys['y']) ? (float)$curSys['y'] : null,
+    'z' => isset($curSys['z']) ? (float)$curSys['z'] : null,
+];
 echo json_encode($data);
+

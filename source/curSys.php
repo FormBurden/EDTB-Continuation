@@ -258,30 +258,43 @@ if ($logDir !== '' && is_dir($logDir) && is_readable($logDir)) {
 }
 
 /**
- * Final fallback if no log source matched: use last_system or Sol
+ * Final resolution chain if no log source matched:
+ *   1) Latest from user_visited_systems (journal-derived)
+ *   2) edtbCommon('last_system')
+ *   3) 'Sol'
  */
 if (empty($curSys) || empty($curSys['name'])) {
-    $fallback = edtbCommon('last_system', 'value');
-    if ($fallback === '' || $fallback === null) {
-        $fallback = 'Sol';
+    $latestName = '';
+    if ($resUv = $mysqli->query("SELECT system_name FROM user_visited_systems WHERE system_name <> '__INIT__' ORDER BY id DESC LIMIT 1")) {
+        if ($rowUv = $resUv->fetch_object()) {
+            $latestName = (string)$rowUv->system_name;
+        }
+        $resUv->close();
     }
 
-    $curSys['name']     = $fallback;
+    if ($latestName === '') {
+        $latestName = edtbCommon('last_system', 'value');
+    }
+    if ($latestName === '' || $latestName === null) {
+        $latestName = 'Sol';
+    }
+
+    $curSys['name']     = $latestName;
     $curSys['esc_name'] = $mysqli->real_escape_string($curSys['name']);
     $curSys['id']       = -1;
     $curSys['population'] = '';
     $curSys['allegiance'] = '';
     $curSys['economy']    = '';
     $curSys['government'] = '';
-    $curSys['ruling_faction'] = '';
-    $curSys['state']     = 'unknown';
-    $curSys['security']  = 'unknown';
-    $curSys['power']     = '';
-    $curSys['power_state']= '';
-    $curSys['needs_permit']= '';
-    $curSys['updated_at'] = '';
-    $curSys['simbad_ref'] = '';
-    $curSys['users_own']  = false;
+    $curSys['ruling_faction']= '';
+    $curSys['state']         = 'unknown';
+    $curSys['security']      = 'unknown';
+    $curSys['power']         = '';
+    $curSys['power_state']   = '';
+    $curSys['needs_permit']  = '';
+    $curSys['updated_at']    = '';
+    $curSys['simbad_ref']    = '';
+    $curSys['users_own']     = false;
 
     // Try to get coordinates from edtb_systems for the fallback
     $sysName = $mysqli->real_escape_string($curSys['name']);
@@ -297,3 +310,4 @@ if (empty($curSys) || empty($curSys['name'])) {
         $r->close();
     }
 }
+
