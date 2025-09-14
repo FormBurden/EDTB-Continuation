@@ -212,7 +212,12 @@ a {
 .body {
   height: 100%;
   width: 100%; }
-
+/* Responsive root wrapper fills the viewport */
+#wrap {
+  position: relative;
+  width: 100vw;
+  overflow: hidden;
+}
 #header {
   width: 100%; }
 
@@ -222,7 +227,7 @@ a {
   display: block;
   height: 100%;
   width: 350px;
-  position: absolute;
+  position: fixed;
   z-index: 150 !important;
   background: #404040 url(/style/img/back.jpg) repeat-x;
   border-right: 3px double #2e3436; }
@@ -243,7 +248,7 @@ a {
 
 .rightpanel-top {
   display: block;
-  height: 60px;
+  height: 72px;
   vertical-align: middle;
   border-bottom: 1px solid #06060d;
   background: #75bdd1 radial-gradient(ellipse at center, #75bdd1 0, #1499d3 0, #168cc0 11%, #222 100%);
@@ -773,7 +778,8 @@ a {
   text-align: center; }
 
 .entries {
-  position: absolute;
+  position: relative;
+  top: 30px;
   margin-top: 60px;
   right: 0;
   left: 0;
@@ -1779,15 +1785,6 @@ fieldset {
 ::-webkit-scrollbar-corner {
   background-color: #000; }
 
-#wrap {
-  display: flex;
-  height: 7%;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 0;
-  border-collapse: collapse;
-}
-
 #datetime:hover div {
   color: #fffffa; }
 
@@ -2148,17 +2145,16 @@ img {
   /* must be > .info (100000000) */
 }
 
-#galmap-form,
 #galmap-form * {
   position: relative;
   z-index: 100000200;
   /* keep inputs/buttons higher than any page overlay */
 }
 /* GalMap: keep controls above the ED3D canvas/hud */
-#galmap-form {
+/* #galmap-form {
   position: relative;
   z-index: 50;
-}
+} */
 
 #ed3dmap {
   position: relative;
@@ -2168,10 +2164,6 @@ img {
 
 #ed3dmap .hudPanel {
   z-index: 2;
-}
-/* === EDTB Linux header: pin header icons to top-right === */
-.rightpanel-top {
-  position: relative;
 }
 
 /* === EDTB Linux: force settings/about panels to viewport top-right === */
@@ -2185,10 +2177,6 @@ img {
   left: auto !important;
   z-index: 1003;
   /* above overlays */
-}
-/* === EDTB Linux header: pin header icons to top-right === */
-.rightpanel-top {
-  position: relative;
 }
 
 .rightpanel-icons img.elite_emb {
@@ -2238,7 +2226,7 @@ img {
   display: flex;
   gap: 10px;
   align-items: center;
-  z-index: 9999;
+  z-index: 10000;
   /* keep above page widgets/maps */
 }
 
@@ -2337,17 +2325,6 @@ img {
   letter-spacing: .03em;
   opacity: .85;
 }
-
-/* (optional, if you have a wrapper for the settings/help buttons) */
-.rightpanel-icons {
-  position: absolute;
-  right: 16px;
-  top: 16px;
-  display: inline-flex;
-  gap: 12px;
-  align-items: center;
-  z-index: 2;
-}
 /* --- EDTB Linux: allow full-height layouts --- */
 html,
 body {
@@ -2360,4 +2337,6 @@ body {
 .content,
 .container {
   min-height: 100%;
+  position: relative;
+  top: 60px
 }

@@ -10,7 +10,7 @@ function get_timeago($ptime, $format = false)
 {
     $ptimeOg = $ptime;
 
-    $etime = time() - $ptime;
+    $etime = time() - (int)$ptime;
     if ($etime < 1) {
         $etime = 1;
     }
