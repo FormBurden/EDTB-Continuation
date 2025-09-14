@@ -31,4 +31,6 @@ $request = isset($_GET['request']) ? preg_replace('/[^0-9]/', '', $_GET['request
     <h2 class="edtbx-h2">Logs</h2>
     <pre id="edtbx-log" class="edtbx-log">Waiting…</pre>
   </section>
+  <script>window.EDTBX_CFG = { api: "/System/getData_systemInfo.php" };</script>
 </main>
+

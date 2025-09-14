@@ -82,23 +82,27 @@
     tbody.appendChild(frag);
   }
 
-  async function load(){
-    setLog('Loading…');
-    try{
-      const data = await fetchData();
-      renderSystemTitle(data?.system_title || '');
-      renderSystemInfo(data?.system_info || {});
-      renderStations(data?.station_data || []);
-      const extra = {
-        request,
-        keys: Object.keys(data || {}),
-        station_count: Array.isArray(data?.station_data) ? data.station_data.length : 0
-      };
-      setLog({ status: 'ok', ...extra });
-    }catch(err){
-      setLog({ status: 'error', message: err?.message || String(err) });
-    }
+  async function load() {
+    // 1) Get system name from Journal
+    const sys = await edtbxCurrentSystem();
+
+    // 2) Reflect immediately in the header
+    var titleEl = document.getElementById('edtbx-system-title');
+    if (titleEl) titleEl.textContent = sys || '—';
+
+    // 3) Fetch System Info JSON for this system (si_name, si_stations, si_detailed)
+    const res = await fetch(edtbxApiUrlForSystem(sys), { credentials: 'same-origin' });
+    const data = await res.json();
+
+    // 4) Render into ED ToolBox using existing renderers
+    if (typeof renderSystem === 'function') renderSystem(data);
+    if (typeof renderStations === 'function') renderStations(data);
+
+    // 5) Show a minimal journal line in Logs for now
+    await edtbxLoadLogsInto(document.getElementById('edtbx-log'), sys);
   }
+  
+  
 
   refreshBtn?.addEventListener('click', load);
   document.addEventListener('DOMContentLoaded', load);
@@ -107,3 +111,61 @@
     load();
   }
 })();
+// === Journal wiring helpers (appended) ===
+async function edtbxCurrentSystem() {
+  const r = await fetch('/get/getData_status.php', { credentials: 'same-origin' });
+  const j = await r.json();
+  return (j.current_system && (j.current_system.name || j.current_system.system)) || '';
+}
+function edtbxApiUrlForSystem(sysName) {
+  // API is set by partial.php to /System/getData_systemInfo.php
+  return window.EDTBX_CFG.api + '?system_name=' + encodeURIComponent(sysName);
+}
+async function edtbxLoadLogsInto(el, sysName) {
+  // For now, show a simple journal status line; we can swap to a logs endpoint later.
+  if (!el) return;
+  el.textContent = 'Journal wired: ' + (sysName || 'Unknown system');
+}
+// === ensure edtoolbox.js is (re)loaded, then call load()
+(function ensureEdtbxScript() {
+  var existing = document.querySelector('script[data-edtbx="1"]');
+  if (existing) existing.remove(); // drop stale cached script
+
+  var s = document.createElement('script');
+  s.src = '/EDToolbox/js/edtoolbox.js?v=2'; // bump to v=2 so browser fetches new code
+  s.setAttribute('data-edtbx', '1');
+  s.defer = true;
+  s.onload = function () {
+    if (typeof load === 'function') { load(); }
+  };
+  document.head.appendChild(s);
+})();
+// === Journal wiring helpers (appended) ===
+async function edtbxCurrentSystem() {
+  const r = await fetch('/get/getData_status.php', { credentials: 'same-origin' });
+  const j = await r.json();
+  return (j.current_system && (j.current_system.name || j.current_system.system)) || '';
+}
+function edtbxApiUrlForSystem(sysName) {
+  return (window.EDTBX_CFG && window.EDTBX_CFG.api ? window.EDTBX_CFG.api : '/System/getData_systemInfo.php')
+    + '?system_name=' + encodeURIComponent(sysName);
+}
+async function edtbxLoadLogsInto(el, sysName) {
+  if (!el) return;
+  el.textContent = 'Journal wired: ' + (sysName || 'Unknown system');
+}
+// Open ToolBox when landing via redirect: /?go=EDToolbox
+(function () {
+  var p = new URLSearchParams(location.search);
+  if (p.get('go') === 'EDToolbox') {
+    if (typeof loadEDToolbox === 'function') {
+      loadEDToolbox('#scrollable', '0');
+      $('#pageTitle').text('ED ToolBox');
+      // highlight the left-nav row
+      $('.leftpanel .links_link').removeClass('active');
+      $('.leftpanel a[href="/EDToolbox/"] .links_link').addClass('active');
+    }
+  }
+})();
+
+

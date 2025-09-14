@@ -7,7 +7,7 @@ global $settings;
 $maplink = $settings['default_map'] === 'galaxy_map' ? '/GalMap' : '/Map';
 
 $links = [
-        'ED ToolBox--log.png--true' => '/EDToolbox/',
+        'ED ToolBox--log.png--false' => '/EDToolbox/',
         'System Information--info.png--false' => '/System',
         'Galaxy Map--grid.png--false' => '/GalMap',
         'Neighborhood Map--grid.png--false' => '/Map',

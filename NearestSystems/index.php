@@ -48,7 +48,7 @@ require_once __DIR__ . '/../style/Footer.php';
 $header = new Header();
 
 /** @var string page_title */
-$header->pageTitle = 'Nearest Systems&nbsp;&nbsp;&&nbsp;&nbsp;Stations';
+$header->pageTitle = 'Nearest Systems & Stations';
 
 /**
  * display the header

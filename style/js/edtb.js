@@ -94,6 +94,16 @@ $(function () {
 });
 if (location.pathname === '/EDToolbox/' || location.pathname === '/EDToolbox') { loadEDToolbox('#scrollable', '0'); $('#pageTitle').text('ED ToolBox'); }
 $(document).on('click', '.leftpanel a', function () { $('.leftpanel .links_link').removeClass('active'); $(this).find('.links_link').addClass('active'); });
+// ED ToolBox: left-nav handler (namespaced)
+$(document)
+  .off('click.edtbx', '.leftpanel a[href="/EDToolbox/"]')
+  .on('click.edtbx', '.leftpanel a[href="/EDToolbox/"]', function (e) {
+    e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
+    loadEDToolbox('#scrollable', '0'); $('#pageTitle').text('ED ToolBox');
+    $('.leftpanel .links_link').removeClass('active');
+    $(this).find('.links_link').addClass('active');
+    return false;
+  });
 
 
 

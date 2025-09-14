@@ -1,37 +1,45 @@
 // Path: /EDToolbox/js/edtoolbox.loader.js
 // Injects the ED Toolbox partial into a container and loads its JS/CSS.
-(function(){
-  function ensureCss(href){
-    if ([...document.querySelectorAll('link[rel="stylesheet"]')].some(l => l.href.includes(href))) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
+// === on-demand loader; does nothing until loadEDToolbox(...) is called ===
+(function () {
+  function ensureCss(href) {
+    if ([].some.call(document.styleSheets, s => s.href && s.href.indexOf(href) !== -1)) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = href;
+    document.head.appendChild(l);
   }
-  function loadScript(src){
-    return new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.defer = true;
-      s.onload = resolve;
-      s.onerror = () => reject(new Error('Failed to load ' + src));
-      document.body.appendChild(s);
-    });
-  }
-  async function loadEDToolbox(containerSelector, request){
-    const container = document.querySelector(containerSelector);
-    if (!container) throw new Error('Container not found: ' + containerSelector);
 
+  function loadEdtbxScript(cb) {
+    var old = document.querySelector('script[data-edtbx="1"]');
+    if (old) old.remove();
+    var s = document.createElement('script');
+    s.src = '/EDToolbox/js/edtoolbox.js?v=2';
+    s.defer = true;
+    s.setAttribute('data-edtbx', '1');
+    s.onload = function () { if (typeof cb === 'function') cb(); };
+    document.head.appendChild(s);
+  }
+
+  window.loadEDToolbox = function (containerSelector, requestFlag) {
+    var target = document.querySelector(containerSelector || '#scrollable');
+    if (!target) return;
+
+    // 1) ensure CSS for this view
     ensureCss('/EDToolbox/css/edtoolbox.css?v=1');
 
-    const res = await fetch('/EDToolbox/partial.php?request=' + encodeURIComponent(request || '0'), { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    container.innerHTML = await res.text();
+    // 2) fetch partial and inject
+    var url = '/EDToolbox/partial.php' + (requestFlag ? ('?request=' + encodeURIComponent(requestFlag)) : '');
+    fetch(url, { credentials: 'same-origin' })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        target.innerHTML = html;
 
-    window.EDTBX_CFG = { api: '/get/getData.php' };
-    await loadScript('/EDToolbox/js/edtoolbox.js?v=1');
-    // edtoolbox.js self-inits and calls load()
-  }
-  // Expose globally so Header.php can call it on nav click:
-  window.loadEDToolbox = loadEDToolbox;
+        // 3) load script and then call load() to populate
+        loadEdtbxScript(function () {
+          if (typeof load === 'function') { load(); }
+        });
+      });
+  };
 })();
+

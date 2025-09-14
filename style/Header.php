@@ -41,7 +41,6 @@ class Header extends Theme
         include __DIR__ . '/header/body_open.php';
         include __DIR__ . '/header/left_panel.php';
         $this->topPanel();
-        $this->settingsPanel();
         $this->about();
         echo '<div class="rightpanel">';
 
@@ -64,16 +63,6 @@ class Header extends Theme
     private function topPanel()
     {
         include __DIR__ . '/header/top_panel.php';
-    }
-
-
-
-        /**
-     * Settings panel links
-     */
-    private function settingsPanel()
-    {
-        include __DIR__ . '/header/settings_panel.php';
     }
 
         /**

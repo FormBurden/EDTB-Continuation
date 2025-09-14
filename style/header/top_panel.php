@@ -41,7 +41,7 @@ global $settings, $api;
             </div>
             <!-- settings & about -->
             <div class="rightpanel-icons">
-                <a href="javascript:void(0)" id="settings_click" title="Settings">
+            <a href="/Admin/index.php" id="settings_link" title="Settings">
                     <img src="/style/img/settings.png" alt="Settings" class="elite_emb">
                 </a>
                 <a href="javascript:void(0)" id="about_click" title="About">
