@@ -9,12 +9,15 @@ declare(strict_types=1);
 /**
  * Format the mini meta after the system name: [ STATE - SECURITY - Visits:N ]
  */
-function formatSiHeaderMeta(string $state, string $security, int $numVisits): string
+function formatSiHeaderMeta($state, $security, int $numVisits): string
 {
-    $sec = formatSecurityLabel($security); // HIGH/MEDIUM/LOW/ANARCHY/NONE
-    $st  = si_label_or_none($state);       // maps '', 'unknown', 'null', 'none' => 'NONE'
+    // Normalize labels to match original UI
+    $st  = si_label_or_none($state);
+    $sec = formatSecurityLabel($security);
+    // Exact order and casing: STATE, SECURITY, VISITS
     return '[ STATE: ' . $st . ' - SECURITY: ' . $sec . ' - VISITS: ' . (int)$numVisits . ' ]';
 }
+
 
 
 /**

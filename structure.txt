@@ -118,7 +118,11 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
+├── edtb_neighborhood3d_entry_stage02.tar.gz
 ├── .edtb-scope.txt
+├── edtb_sysinfo_parity_02.tar.gz
+├── edtb_sysinfo_parity_03.tar.gz
+├── edtb_sysinfo_parity_modules_01.tar.gz
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
@@ -851,4 +855,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-143 directories, 709 files
+143 directories, 713 files

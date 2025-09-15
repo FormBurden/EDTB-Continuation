@@ -107,7 +107,12 @@ function tooltipFormatter() {
         <?php
     } else {
         ?>
-        value = this.series.name.toUpperCase() + " is " + Math.round(Math.sqrt(Math.pow((this.point.x-(<?= $curSys['x']?>)), 2)+Math.pow((this.point.y-(<?= $curSys['y']?>)), 2)+Math.pow((this.point.z-(<?= $curSys['z']?>)), 2))) + " ly away";
+        value = this.series.name.toUpperCase() + " is " +
+            Math.round(Math.sqrt(
+                Math.pow((this.point.x - (<?= $curSys['x'] ?>)), 2) +
+                Math.pow((this.point.y - (<?= $curSys['y'] ?>)), 2) +
+                Math.pow((this.point.z - (<?= $curSys['z'] ?>)), 2)
+            )) + " ly away";
         <?php
     }
     ?>
@@ -329,10 +334,7 @@ $(function ()
         {
             enabled: true
         },
-        legend:
-        {
-            enabled: false
-        },
+        legend: { enabled: true, layout: 'vertical', align: 'left', verticalAlign: 'top' },
         exporting:
         {
             enabled: false

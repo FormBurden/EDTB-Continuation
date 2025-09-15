@@ -60,47 +60,58 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
         $typeIcon = '<div class="' . $cls . '"></div>';
 
         // Facilities row (icons) — unavailable ones are dimmed with .si-off for layout parity
-        $facMap = [
-            'market'                  => 'Commodities',
-            'blackmarket'             => 'Black Market',
-            'outfitting'              => 'Outfitting',
-            'shipyard'                => 'Shipyard',
-            'refuel'                  => 'Refuel',
-            'repair'                  => 'Repair',
-            'rearm'                   => 'Restock',
-            'restock'                 => 'Restock',
-            'universal_cartographics' => 'Universal Cartographics',
-            'contacts'                => 'Contacts',
-            'interstellar_factors'    => 'Interstellar Factors',
+                // Facilities row (icons) — use icon map and actual DB columns
+        $facIconMap = require __DIR__ . '/../Lookups/FacilitiesIconMap.php'; // key => filename
+        $facLabels = [
+            'market'       => 'Commodities',
+            'black_market' => 'Black Market',
+            'outfitting'   => 'Outfitting',
+            'shipyard'     => 'Shipyard',
+            'refuel'       => 'Refuel',
+            'repair'       => 'Repair',
+            'restock'      => 'Restock',
         ];
         $facVals = [
-            'market'                  => (int)($st->market ?? 0),
-            'blackmarket'             => (int)($st->blackmarket ?? 0),
-            'outfitting'              => (int)($st->outfitting ?? 0),
-            'shipyard'                => (int)($st->shipyard ?? 0),
-            'refuel'                  => (int)($st->refuel ?? 0),
-            'repair'                  => (int)($st->repair ?? 0),
-            'rearm'                   => (int)($st->rearm ?? 0),
-            'restock'                 => (int)($st->restock ?? ($st->rearm ?? 0)), // legacy alias
-            'universal_cartographics' => (int)($st->universal_cartographics ?? 0),
-            'contacts'                => (int)($st->contacts ?? 0),
-            'interstellar_factors'    => (int)($st->interstellar_factors ?? 0),
+            'market'       => (int)($st->commodities_market ?? 0),
+            'black_market' => (int)($st->black_market ?? 0),
+            'outfitting'   => (int)($st->outfitting ?? 0),
+            'shipyard'     => (int)($st->shipyard ?? 0),
+            'refuel'       => (int)($st->refuel ?? 0),
+            'repair'       => (int)($st->repair ?? 0),
+            'restock'      => (int)($st->rearm ?? 0), // DB uses 'rearm'
         ];
+
         $facHtml = '<div class="si-facilities">';
-        foreach ($facMap as $key => $label) {
+        foreach ($facIconMap as $key => $filename) {
             $on    = (int)($facVals[$key] ?? 0) === 1;
-            $fcls  = 'si-facility si-facility-' . $key . ($on ? '' : ' si-off');
-            $title = htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $facHtml .= '<span class="' . $fcls . '" title="' . $title . '"></span>';
+            $title = htmlspecialchars($facLabels[$key] ?? ucfirst(str_replace('_',' ',$key)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $cls   = 'si-facility-img' . ($on ? '' : ' si-off');
+            $src   = '/style/img/facilities/' . $filename;
+            $facHtml .= '<img class="' . $cls . '" src="' . $src . '" alt="' . $title . '" title="' . $title . '">';
         }
         $facHtml .= '</div>';
 
+
         // Commodities summary line
-        $hasMarket   = (int)($st->market ?? 0) === 1;
+        $hasMarket   = (int)($st->commodities_market ?? 0) === 1;
         $hasOutf     = (int)($st->outfitting ?? 0) === 1;
         $hasShipyard = (int)($st->shipyard ?? 0) === 1;
 
                 $commodHtml = buildCommoditiesText($st);
+                if ((int)$st->commodities_market === 0) { $html .= '<div>No market</div>'; }
+                if (!empty($st->selling_ships)) {
+                    $html .= '<div class="si-selling"><strong>Selling ships:</strong> ' .
+                             htmlspecialchars((string)$st->selling_ships, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') .
+                             '</div>';
+                }
+                if (!empty($st->selling_modules)) {
+                    $html .= '<div class="si-selling-modules">' .
+                             htmlspecialchars((string)$st->selling_modules, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') .
+                             '</div>';
+                }
+        
+        
+
 
         $sellingShips = trim((string)($st->selling_ships ?? ($st->ships_sold ?? '')));
         $sellingShipsHtml = $sellingShips !== ''

@@ -48,9 +48,13 @@ $header->displayHeader();
 
 if (isset($_GET['maxdistance']) && is_numeric($_GET['maxdistance'])) {
     $settings['maxdistance'] = $_GET['maxdistance'];
+}
 if (empty($settings['maxdistance'])) $settings['maxdistance'] = 50;
 
-}
+
+
+
+
 ?>
 <script src="/Map/Vendor/Highcharts/js/highcharts.js"></script>
 <script src="/Map/Vendor/Highcharts/js/highcharts-3d.js"></script>
@@ -168,24 +172,17 @@ $(function () {
                 <input type="hidden" name="mode" value="<?= $mode?>">
                 <select title="Range" class="distance" name="maxdistance" onchange="this.form.submit()">
                     <?php
-                    $selected = $_GET['maxdistance'] ?? [];
-                    if (!is_array($selected)) {
-                        $selected = [$selected];
-                    }
-                    $selected = array_values(array_unique(array_map('intval', $selected)));
-                    sort($selected);
                     
-                    // ...then render options from $selected safely
-                    foreach ($selected as $dist) {
-                        // echo "<option ...>{$dist}</option>";
+                    // Canonical distance choices (ly)
+                    $ranges = [10, 20, 25, 30, 40, 50, 75, 100, 150, 200];
+                    $current = (int)($settings['maxdistance'] ?? 50);
+                  
+                    foreach ($ranges as $value) {
+                        $sel = ($current === (int)$value) ? ' selected="selected"' : '';
+                        echo '<option value="' . $value . '"' . $sel . '>Range ' . $value . ' ly</option>';
                     }
-                    
-
-                    foreach ($selected as $value) {
-                        $selected = $settings['maxdistance'] == $value ? 'selected="selected"' : '';
-
-                        echo '<option value="' . $value . '" ' . $selected . '>Range ' . $value . ' ly</option>';
-                    }
+                  
+                  
 
                     ?>
                 </select>
@@ -210,6 +207,20 @@ $(function () {
         });
     });
 </script>
+<script>
+  (function () {
+    // Prevent the document mouseup handler from immediately closing the legend
+    $('#map_legend').on('mousedown mouseup', function(e){ e.stopPropagation(); });
+    $('#map_legend2').on('mousedown mouseup', function(e){ e.stopPropagation(); });
+
+    // Toggle legend panel
+    $('#map_legend').on('click', function(e){
+      e.stopPropagation();
+      $('#map_legend2').fadeToggle('fast');
+    });
+  })();
+</script>
+
 <?php
 /**
  * initiate page footer

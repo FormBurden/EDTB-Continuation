@@ -2426,3 +2426,47 @@ body {
 .system_table .col-pad {
   width: 60px;
 }
+/* System Info – Selling rows */
+.systeminfo_station_info .si-selling {
+  margin-top: 6px;
+}
+
+.systeminfo_station_info .si-selling strong {
+  font-weight: 700;
+}
+
+.systeminfo_station_info .si-selling-modules {
+  margin: 4px 0 8px;
+}
+/* System Info – Facilities image row */
+.si-facilities {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.si-facility-img {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  image-rendering: auto;
+}
+
+.si-facility-img.si-off {
+  opacity: 0.35;
+  filter: grayscale(100%);
+}
+
+/* System Info – Selling rows */
+.systeminfo_station_info .si-selling {
+  margin-top: 6px;
+}
+
+.systeminfo_station_info .si-selling strong {
+  font-weight: 700;
+}
+
+.systeminfo_station_info .si-selling-modules {
+  margin: 4px 0 8px;
+}
