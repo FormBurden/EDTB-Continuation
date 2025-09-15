@@ -1,118 +1,167 @@
 <?php
 declare(strict_types=1);
 
-use EDTB\Domain\Rares\RaresRepository;
+/**
+ * Rares rendering helpers for System Information.
+ * Provides:
+ *  - renderRaresBlock($rareResult, int $raresCloseby, array $settings, array $curSys): array
+ *  - fetchNearbyRares(mysqli $mysqli, string $systemName, float $cx, float $cy, float $cz, $range = 50.0): array
+ *  - renderNearbyRaresHtml(string $systemName, array $curSys, array $settings, $rareResult, int $raresCloseby): array
+ */
 
 /**
- * Fetch nearby rares as a mysqli_result and a row count, mirroring legacy behavior.
- * Returns [mysqli_result|false, int $raresCloseby]
+ * Iterate over a mysqli_result or any Traversable/array as objects.
+ *
+ * @param mixed $res
+ * @return \Generator
  */
-function fetchNearbyRares(
-    \mysqli $mysqli,
-    string $systemName,
-    float $cx,
-    float $cy,
-    float $cz,
-    $rangeRaw
-) {
-    // Disabled or nonsensical range — match legacy outcome: no rares.
-    if (isset($rangeRaw) && (string)$rangeRaw === '-1') {
-        return [false, 0];
-    }
-    $range = (float)$rangeRaw;
-    if ($range <= 0) {
-        $range = 50.0;
-    }
-
-    // Attempt the legacy-style query (repository already checks table existence).
-    $res = RaresRepository::selectNearbyRaresResult($mysqli, $systemName, $cx, $cy, $cz, $range);
-    $count = 0;
+function _si_iter_rows($res): \Generator
+{
     if ($res instanceof \mysqli_result) {
-        $count = $res->num_rows;
+        while ($o = $res->fetch_object()) {
+            yield $o;
+        }
+        return;
     }
-    return [$res, $count];
+    if (is_array($res)) {
+        foreach ($res as $o) {
+            yield is_object($o) ? $o : (object)$o;
+        }
+        return;
+    }
+    if ($res instanceof \Traversable) {
+        foreach ($res as $o) {
+            yield is_object($o) ? $o : (object)$o;
+        }
+    }
 }
 
 /**
- * Render the Nearby Rares panel and return: [html, actualNumRes, miniLabel]
+ * Render the rares HTML block and compute the mini-label.
+ * Returns [string $cRaresData, int $actualNumRes, string $rareText]
+ *
+ * Expected $rareResult rows to have fields:
+ *  item, price, distance, system_name, station, ls_to_star, sc_est_mins, needs_permit, max_landing_pad_size
  */
-function renderNearbyRaresHtml(
-    \mysqli $mysqli,
-    string $systemName,
-    array $curSys,
-    array $settings,
-    $res,
-    int $actualNumRes
-): array {
-    $cRaresData = '<div class="si-rares">';
+function renderRaresBlock($rareResult, int $raresCloseby, array $settings, array $curSys): array
+{
+    $cRaresData   = '<div class=\"si-rares\">';
+    $actualNumRes = 0;
 
-    if (!($res instanceof \mysqli_result) || $actualNumRes === 0) {
-        $cRaresData .= '<div class="light">No nearby rares found</div>';
-        $cRaresData .= '</div>';
-        // Preserve the mini-label call below with zero results
-        $rareText = buildRaresMiniLabel(0, ($settings['rare_range'] ?? null), $cRaresData,
-                                        ($curSys['x'] ?? null), ($curSys['y'] ?? null), ($curSys['z'] ?? null));
-        return [$cRaresData, 0, $rareText];
-    }
+    $range = $settings['rare_range'] ?? 50.0;
+    $range = is_numeric($range) ? (float)$range : 50.0;
 
-    while ($row = $res->fetch_object()) {
-        $rareName  = (string)($row->rare ?? ($row->rare_name ?? $row->name ?? 'Rare Commodity'));
-        $sysName   = (string)($row->system_name ?? $row->__joined_system_name ?? '');
-        $stName    = (string)($row->station ?? $row->station_name ?? $row->market ?? '');
-        $distance  = (float)($row->distance ?? 0.0);
-        $price     = isset($row->price) ? (float)$row->price : null;
+    if ($raresCloseby > 0 && $rareResult) {
+        foreach (_si_iter_rows($rareResult) as $rareObj) {
+            $distance = (float)($rareObj->distance ?? 0.0);
+            if ($distance > $range) {
+                continue; // respect range filter
+            }
 
-        $rareSafe = htmlspecialchars($rareName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $sysSafe  = htmlspecialchars($sysName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $stSafe   = $stName !== '' ? htmlspecialchars($stName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
+            $item  = htmlspecialchars((string)($rareObj->item ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $price = (isset($rareObj->price) && is_numeric($rareObj->price)) ? number_format((float)$rareObj->price) : '';
+            $sys   = htmlspecialchars((string)($rareObj->system_name ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $stn   = htmlspecialchars((string)($rareObj->station ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-        $inaraRare = 'https://inara.cz/galaxy-commodities/?search=' . rawurlencode($rareName);
-        $inaraSys  = 'https://inara.cz/galaxy-system/?search=' . rawurlencode($sysName);
+            $ls    = (isset($rareObj->ls_to_star) && is_numeric($rareObj->ls_to_star)) ? number_format((float)$rareObj->ls_to_star) . ' ls' : '';
+            $mins  = (isset($rareObj->sc_est_mins) && is_numeric($rareObj->sc_est_mins)) ? number_format((float)$rareObj->sc_est_mins) . ' min' : '';
+            $permit= (isset($rareObj->needs_permit) && ((string)$rareObj->needs_permit === '1')) ? 'Permit needed' : '';
+            $pad   = htmlspecialchars((string)($rareObj->max_landing_pad_size ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-        $cRaresData .= '<div class="si-rare">';
-        $cRaresData .= '<div class="si-rare-title">'
-                     . '<span class="si-rare-name"><a href="' . $inaraRare . '" target="_blank" class="external">' . $rareSafe . '</a></span>'
-                     . ' <span class="si-dim">(' . number_format($distance, 1) . ' Ly)</span>'
-                     . '</div>';
-        $cRaresData .= '<div class="si-rare-meta">'
-                     . '<a href="' . $inaraSys . '" target="_blank" class="external">' . $sysSafe . '</a>'
-                     . ($stSafe !== '' ? ' &middot; ' . $stSafe : '')
-                     . ($price !== null ? ' &middot; ' . number_format($price) . ' cr' : '')
-                     . '</div>';
-        $cRaresData .= '</div>';
+            $cRaresData .= '<div class=\"rare\">';
+            $cRaresData .= '[' . number_format($distance, 1) . ' ly] ' . $item;
+            if ($price !== '') {
+                $cRaresData .= ' (' . $price . ' CR)';
+            }
+            $cRaresData .= '<br>' . $sys . ' - ' . $stn;
+
+            $extra = [];
+            if ($ls !== '')     { $extra[] = $ls; }
+            if ($mins !== '')   { $extra[] = '(' . $mins . ')'; }
+            if ($permit !== '') { $extra[] = $permit; }
+            if ($pad !== '')    { $extra[] = $pad; }
+
+            if ($extra) {
+                $cRaresData .= ' — ' . implode(' ', $extra);
+            }
+
+            $cRaresData .= '</div>';
+            $actualNumRes++;
+        }
+    } else {
+        $cRaresData .= '<div class=\"rare rare-empty\">No rares nearby</div>';
     }
 
     $cRaresData .= '</div>';
 
-    // Mini-label exactly as before (delegated to formatter)
-    $rareText = buildRaresMiniLabel(
-        (int)$actualNumRes,
-        ($settings['rare_range'] ?? null),
-        $cRaresData,
-        ($curSys['x'] ?? null),
-        ($curSys['y'] ?? null),
-        ($curSys['z'] ?? null)
-    );
+    // Mini-label (delegate to formatter if present)
+    if (function_exists('buildRaresMiniLabel')) {
+        $rareText = buildRaresMiniLabel(
+            (int)$actualNumRes,
+            $range,
+            $cRaresData,
+            ($curSys['x'] ?? null),
+            ($curSys['y'] ?? null),
+            ($curSys['z'] ?? null)
+        );
+    } else {
+        $rareText = $actualNumRes > 0 ? ('Rares: ' . $actualNumRes . ' within ' . number_format($range, 0) . ' ly') : '';
+    }
 
     return [$cRaresData, $actualNumRes, $rareText];
 }
-/**
- * Legacy shim for older call-sites.
- * Returns [html, actualNumRes, miniLabel] just like before.
- */
-function renderRaresBlock(
-    \mysqli $mysqli,
-    string $systemName,
-    array $curSys,
-    array $settings
-): array {
-    $cx = (float)($curSys['x'] ?? 0.0);
-    $cy = (float)($curSys['y'] ?? 0.0);
-    $cz = (float)($curSys['z'] ?? 0.0);
-    $rangeRaw = $settings['rare_range'] ?? 50.0;
 
-    // Reuse the new pipeline
-    [$res, $count] = fetchNearbyRares($mysqli, $systemName, $cx, $cy, $cz, $rangeRaw);
-    return renderNearbyRaresHtml($mysqli, $systemName, $curSys, $settings, $res, (int)$count);
+/**
+ * Thin wrapper expected by System/getData_systemInfo.php.
+ * Returns [mysqli_result|false $result, int $countCloseby].
+ */
+if (!function_exists('fetchNearbyRares')) {
+    function fetchNearbyRares(
+        \mysqli $mysqli,
+        string $systemName,
+        float $cx,
+        float $cy,
+        float $cz,
+        $range = 50.0
+    ): array {
+        if ($systemName === '') {
+            return [false, 0];
+        }
+        $rng = is_numeric($range) ? (float)$range : 50.0;
+
+        if (class_exists('\\EDTB\\Domain\\Rares\\RaresRepository')
+            && method_exists('\\EDTB\\Domain\\Rares\\RaresRepository', 'selectNearbyRaresResult')) {
+            $res = \EDTB\Domain\Rares\RaresRepository::selectNearbyRaresResult(
+                $mysqli,
+                $systemName,
+                $cx, $cy, $cz,
+                $rng
+            );
+        } else {
+            $res = false;
+        }
+
+        $count = ($res instanceof \mysqli_result) ? (int)$res->num_rows : 0;
+        return [$res, $count];
+    }
 }
 
+/**
+ * Renderer expected by System/getData_systemInfo.php.
+ * Returns [$cRaresDataHtml, $actualNumRes, $rareTextMiniLabel].
+ */
+if (!function_exists('renderNearbyRaresHtml')) {
+    function renderNearbyRaresHtml(
+        string $systemName,
+        array $curSys,
+        array $settings,
+        $rareResult,
+        int $raresCloseby
+    ): array {
+        if (function_exists('renderRaresBlock')) {
+            return renderRaresBlock($rareResult, $raresCloseby, $settings, $curSys);
+        }
+        $html = '<div class=\"si-rares\"><div class=\"rare rare-empty\">No rares nearby</div></div>';
+        return [$html, 0, ''];
+    }
+}

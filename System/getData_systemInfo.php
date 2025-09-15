@@ -324,7 +324,8 @@ if (isset($settings['dist_systems'])) {
         $i++;
     }
 }
-list($cRaresData, $actualNumRes, $rareText) = renderNearbyRaresHtml($mysqli, (string)$siSystemName, $curSys, $settings, $rareResult, (int)$raresCloseby);
+[$cRaresData, $actualNumRes, $rareText] = renderNearbyRaresHtml($siSystemName, $curSys, $settings, $rareResult, $raresCloseby);
+
 
 // [System Info computed segments]
 
@@ -385,5 +386,7 @@ if ($siSystemName === '' && $stationExists == 0) {
         $siSystemEconomy,
         $siSystemRulingFaction
     );
+    $data['si_detailed'] .= ($actualNumRes > 0 ? $cRaresData : '');
+
 }
 header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;
