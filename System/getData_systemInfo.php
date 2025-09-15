@@ -362,8 +362,10 @@ $data['si_name'] .= renderSystemHeaderHtml(
     (string)$siSystemSecurity,
     (int)$numVisits,
     (string)$rareText,
-    (string)$userDists
+    (string)$userDists,
+    (string)$siSystemAllegiance // NEW: pass allegiance so we can render the emblem inline
 );
+
 
 $getSystemId   = $_GET['system_id']   ?? 'undefined';
 $getSystemName = $_GET['system_name'] ?? 'undefined';
@@ -383,4 +385,4 @@ if ($siSystemName === '' && $stationExists == 0) {
         $siSystemRulingFaction
     );
 }
-header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION); exit;
+header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;

@@ -19,14 +19,32 @@ function buildSystemDetailsHtml(
     $out = '';
     $siSystemData = '';
     if (!empty($siSystemPower) && !empty($siSystemPowerState)) {
-        $hq = \EDTB\Domain\Powers\PowersRepository::getHQSystemName($mysqli, (string)$siSystemPower);
-        $hqTitle = $hq ? 'Headquarters: ' . $hq : '';
-        $siSystemData = '<a href="#" title="' . $hqTitle . '">' . $siSystemPower . '</a> [' . $siSystemPowerState . ']';
+        $isNone = (strcasecmp((string)$siSystemPower, 'None') === 0) && (strcasecmp((string)$siSystemPowerState, 'None') === 0);
+
+        // Optional HQ lookup (only if the class/method exists and power isn't "None")
+        $hq = null;
+        if (!$isNone
+            && class_exists('\\EDTB\\Domain\\Powers\\PowersRepository')
+            && method_exists('\\EDTB\\Domain\\Powers\\PowersRepository', 'getHQSystemName')) {
+            $hq = \EDTB\Domain\Powers\PowersRepository::getHQSystemName($mysqli, (string)$siSystemPower);
+        }
+
+        $hqTitle = $hq ? ('Headquarters: ' . $hq) : '';
+        $label   = htmlspecialchars((string)$siSystemPower, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $state   = htmlspecialchars((string)$siSystemPowerState, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        // When "None", show plain text; otherwise, keep the tooltip but avoid a fake "#" link
+        $nameHtml = $isNone
+            ? $label
+            : '<span title="' . htmlspecialchars($hqTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '">' . $label . '</span>';
+
+        $siSystemData = $nameHtml . ' [' . $state . ']';
     } elseif (empty($siSystemPower) && empty($siSystemPowerState)) {
-        $siSystemData = $siSystemPowerState;
+        $siSystemData = '';
     } else {
         $siSystemData = '';
     }
+
 
     $dispPopulation = is_numeric($siSystemPopulation)
         ? number_format((int)$siSystemPopulation)
