@@ -4,7 +4,7 @@
  * Keep keys case-accurate with how the rest of the app sets $allegiance.
  */
 return [
-    'Empire'     => 'empire.png',
-    'Alliance'   => 'alliance.png',
-    'Federation' => 'federation.png',
+    'Empire'     => 'empire.svg',
+    'Alliance'   => 'alliance.svg',
+    'Federation' => 'federation.svg',
 ];

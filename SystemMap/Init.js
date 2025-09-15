@@ -6,7 +6,7 @@
 		increment: 0.1,
 		disablePan: false,
 		disableZoom: true,
-		cursor: "/style/img/cursor.png"
+		cursor: "/style/img/cursor.svg"
 	});
 
 	/*$panzoom.parent().on("mousewheel.focal", function(e)
@@ -108,7 +108,7 @@ window.onload = function () {
 						options2["id"] = bodyid;
 						options2["type"] = item.type;
 						options2["name"] = item.name;
-						options2["src"] = bodies + "/" + imgname.toLowerCase() + "_" + imgid + ".png";
+						options2["src"] = bodies + "/" + imgname.toLowerCase() + "_" + imgid + ".svg";
 						options2["imgid"] = imgid;
 						options2["width"] = width;
 						options2["min_value"] = minvalue;

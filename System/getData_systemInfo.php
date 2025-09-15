@@ -79,6 +79,7 @@ require_once $ROOT . '/source/functions.php';
 require_once $ROOT . '/source/MySQL.php';
 require_once $ROOT . '/source/System.php';
 require_once $ROOT . '/source/curSys.php';
+require_once $ROOT . '/source/Helpers/Icons.php';
 require_once $ROOT . '/src/Domain/System/SystemRepository.php';
 require_once $ROOT . '/src/Domain/Stations/StationsRepository.php';
 require_once $ROOT . '/src/Domain/Rares/RaresRepository.php';

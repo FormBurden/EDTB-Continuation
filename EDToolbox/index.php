@@ -1,23 +1,24 @@
 <?php
-// EDToolbox/index.php — canonical page using the app’s standard wrappers
+// EDToolbox/index.php — render ED ToolBox inside the standard page shell
 declare(strict_types=1);
 
 $ROOT = dirname(__DIR__);
 
 /**
- * IMPORTANT:
- * Do NOT include head.php/body_open.php/top_panel.php directly here.
- * Your build expects them to be orchestrated by style/Header.php,
- * which provides the required $this context. Including head.php
- * directly causes "Using $this when not in object context".
+ * Use the same pattern as the front page:
+ *   1) create Header
+ *   2) display header (opens wrappers + sidebar)
+ *   3) render ED ToolBox partial
+ *   4) display footer (closes wrappers)
  */
-require_once $ROOT . '/style/Header.php';
+require_once $ROOT . '/style/Theme.php';
+
+$header = new Header();
+$header->pageTitle = 'ED ToolBox';
+$header->displayHeader();
 ?>
-<div class="right_panel">
-  <div id="content" class="content">
-    <?php require __DIR__ . '/partial.php'; ?>
-  </div>
-</div>
+
+<?php require __DIR__ . '/partial.php'; ?>
 
 <link rel="stylesheet" href="/EDToolbox/css/edtoolbox.css">
 <script>
@@ -27,3 +28,7 @@ require_once $ROOT . '/style/Header.php';
   };
 </script>
 <script src="/EDToolbox/js/edtoolbox.js" defer></script>
+
+<?php
+$footer = new Footer();
+$footer->displayFooter();

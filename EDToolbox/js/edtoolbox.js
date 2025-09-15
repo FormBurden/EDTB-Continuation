@@ -42,30 +42,34 @@
 	async function fetchLogs(systemName, category, limit) {
 		const sysKeys = ['system_name', 'system', 'sys'];
 		const catKeys = ['category', 'type', 'topic', 'tag'];
-		const base = '/Log/getData_logs.php';
+		// Support both legacy and in-app endpoints
+		const baseUrls = ['/EDToolbox/getData_logs.php', '/Log/getData_logs.php'];
 
 		const attempts = [];
 
-		// Build parameter permutations (GET first)
-		for (const sk of sysKeys) {
-			for (const ck of catKeys) {
-				const qs = new URLSearchParams();
-				if (systemName) qs.set(sk, systemName);
-				if (category) qs.set(ck, category);
-				if (limit) qs.set('limit', String(limit));
-				attempts.push({ method: 'GET', url: `${base}?${qs.toString()}`, body: null, desc: `GET ${sk}+${ck}` });
+		for (const base of baseUrls) {
+			// Build parameter permutations (GET first)
+			for (const sk of sysKeys) {
+				for (const ck of catKeys) {
+					const qs = new URLSearchParams();
+					if (systemName) qs.set(sk, systemName);
+					if (category) qs.set(ck, category);
+					if (limit) qs.set('limit', String(limit));
+					attempts.push({ method: 'GET', url: `${base}?${qs.toString()}`, body: null, desc: `GET ${base} ${sk}+${ck}` });
+				}
+			}
+			// Then POST variants
+			for (const sk of sysKeys) {
+				for (const ck of catKeys) {
+					const form = new URLSearchParams();
+					if (systemName) form.set(sk, systemName);
+					if (category) form.set(ck, category);
+					if (limit) form.set('limit', String(limit));
+					attempts.push({ method: 'POST', url: base, body: form.toString(), desc: `POST ${base} ${sk}+${ck}` });
+				}
 			}
 		}
-		// Then POST variants
-		for (const sk of sysKeys) {
-			for (const ck of catKeys) {
-				const form = new URLSearchParams();
-				if (systemName) form.set(sk, systemName);
-				if (category) form.set(ck, category);
-				if (limit) form.set('limit', String(limit));
-				attempts.push({ method: 'POST', url: base, body: form.toString(), desc: `POST ${sk}+${ck}` });
-			}
-		}
+		
 
 		// Run attempts until one yields content
 		for (const a of attempts) {

@@ -44,11 +44,11 @@ function buildEconomiesText(object $stationObj): string
 
 /**
  * Facilities strip: expects an associative array of booleans keyed by facility name.
- * Uses /style/img/facilities/{key}.png icon filenames.
+ * Uses /style/img/facilities/{key}.svg icon filenames.
  */
 function buildFacilitiesHtml(array $facilities): string
 {
-    // Map facility key -> icon filename (fallback: {key}.png)
+    // Map facility key -> icon filename (fallback: {key}.svg)
     $iconMapPath = __DIR__ . '/../Lookups/FacilitiesIconMap.php';
     $iconMap = file_exists($iconMapPath) ? require $iconMapPath : [];
 
@@ -57,7 +57,7 @@ function buildFacilitiesHtml(array $facilities): string
         if (!$enabled) {
             continue;
         }
-        $file = $iconMap[$key] ?? ($key . '.png');
+        $file = $iconMap[$key] ?? ($key . '.svg');
         $alt  = ucfirst(str_replace('_',' ', (string)$key));
         $html[] = '<img src="/style/img/facilities/' . htmlspecialchars($file) . '" class="icon" title="' . htmlspecialchars($alt) . '" alt="' . htmlspecialchars($alt) . '">';
     }
@@ -138,7 +138,7 @@ function buildRaresMiniLabel(...$args): string
 
     $text = implode(' • ', $parts);
 
-    return '<span class="rareMiniLabel"><img src="/style/img/rare.png" class="icon" alt="Rare"> '
+    return '<span class="rareMiniLabel"><img src="/style/img/rare.svg" class="icon" alt="Rare"> '
          . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
          . '</span>';
 }
