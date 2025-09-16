@@ -30,11 +30,19 @@ declare(strict_types=1);
       </div>
 
       <div class="edtbx-row">
+        <label for="edtbx-sysfilter" class="edtbx-label">System</label>
+        <input type="text" id="edtbx-sysfilter" class="edtbx-text" placeholder="Optional system name" aria-label="System name">
+        <button type="button" id="edtbx-sysgo" class="edtbx-button">Apply</button>
+      </div>
+
+      <div class="edtbx-row">
         <label for="edtbx-limit" class="edtbx-label">Limit</label>
         <input type="number" id="edtbx-limit" class="edtbx-num" min="1" max="50" value="10" aria-label="Result limit">
         <button type="button" id="edtbx-refresh" class="edtbx-button">Refresh</button>
         <button type="button" id="edtbx-newlog" class="edtbx-button">New Log</button>
       </div>
+
+
     </div>
   </header>
 

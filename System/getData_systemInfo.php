@@ -412,4 +412,10 @@ if ($siSystemName === '' && $stationExists == 0) {
     $data['si_detailed'] .= ($actualNumRes > 0 ? $cRaresData : '');
 
 }
-header('Content-Type: application/json; charset=UTF-8'); echo json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;
+/** Output JSON only when executed directly (not when included) */
+$__isDirect = (isset($_SERVER['SCRIPT_FILENAME']) && @realpath(__FILE__) === @realpath((string)$_SERVER['SCRIPT_FILENAME']));
+if ($__isDirect) {
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}

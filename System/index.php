@@ -62,22 +62,20 @@ $header->displayHeader();
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    try {
-        if (typeof get_data === 'function') {
-            // Use the existing global fetcher (same code path as the front page)
-            get_data(true);
-        } else {
-            // Fallback (in case get_data() isn’t defined on this template)
-            fetch('/get/getData.php?request=0', { credentials: 'same-origin' })
-                .then(r => r.json())
-                .then(j => {
-                    if (j && j.log_data !== undefined) {
-                        var el = document.getElementById('scrollable');
-                        if (el) el.innerHTML = j.log_data || '';
-                    }
-                })
-                .catch(console.error);
-        }
+            // Fetch just the System Information JSON and inject into this page's containers
+            fetch('/System/getData_systemInfo.php', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+                if (!j) return;
+                var nameEl     = document.getElementById('si_name');
+                var stationsEl = document.getElementById('si_stations');
+                var detailedEl = document.getElementById('si_detailed');
+                if (nameEl &&     typeof j.si_name     !== 'undefined') nameEl.innerHTML     = j.si_name     || '';
+                if (stationsEl && typeof j.si_stations !== 'undefined') stationsEl.innerHTML = j.si_stations || '';
+                if (detailedEl && typeof j.si_detailed !== 'undefined') detailedEl.innerHTML = j.si_detailed || '';
+            })
+            .catch(console.error);
+        
     } catch (e) {
         console.error(e);
     }

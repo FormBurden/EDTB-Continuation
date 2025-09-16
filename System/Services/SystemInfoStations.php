@@ -98,7 +98,7 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
             'shipyard'             => (int)($st->shipyard ?? 0),
             'refuel'               => (int)($st->refuel ?? 0),
             'repair'               => (int)($st->repair ?? 0),
-            'restock'              => (int)($st->rearm ?? 0), // DB uses 'rearm'
+            'restock'             => (int)($st->restock ?? $st->rearm ?? 0),
 
             // Odyssey-era (aliases handled here; canonical keys above)
             'pioneer_supplies'     => $has($st, ['pioneer_supplies','pioneer']),

@@ -11,7 +11,9 @@
 		from: "",
 		to: "",
 		limit: 10,
+		system_name: "",
 	};
+
 
 	const els = {};
 
@@ -26,6 +28,9 @@
 		els.from = $("#edtbx-from");
 		els.to = $("#edtbx-to");
 		els.chips = $$(".chip");
+		els.sysfilter = $("#edtbx-sysfilter");
+		els.sysgo = $("#edtbx-sysgo");
+
 
 		hydrateFromURL();
 		bindEvents();
@@ -42,12 +47,15 @@
 		const from = qp.get("from") || qp.get("date_from") || qp.get("start");
 		const to = qp.get("to") || qp.get("date_to") || qp.get("end");
 		const limit = qp.get("limit");
+		const sys = qp.get("system_name") || qp.get("system") || qp.get("sys");
 
 		if (cat && (cat === "general" || cat === "personal")) state.category = cat;
 		if (range !== null) state.range = range;
 		if (from !== null) state.from = from;
 		if (to !== null) state.to = to;
 		if (limit && /^\d+$/.test(limit)) state.limit = clamp(parseInt(limit, 10), 1, 50);
+		if (sys !== null) state.system_name = sys;
+
 	}
 
 	function bindEvents() {
@@ -61,6 +69,19 @@
 		});
 
 		if (els.refresh) els.refresh.addEventListener("click", () => fetchAndRender());
+
+		// System filter: button + Enter key
+		if (els.sysgo) els.sysgo.addEventListener("click", () => {
+			state.system_name = (els.sysfilter && els.sysfilter.value || "").trim();
+			fetchAndRender();
+		});
+		if (els.sysfilter) els.sysfilter.addEventListener("keydown", (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				state.system_name = (els.sysfilter.value || "").trim();
+				fetchAndRender();
+			}
+		});
 
 		if (els.from) els.from.addEventListener("change", () => {
 			state.from = els.from.value;
@@ -110,16 +131,23 @@
 		if (els.limit) els.limit.value = String(state.limit);
 		if (els.from) els.from.value = state.from;
 		if (els.to) els.to.value = state.to;
+		if (els.sysfilter) els.sysfilter.value = state.system_name || "";
 		updateChipSelection(state.range);
 	}
+
 
 	function buildParams() {
 		const qp = new URLSearchParams();
 		qp.set("limit", String(state.limit));
 
+		// Per-system view
+		if (state.system_name) {
+			qp.set("system_name", state.system_name);
+		}
+
 		// Category only applies when NOT viewing a specific system
-		// (the backend hides general/personal when system_name is present anyway)
-		if (state.category && (state.category === "general" || state.category === "personal")) {
+		// (backend hides general/personal when system_name is present anyway)
+		if (!state.system_name && state.category && (state.category === "general" || state.category === "personal")) {
 			qp.set("category", state.category);
 		}
 
@@ -128,9 +156,9 @@
 		if (state.to) qp.set("to", state.to);
 		if (!state.from && !state.to && state.range) qp.set("range", state.range);
 
-		// If you later wire a system-level view, add ?system_name=... to qp here.
 		return qp;
 	}
+
 
 	async function fetchAndRender() {
 		const params = buildParams();

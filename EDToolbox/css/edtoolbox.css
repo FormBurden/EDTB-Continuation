@@ -29,7 +29,8 @@
 
 .edtbx-select,
 .edtbx-date,
-.edtbx-num {
+.edtbx-num,
+.edtbx-text {
 	padding: 6px 8px;
 	border: 1px solid var(--edtbx-b, #334);
 	background: var(--edtbx-bg, rgba(255, 255, 255, 0.02));
