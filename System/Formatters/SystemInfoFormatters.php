@@ -166,17 +166,6 @@ if (!function_exists('formatSecurityLabel')) {
         return strtoupper($s);
     }
 }
-/**
- * Build the compact rares mini-label for the header, e.g. "Rares: 3 within 50 ly".
- * If $count == 0, return empty string.
- */
-function buildRaresMiniLabel(int $count, float $rangeLy, string $html, $sx = null, $sy = null, $sz = null): string
-{
-    if ($count <= 0) {
-        return '';
-    }
-    $rng = $rangeLy > 0 ? $rangeLy : 50.0;
-    return 'Rares: ' . $count . ' within ' . number_format($rng, 0) . ' ly';
-}
+
 
 

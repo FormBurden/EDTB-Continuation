@@ -129,7 +129,7 @@ function renderStationsHtml(\mysqli $mysqli, int $systemId): string
             if (!$exists($src)) {
                 $stem   = preg_replace('/\.(?:png|svg)$/i', '', $filename);
                 $trySvg = $base . $stem . '.svg';
-                $tryPng = $base . $stem . '.svg';
+                $tryPng = $base . $stem . '.png';
                 if     ($exists($trySvg)) { $src = $trySvg; }
                 elseif ($exists($tryPng)) { $src = $tryPng; }
                 elseif ($exists($base . 'market.svg')) { $src = $base . 'market.svg'; }

@@ -118,14 +118,11 @@
 ├── edtb-edsm-import.service.in
 ├── edtb-edsm-import.timer.in
 ├── .edtb-files.txt
-├── edtb_neighborhood3d_entry_stage02.tar.gz
 ├── .edtb-scope.txt
-├── edtb_sysinfo_parity_02.tar.gz
-├── edtb_sysinfo_parity_03.tar.gz
-├── edtb_sysinfo_parity_modules_01.tar.gz
 ├── EDToolbox
 │   ├── css
 │   │   └── edtoolbox.css
+│   ├── getData_logs.php
 │   ├── index.php
 │   ├── js
 │   │   └── edtoolbox.js
@@ -569,21 +566,28 @@
 │   │   ├── empire.png
 │   │   ├── external_link.png
 │   │   ├── facilities
-│   │   │   ├── black_market_not.png
-│   │   │   ├── black_market.png
-│   │   │   ├── market_not.png
-│   │   │   ├── market.png
-│   │   │   ├── not.png
-│   │   │   ├── outfitting_not.png
-│   │   │   ├── outfitting.png
-│   │   │   ├── refuel_not.png
-│   │   │   ├── refuel.png
-│   │   │   ├── repair_not.png
-│   │   │   ├── repair.png
-│   │   │   ├── restock_not.png
-│   │   │   ├── restock.png
-│   │   │   ├── shipyard_not.png
-│   │   │   └── shipyard.png
+│   │   │   ├── apex.svg
+│   │   │   ├── bartender.svg
+│   │   │   ├── black_market_not.svg
+│   │   │   ├── black_market.svg
+│   │   │   ├── frontline.svg
+│   │   │   ├── genomics.svg
+│   │   │   ├── interstellar_factors.svg
+│   │   │   ├── market_not.svg
+│   │   │   ├── market.svg
+│   │   │   ├── not.svg
+│   │   │   ├── outfitting_not.svg
+│   │   │   ├── outfitting.svg
+│   │   │   ├── pioneer.svg
+│   │   │   ├── redemption.svg
+│   │   │   ├── refuel_not.svg
+│   │   │   ├── refuel.svg
+│   │   │   ├── repair_not.svg
+│   │   │   ├── repair.svg
+│   │   │   ├── restock_not.svg
+│   │   │   ├── restock.svg
+│   │   │   ├── shipyard_not.svg
+│   │   │   └── shipyard.svg
 │   │   ├── federation.png
 │   │   ├── find.png
 │   │   ├── fuel.png
@@ -855,4 +859,4 @@
     ├── ReferenceSystems.php
     └── Trilateration.php
 
-143 directories, 713 files
+143 directories, 717 files

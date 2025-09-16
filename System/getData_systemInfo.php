@@ -278,6 +278,12 @@ if (validCoordinates($curSys['x'], $curSys['y'], $curSys['z'])) {
             $siSystemDisplayName = $siSystemName;
         }        
         $siSystemDisplayName = $siSystemName;
+        /** SIMBAD wrap for the system name, if reference exists */
+        if (isset($systemObj->simbad_ref) && trim((string)$systemObj->simbad_ref) !== '') {
+            $hrefSim   = 'http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' . rawurlencode((string)$systemObj->simbad_ref);
+            $safeName  = htmlspecialchars((string)$siSystemDisplayName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $siSystemDisplayName = '<a href="' . $hrefSim . '" target="_blank" rel="noopener" class="external">' . $safeName . '</a>';
+        }
 
         $add3 = ''; // known origin
     } else {
@@ -331,7 +337,24 @@ if (isset($settings['dist_systems'])) {
 
 // Crosslinks icons (gallery/log/map/info) — parity with legacy System::crosslinks()
 // Signature: System::crosslinks($system, $showScreens=true, $showSystem=false, $showLogs=true, $showMap=true)
-list($siCrosslinks) = buildSystemLinksAndDists((string)$siSystemName, $curSys, $settings);
+list($extLinksHtml, $udHtml) = buildSystemLinksAndDists((string)$siSystemName, $curSys, $settings);
+
+// Legacy internal crosslinks (gallery/log/map/info) — parity with original
+$internalLinksHtml = \EDTB\source\System::crosslinks(
+    (string)$siSystemName,
+    true,   // showScreens
+    false,  // showSystem link (we're already on System)
+    true,   // showLogs
+    true    // showMap
+);
+
+// Merge internal + external strips for the header
+$siCrosslinks = $internalLinksHtml . $extLinksHtml;
+
+// Keep your existing $userDists builder, but fall back to the computed one if empty
+if (trim((string)$userDists) === '') {
+    $userDists = (string)$udHtml;
+}
 
 // Determine a system id we can use for stations/visits
 $stationSystemId = (isset($siSystemId) && (int)$siSystemId > 0)

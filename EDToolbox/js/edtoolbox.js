@@ -202,6 +202,123 @@
 		return String(html).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
 	}
 
+	// --- Add/Edit/Delete modal wiring (no audio) ---
+	document.addEventListener("DOMContentLoaded", () => {
+		const list = document.getElementById("edtbx-list");
+		const modal = document.getElementById("edtbx-modal");
+		const form = document.getElementById("edtbx-form");
+		const btnNew = document.getElementById("edtbx-newlog");
+		const btnDel = document.getElementById("edtbx-delete");
+		const btnCancel = document.getElementById("edtbx-cancel");
+		const titleEl = document.getElementById("edtbx-modal-title");
+		const editIdEl = document.getElementById("edtbx-edit-id");
+
+		if (!list || !modal || !form) return;
+
+		function showModal(mode, id) {
+			modal.classList.add("show");
+			if (mode === "edit") {
+				titleEl.textContent = "Edit log";
+				btnDel.style.display = "";
+				editIdEl.value = id || "";
+			} else {
+				titleEl.textContent = "New log";
+				btnDel.style.display = "none";
+				editIdEl.value = "";
+				form.reset();
+			}
+		}
+
+		function hideModal() { modal.classList.remove("show"); }
+
+		function getIdFromNode(node) {
+			let id = node.getAttribute("data-log-id") || node.dataset?.logId;
+			if (id) return id;
+			const href = node.getAttribute && node.getAttribute("href");
+			if (href) {
+				const m = href.match(/[?&](?:logid|id)=(\d+)/);
+				if (m) return m[1];
+			}
+			return null;
+		}
+
+		async function prefillEdit(id) {
+			const url = `/Log/getLogEditData.php?logid=${encodeURIComponent(id)}`;
+			const res = await fetch(url, { headers: { "Accept": "application/json" } });
+			if (!res.ok) throw new Error(`Prefill failed: ${res.status}`);
+			const data = await res.json();
+			form.log_type.value = data.log_type || "general";
+			form.title.value = data.title || "";
+			form.system_1.value = data.system_1 || "";
+			form.statname.value = data.statname || "";
+			form.pinned.value = String(data.pinned ? 1 : 0);
+			form.weight.value = String(data.weight ?? 0);
+			form.html.value = data.html || "";
+		}
+
+		function toQS(formEl) {
+			const fd = new FormData(formEl);
+			const usp = new URLSearchParams();
+			for (const [k, v] of fd.entries()) usp.append(k, v);
+			if (!usp.has("pinned")) usp.set("pinned", "0");
+			return usp;
+		}
+
+		async function submitForm(evt) {
+			evt.preventDefault();
+			const isEdit = !!editIdEl.value;
+			const usp = toQS(form);
+			const doMode = isEdit ? "edit" : "add";
+			if (isEdit) usp.set("edit_id", editIdEl.value);
+			const url = `/Log/add_log.php?do=${doMode}`;
+			const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: usp.toString() });
+			if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+			hideModal();
+			if (typeof fetchAndRender === "function") fetchAndRender();
+		}
+
+		async function doDelete() {
+			const id = editIdEl.value;
+			if (!id) return hideModal();
+			if (!confirm("Delete this log entry?")) return;
+			const url = `/Log/add_log.php?do=delete&id=${encodeURIComponent(id)}`;
+			const res = await fetch(url, { method: "POST" });
+			if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+			hideModal();
+			if (typeof fetchAndRender === "function") fetchAndRender();
+		}
+
+		// New log
+		if (btnNew) btnNew.addEventListener("click", () => showModal("add"));
+
+		// Delegated list actions
+		list.addEventListener("click", async (e) => {
+			const a = e.target.closest("a,button");
+			if (!a) return;
+			const action = a.getAttribute("data-action") || "";
+			if (action === "edit" || /do=edit/.test(a.getAttribute("href") || "")) {
+				e.preventDefault();
+				const id = getIdFromNode(a);
+				if (!id) return;
+				showModal("edit", id);
+				try { await prefillEdit(id); } catch (err) { console.error(err); }
+			} else if (action === "delete" || /do=delete/.test(a.getAttribute("href") || "")) {
+				e.preventDefault();
+				const id = getIdFromNode(a);
+				if (!id) return;
+				showModal("edit", id);
+				try { await prefillEdit(id); } catch { }
+				try { await doDelete(); } catch (err) { console.error(err); }
+			}
+		});
+
+		form.addEventListener("submit", submitForm);
+		btnCancel && btnCancel.addEventListener("click", () => hideModal());
+		btnDel && btnDel.addEventListener("click", () => { doDelete().catch(console.error); });
+	}, { once: true });
+
+	// keep original init
 	document.addEventListener("DOMContentLoaded", init, { capture: true, once: true });
 })();
+
   

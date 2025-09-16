@@ -90,64 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 $footer = new Footer();
 ?>
-<script>
-(function () {
-  function loadSystemInfo() {
-    try {
-      var params = {};
-      var sName   = <?php echo json_encode($_GET['system_name'] ?? ''); ?>;
-      var sId     = <?php echo json_encode($_GET['system_id']   ?? ''); ?>;
-      var sLegacy = <?php echo json_encode($_GET['system']      ?? ''); ?>;
-      if (!sName && sLegacy) sName = sLegacy;
-
-      if (sName) params.system_name = sName;
-      if (sId)   params.system_id   = sId;
-
-      $.ajax({
-        url: '/System/getData_systemInfo.php',
-        data: params,
-        dataType: 'json',
-        cache: false
-      })
-      .done(function (d) {
-        var name = d && d.si_name     ? d.si_name     : '';
-        var st   = d && d.si_stations ? d.si_stations : '';
-        var det  = d && d.si_detailed ? d.si_detailed : '';
-
-        $('#si_name').html(name);
-        $('#si_stations').html(st);
-        $('#si_detailed').html(det);
-
-        if (!name && !st && !det) {
-          $('#si_name').html('<div class="light">No data returned for "' + (sName || sId || '') + '".</div>');
-        }
-      })
-      .fail(function (xhr) {
-        var msg = 'Failed to load system info';
-        if (xhr && xhr.status) msg += ' (' + xhr.status + ')';
-        if (xhr && xhr.responseText) {
-          var snippet = $('<div>').text(xhr.responseText).text().slice(0, 300);
-          msg += ': ' + snippet;
-        }
-        $('#si_name').html('<div class="light">' + msg + '</div>');
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  // Run after PJAX page swaps (Wiselinks)
-  if (window.jQuery) {
-    $(document).on('page:load', loadSystemInfo);
-  }
-  // Run on full page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadSystemInfo);
-  } else {
-    loadSystemInfo();
-  }
-})();
-</script>
 
 
 <?php

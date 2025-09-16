@@ -104,3 +104,96 @@
 	padding: 10px;
 	border-radius: 8px;
 }
+
+/* Log meta visibility (system & station) */
+.edtbx-list .log-meta {
+	font-size: 12px;
+	opacity: .85;
+	margin: 4px 0 2px;
+}
+
+.edtbx-list .log-system {
+	font-weight: 600;
+}
+
+.edtbx-list .log-station {
+	font-style: italic;
+}
+
+/* Modal (Add/Edit Log) */
+.edtbx-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, .5);
+	display: none;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+}
+
+.edtbx-modal-backdrop.show {
+	display: flex;
+}
+
+.edtbx-modal {
+	background: #111;
+	border: 1px solid #333;
+	border-radius: 10px;
+	padding: 14px;
+	width: min(720px, 92vw);
+	max-height: 90vh;
+	overflow: auto;
+}
+
+.edtbx-modal h2 {
+	margin: 0 0 10px;
+	font-size: 18px;
+}
+
+.edtbx-form {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.edtbx-form .full {
+	grid-column: 1 / -1;
+}
+
+.edtbx-form label {
+	display: block;
+	font-size: 12px;
+	opacity: .8;
+	margin-bottom: 4px;
+}
+
+.edtbx-form input[type="text"],
+.edtbx-form input[type="number"],
+.edtbx-form select,
+.edtbx-form textarea {
+	width: 100%;
+	padding: 6px 8px;
+	border: 1px solid #333;
+	border-radius: 6px;
+	background: #0e0e0e;
+	color: #eee;
+}
+
+.edtbx-form textarea {
+	min-height: 140px;
+}
+
+.edtbx-modal .actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.edtbx-button.danger {
+	background: #722;
+}
+
+.edtbx-button.secondary {
+	background: #2a2a2a;
+}
