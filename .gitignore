@@ -10,18 +10,19 @@
 /.edtb-scope.txt
 /__INIT__
 /cache
-
+.edtb-venv
+docs/
 # --- EDSM / ED data (downloads, extracts, caches, dumps) ---
-/data/dumps/
-/data/downloads/
-/data/extracts/
-/data/cache/
-/data/edsm/
-/data/eddb/
-/data/tmp/
-/data/logs/
-/data/phpfastcache/
-
+/data/dumps/*
+/data/downloads/*
+/data/extracts/*
+/data/cache/*
+/data/edsm/*
+/data/eddb/*
+/data/tmp/*
+/data/logs/*
+/data/phpfastcache/*
+/Admin/adminer.php
 # Common big data formats produced by imports/extracts
 # *.sql
 *.sql.gz
@@ -47,3 +48,4 @@ systemd-user/*.timer
 
 # Local env (machine-specific)
 edtb.env
+push_all.sh
