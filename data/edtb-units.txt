@@ -1,2 +1,0 @@
-edtb-web.service
-edtb-screenshot-mirror.timer
